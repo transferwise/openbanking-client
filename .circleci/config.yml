@@ -36,7 +36,7 @@ jobs:
             - gradle-cache-{{ checksum "build.gradle" }}
       - add_ssh_keys:
           fingerprints:
-            - "6f:bb:82:f5:96:3e:55:b5:45:ef:58:87:93:fe:d3:41"
+            - "22:84:70:6d:93:9b:0f:23:c6:88:2a:57:4a:e4:e5:69"
       - run:
           # this step is required for pushing to git, otherwise git push in the release plugin will fail
           name: Set git config
