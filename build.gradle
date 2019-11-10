@@ -43,7 +43,7 @@ dependencies {
 jar {
     doFirst {
         manifest {
-            attributes("Implementation-Title": project.buildName, "Implementation-Version": project.buildVersion)
+            attributes("Implementation-Title": project.name, "Implementation-Version": project.version)
         }
     }
 }
