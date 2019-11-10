@@ -1,0 +1,88 @@
+buildscript {
+    repositories {
+        maven { url 'https://arti.tw.ee/artifactory/plugins-release' }
+    }
+}
+
+plugins {
+    id 'java'
+    id 'checkstyle'
+    id 'pmd'
+    id 'com.github.spotbugs' version '2.0.1'
+    id 'org.unbroken-dome.test-sets' version '2.2.1'
+    id 'net.researchgate.release' version '2.6.0'
+}
+
+ext.artifactoryUser = "$System.env.ARTIFACTORY_USER"
+ext.artifactoryPassword = "$System.env.ARTIFACTORY_PASSWORD"
+
+apply from: 'https://artifacts.tw.ee/artifactory/ivy-release-local/com/transferwise/gradle-scripts/1.0.8/libUpload.gradle'
+
+group = 'com.transferwise'
+
+sourceCompatibility = 12
+targetCompatibility = 12
+
+repositories {
+    maven { url 'https://arti.tw.ee/artifactory/libs-release' }
+    maven { url 'https://arti.tw.ee/artifactory/libs-release-local' }
+    maven { url 'https://arti.tw.ee/artifactory/remote-repos' }
+}
+
+testSets {
+    integrationTest
+}
+
+dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.2")
+
+    integrationTestImplementation sourceSets.test.output
+}
+
+jar {
+    doFirst {
+        manifest {
+            attributes("Implementation-Title": project.buildName, "Implementation-Version": project.buildVersion)
+        }
+    }
+}
+
+checkstyle {
+    configFile = new File(rootDir, "checkstyle.xml")
+    toolVersion = '8.26'
+    sourceSets = [project.sourceSets.main]
+}
+
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+    excludeFilter file('spotbugs_exclude_filter.xml')
+}
+
+pmd {
+    incrementalAnalysis = true
+    ruleSetFiles = files("custom-pmd-rules.xml")
+    ruleSets = []
+}
+
+check.finalizedBy(integrationTest)
+
+wrapper {
+    gradleVersion = '5.6.4'
+}
+
+release {
+    failOnUnversionedFiles = true
+    tagTemplate = '$name-$version'
+    tagCommitMessage = "[ci skip] creating tag: "
+    newVersionCommitMessage = "[ci skip] new version commit: "
+}
+
+afterReleaseBuild.dependsOn publish
+
+test {
+    useJUnitPlatform()
+}

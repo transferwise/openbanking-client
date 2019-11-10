@@ -1,0 +1,58 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: arti.tw.ee/circle_openjdk12:latest
+        user: circleci
+    resource_class: small
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - gradle-cache-{{ checksum "build.gradle" }}
+      - run:
+          name: Install dependencies
+          command: ./gradlew dependencies testClasses --console=plain
+      - run:
+          name: Run tests
+          command: ./gradlew check --info --console=plain
+      - store_test_results:
+          path: build/test-results/
+      - store_artifacts:
+          path: build/test-results/
+      - save_cache:
+          key: gradle-cache-{{ checksum "build.gradle" }}
+          paths:
+            - "~/.gradle"
+  release:
+    docker:
+      - image: arti.tw.ee/circle_openjdk12:latest
+        user: circleci
+    resource_class: small
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - gradle-cache-{{ checksum "build.gradle" }}
+      - add_ssh_keys:
+          fingerprints:
+            - "1f:4b:3b:80:e7:44:c9:a2:0e:37:54:ae:2d:e8:13:b9"
+      - run:
+          # this step is required for pushing to git, otherwise git push in the release plugin will fail
+          name: Set git config
+          command: git config --global user.name "TransferWise CircleCI" && git config --global user.email circle@circle.tw.ee
+      - run:
+          name: Publish release
+          command: ./gradlew release -Prelease.useAutomaticVersion=true --console=plain
+workflows:
+  version: 2
+  test_and_publish:
+    jobs:
+      - test
+      - release:
+          context: artifactory-deploy
+          requires:
+            - test
+          filters:
+            branches:
+              only: master

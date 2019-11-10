@@ -1,0 +1,7 @@
+<FindBugsFilter>
+    <!-- Exclude 'Class is Serializable, but doesn't define serialVersionUID' from test classes -->
+    <Match>
+        <Class name="~.*\.*Spec.*" />
+        <Bug pattern="SE_NO_SERIALVERSIONID" />
+    </Match>
+</FindBugsFilter>
