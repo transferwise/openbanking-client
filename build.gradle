@@ -9,7 +9,6 @@ plugins {
     id 'checkstyle'
     id 'pmd'
     id 'com.github.spotbugs' version '2.0.1'
-    id 'org.unbroken-dome.test-sets' version '2.2.1'
     id 'net.researchgate.release' version '2.6.0'
 }
 
@@ -29,15 +28,9 @@ repositories {
     maven { url 'https://arti.tw.ee/artifactory/remote-repos' }
 }
 
-testSets {
-    integrationTest
-}
-
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.2")
-
-    integrationTestImplementation sourceSets.test.output
 }
 
 jar {
@@ -68,10 +61,8 @@ pmd {
     ruleSets = []
 }
 
-check.finalizedBy(integrationTest)
-
 wrapper {
-    gradleVersion = '5.6.4'
+    gradleVersion = '6.0.1'
 }
 
 release {
