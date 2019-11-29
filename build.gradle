@@ -22,6 +22,16 @@ group = 'com.transferwise'
 sourceCompatibility = 12
 targetCompatibility = 12
 
+ext {
+    libs = [
+        'spring': '5.1.11.RELEASE',
+        'jackson': '2.10.0',
+        'lombok': '1.18.10',
+        'junit': '5.4.2',
+        'mockito': '3.1.0'
+    ]
+}
+
 repositories {
     maven { url 'https://arti.tw.ee/artifactory/libs-release' }
     maven { url 'https://arti.tw.ee/artifactory/libs-release-local' }
@@ -29,8 +39,33 @@ repositories {
 }
 
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.2")
+    implementation("org.springframework:spring-web:${libs.spring}")
+
+    implementation('org.apache.httpcomponents:httpclient:4.5.10')
+
+    implementation("com.fasterxml.jackson.core:jackson-annotations:${libs.jackson}")
+    implementation("com.fasterxml.jackson.core:jackson-databind:${libs.jackson}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${libs.jackson}")
+
+    implementation('org.bitbucket.b_c:jose4j:0.6.5')
+
+    compileOnly("org.projectlombok:lombok:${libs.lombok}")
+    testCompileOnly("org.projectlombok:lombok:${libs.lombok}")
+    annotationProcessor("org.projectlombok:lombok:${libs.lombok}")
+    testAnnotationProcessor("org.projectlombok:lombok:${libs.lombok}")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:${libs.junit}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${libs.junit}")
+
+    testImplementation("org.mockito:mockito-core:${libs.mockito}")
+    testImplementation("org.mockito:mockito-junit-jupiter:${libs.mockito}")
+
+    testImplementation("org.hamcrest:hamcrest:2.1")
+    testImplementation("org.skyscreamer:jsonassert:1.5.0")
+
+    testImplementation("org.springframework:spring-test:${libs.spring}")
+
+    testImplementation("com.transferwise.common:tw-base-utils:1.2.5")
 }
 
 jar {

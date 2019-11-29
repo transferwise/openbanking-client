@@ -71,7 +71,7 @@
         http://checkstyle.sourceforge.net/config_coding.html#MultipleStringLiterals
         -->
         <module name="MultipleStringLiterals">
-            <property name="ignoreStringsRegexp" value='^(("")|(", "))$'/>
+            <property name="ignoreStringsRegexp" value='^(("")|(", ")|("&apos;"))$'/>
             <!-- Allow empty string, comma separator and star to be duplicated -->
             <property name="allowedDuplicates" value="2"/>
         </module>
