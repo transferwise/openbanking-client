@@ -21,7 +21,7 @@ public class RestRegistrationClient implements RegistrationClient {
     private final RestTemplate restTemplate;
 
     @Override
-    public String registerClient(String softwareStatementAssertion, AspspDetails aspspDetails) {
+    public String registerClient(String signedClaims, AspspDetails aspspDetails) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf("application/jwt"));
@@ -29,7 +29,7 @@ public class RestRegistrationClient implements RegistrationClient {
         // as we're using a raw String as the body type, we need to manually set the header
         headers.setAcceptCharset(Collections.singletonList(StandardCharsets.UTF_8));
 
-        HttpEntity<String> request = new HttpEntity<>(softwareStatementAssertion, headers);
+        HttpEntity<String> request = new HttpEntity<>(signedClaims, headers);
 
         try {
             // TODO: use a proper object as the response, not just a raw string
