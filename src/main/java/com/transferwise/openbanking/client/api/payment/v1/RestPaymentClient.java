@@ -17,7 +17,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestOperations;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -32,7 +32,7 @@ public class RestPaymentClient implements PaymentClient {
 
     private final OAuthClient oAuthClient;
     private final IdempotencyKeyGenerator idempotencyKeyGenerator;
-    private final RestTemplate restTemplate;
+    private final RestOperations restTemplate;
 
     @Override
     public PaymentSetupResponse setupPayment(SetupPaymentRequest setupPaymentRequest, AspspDetails aspspDetails) {
