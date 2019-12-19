@@ -11,6 +11,9 @@ import org.jose4j.lang.JoseException;
 
 import java.security.Key;
 
+/**
+ * Provides functionality for signing JWT claims, for use in requests to ASPSPs.
+ */
 @RequiredArgsConstructor
 public class JwtClaimsSigner {
 
@@ -30,10 +33,29 @@ public class JwtClaimsSigner {
         return objectMapper;
     }
 
+    /**
+     * Sign the given claims to produce a JWS string.
+     *
+     * @param jwtClaims        The JWT claims to sign
+     * @param signingAlgorithm The algorithm to use for the signing, see {@link org.jose4j.jws.AlgorithmIdentifiers}
+     *                         for possible values
+     * @return The signed claims as a compact and URL friendly string
+     */
     public String signPayload(JwtClaims jwtClaims, String signingAlgorithm) {
         return signJsonPayload(jwtClaims.toJson(), signingAlgorithm);
     }
 
+    /**
+     * Sign the given claims to produce a JWS string.
+     * <p>
+     * This method provides full flexibility in the claims that can be signed, the Jackson JSON {@link ObjectMapper}
+     * class will be used to convert the claims to a JSON string prior to signing.
+     *
+     * @param jwtClaims        The JWT claims to sign
+     * @param signingAlgorithm The algorithm to use for the signing, see {@link org.jose4j.jws.AlgorithmIdentifiers}
+     *                         for possible values
+     * @return The signed claims as a compact and URL friendly string
+     */
     public String signPayload(Object jwtClaims, String signingAlgorithm) {
         try {
             return signJsonPayload(objectMapper.writeValueAsString(jwtClaims), signingAlgorithm);

@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Supported OpenID client authentication methods, for bank access token requests.
+ * Supported OpenID client authentication methods, for ASPSP access token requests.
  *
  * @see
  * <a href="http://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication">OpenID Client Authentication</a>
