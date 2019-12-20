@@ -7,7 +7,8 @@ Java client for using the Open Banking API, exposed by an ASPSP, as a TPP. The l
 API:  
 
 - Support for registering as a TPP client with an ASPSP
-- Support for version 1 single immediate domestic payments
+- Support for version 1 [single immediate domestic payments](https://openbanking.atlassian.net/wiki/spaces/DZ/pages/5786479/Payment+Initiation+API+Specification+-+v1.1.0)
+- Support for version 3 [single immediate domestic payments](https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937984109/Domestic+Payments+v3.1)
 
 ## License
 
