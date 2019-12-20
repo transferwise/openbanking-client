@@ -1,6 +1,8 @@
 package com.transferwise.openbanking.client.api.payment.v1;
 
 import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
+import com.transferwise.openbanking.client.api.payment.common.BasePaymentClient;
+import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSetupResponse;
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSubmissionResponse;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SetupPaymentRequest;
@@ -8,9 +10,6 @@ import com.transferwise.openbanking.client.api.payment.v1.domain.SubmitPaymentRe
 import com.transferwise.openbanking.client.aspsp.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
-import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
-import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -19,30 +18,31 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
 
-@RequiredArgsConstructor
 @Slf4j
-public class RestPaymentClient implements PaymentClient {
-
-    private static final String PAYMENTS_SCOPE = "payments";
+public class RestPaymentClient extends BasePaymentClient implements PaymentClient {
 
     private static final String ENDPOINT_PATH_FORMAT = "%s/open-banking/v1.%s/%s";
 
     private static final String PAYMENT_RESOURCE = "payments";
     private static final String PAYMENT_SUBMISSION_RESOURCE = "payment-submissions";
 
-    private final OAuthClient oAuthClient;
-    private final IdempotencyKeyGenerator idempotencyKeyGenerator;
+    private final IdempotencyKeyGenerator<SetupPaymentRequest, SubmitPaymentRequest> idempotencyKeyGenerator;
     private final RestOperations restTemplate;
+
+    public RestPaymentClient(OAuthClient oAuthClient,
+                             IdempotencyKeyGenerator<SetupPaymentRequest, SubmitPaymentRequest> idempotencyKeyGenerator,
+                             RestOperations restTemplate) {
+        super(oAuthClient);
+        this.idempotencyKeyGenerator = idempotencyKeyGenerator;
+        this.restTemplate = restTemplate;
+    }
 
     @Override
     public PaymentSetupResponse setupPayment(SetupPaymentRequest setupPaymentRequest, AspspDetails aspspDetails) {
 
-        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest(PAYMENTS_SCOPE);
-        AccessTokenResponse accessTokenResponse = oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);
-
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getFinancialId(),
-            accessTokenResponse.getAccessToken(),
-            idempotencyKeyGenerator.generateIdempotencyKey(setupPaymentRequest));
+            getClientCredentialsToken(aspspDetails),
+            idempotencyKeyGenerator.generateKeyForSetup(setupPaymentRequest));
 
         HttpEntity<SetupPaymentRequest> request = new HttpEntity<>(setupPaymentRequest, headers);
 
@@ -68,13 +68,9 @@ public class RestPaymentClient implements PaymentClient {
                                                    String authorizationCode,
                                                    AspspDetails aspspDetails) {
 
-        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.authorizationCodeRequest(authorizationCode,
-            aspspDetails.getTppRedirectUrl());
-        AccessTokenResponse accessTokenResponse = oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);
-
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getFinancialId(),
-            accessTokenResponse.getAccessToken(),
-            idempotencyKeyGenerator.generateIdempotencyKey(submitPaymentRequest));
+            exchangeAuthorizationCode(authorizationCode, aspspDetails),
+            idempotencyKeyGenerator.generateKeyForSubmission(submitPaymentRequest));
 
         HttpEntity<SubmitPaymentRequest> request = new HttpEntity<>(submitPaymentRequest, headers);
 
@@ -98,13 +94,10 @@ public class RestPaymentClient implements PaymentClient {
     @Override
     public PaymentSubmissionResponse getPaymentSubmission(String paymentSubmissionId, AspspDetails aspspDetails) {
 
-        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest(PAYMENTS_SCOPE);
-        AccessTokenResponse accessTokenResponse = oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);
-
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getFinancialId(),
-            accessTokenResponse.getAccessToken());
+            getClientCredentialsToken(aspspDetails));
 
-        HttpEntity request = new HttpEntity(headers);
+        HttpEntity<?> request = new HttpEntity<>(headers);
 
         log.info("Calling get submission API, with interaction ID {}", headers.getInteractionId());
 

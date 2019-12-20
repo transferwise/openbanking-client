@@ -1,15 +1,16 @@
 package com.transferwise.openbanking.client.api.payment.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.transferwise.openbanking.client.api.payment.v1.domain.CreditorAccount;
-import com.transferwise.openbanking.client.api.payment.v1.domain.Initiation;
-import com.transferwise.openbanking.client.api.payment.v1.domain.InstructedAmount;
+import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
+import com.transferwise.openbanking.client.api.payment.common.domain.CreditorAccount;
+import com.transferwise.openbanking.client.api.payment.common.domain.Initiation;
+import com.transferwise.openbanking.client.api.payment.common.domain.InstructedAmount;
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSetupResponse;
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSetupResponseData;
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSubmissionResponse;
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSubmissionResponseData;
-import com.transferwise.openbanking.client.api.payment.v1.domain.RemittanceInformation;
-import com.transferwise.openbanking.client.api.payment.v1.domain.Risk;
+import com.transferwise.openbanking.client.api.payment.common.domain.RemittanceInformation;
+import com.transferwise.openbanking.client.api.payment.common.domain.Risk;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SetupPaymentRequest;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SetupPaymentRequestData;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SubmitPaymentRequest;
@@ -47,7 +48,7 @@ class RestPaymentClientTest {
     private OAuthClient oAuthClient;
 
     @Mock
-    private IdempotencyKeyGenerator idempotencyKeyGenerator;
+    private IdempotencyKeyGenerator<SetupPaymentRequest, SubmitPaymentRequest> idempotencyKeyGenerator;
 
     private MockRestServiceServer mockAspspServer;
 
@@ -80,7 +81,7 @@ class RestPaymentClientTest {
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
-        Mockito.when(idempotencyKeyGenerator.generateIdempotencyKey(setupPaymentRequest))
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(setupPaymentRequest))
             .thenReturn(IDEMPOTENCY_KEY);
 
         PaymentSetupResponse mockSetupResponse = aPaymentSetupResponse();
@@ -112,7 +113,7 @@ class RestPaymentClientTest {
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        Mockito.when(idempotencyKeyGenerator.generateIdempotencyKey(Mockito.any(SetupPaymentRequest.class)))
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(Mockito.any(SetupPaymentRequest.class)))
             .thenReturn(IDEMPOTENCY_KEY);
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v1.1/payments"))
@@ -141,7 +142,7 @@ class RestPaymentClientTest {
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
-        Mockito.when(idempotencyKeyGenerator.generateIdempotencyKey(submitPaymentRequest))
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(submitPaymentRequest))
             .thenReturn(IDEMPOTENCY_KEY);
 
         PaymentSubmissionResponse mockPaymentSubmissionResponse = aPaymentSubmissionResponse();
@@ -176,7 +177,7 @@ class RestPaymentClientTest {
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        Mockito.when(idempotencyKeyGenerator.generateIdempotencyKey(Mockito.any(SubmitPaymentRequest.class)))
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(SubmitPaymentRequest.class)))
             .thenReturn(IDEMPOTENCY_KEY);
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v1.1/payment-submissions"))
