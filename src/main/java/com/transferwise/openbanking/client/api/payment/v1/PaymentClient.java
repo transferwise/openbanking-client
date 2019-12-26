@@ -4,7 +4,7 @@ import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSetupRes
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSubmissionResponse;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SetupPaymentRequest;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SubmitPaymentRequest;
-import com.transferwise.openbanking.client.aspsp.AspspDetails;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
 
 /**
  * An interface specifying the operations for a client supporting version 1 single immediate domestic payments.

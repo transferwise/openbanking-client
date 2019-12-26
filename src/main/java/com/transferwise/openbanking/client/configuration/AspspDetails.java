@@ -1,4 +1,4 @@
-package com.transferwise.openbanking.client.aspsp;
+package com.transferwise.openbanking.client.configuration;
 
 import org.jose4j.jws.AlgorithmIdentifiers;
 
@@ -69,13 +69,6 @@ public interface AspspDetails {
     default String getTokenIssuerUrl() {
         throw new UnsupportedOperationException("getTokenIssuerUrl not implemented");
     }
-
-    /**
-     * Get the URL that the ASPSP will redirect the user back to once the authorisation process is finished.
-     *
-     * @return the TPP URL the ASPSP redirects to
-     */
-    String getTppRedirectUrl();
 
     /**
      * Get the ID value to use for identifying ourselves as a client to the ASPSP.

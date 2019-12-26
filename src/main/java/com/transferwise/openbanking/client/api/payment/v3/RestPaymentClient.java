@@ -7,8 +7,10 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPayment
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentRequest;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
-import com.transferwise.openbanking.client.aspsp.AspspDetails;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
+import com.transferwise.openbanking.client.configuration.TppConfiguration;
 import com.transferwise.openbanking.client.error.ApiCallException;
+import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -27,14 +29,16 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     private static final String PAYMENT_RESOURCE = "domestic-payments";
 
     private final IdempotencyKeyGenerator<DomesticPaymentConsentRequest, DomesticPaymentRequest> idempotencyKeyGenerator;
-    private final RestOperations restTemplate;
+    private final JwtClaimsSigner jwtClaimsSigner;
 
-    public RestPaymentClient(OAuthClient oAuthClient,
+    public RestPaymentClient(TppConfiguration tppConfiguration,
+                             RestOperations restOperations,
+                             OAuthClient oAuthClient,
                              IdempotencyKeyGenerator<DomesticPaymentConsentRequest, DomesticPaymentRequest> idempotencyKeyGenerator,
-                             RestOperations restTemplate) {
-        super(oAuthClient);
+                             JwtClaimsSigner jwtClaimsSigner) {
+        super(tppConfiguration, restOperations, oAuthClient);
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
-        this.restTemplate = restTemplate;
+        this.jwtClaimsSigner = jwtClaimsSigner;
     }
 
     @Override
@@ -44,14 +48,15 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getFinancialId(),
             getClientCredentialsToken(aspspDetails),
-            idempotencyKeyGenerator.generateKeyForSetup(domesticPaymentConsentRequest));
+            idempotencyKeyGenerator.generateKeyForSetup(domesticPaymentConsentRequest),
+            jwtClaimsSigner.createDetachedSignature(domesticPaymentConsentRequest));
 
         HttpEntity<DomesticPaymentConsentRequest> request = new HttpEntity<>(domesticPaymentConsentRequest, headers);
 
         log.info("Calling create payment consent API, with interaction ID {}", headers.getInteractionId());
 
         try {
-            ResponseEntity<DomesticPaymentConsentResponse> response = restTemplate.exchange(
+            ResponseEntity<DomesticPaymentConsentResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE),
                 HttpMethod.POST,
                 request,
@@ -72,14 +77,15 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getFinancialId(),
             exchangeAuthorizationCode(authorizationCode, aspspDetails),
-            idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest));
+            idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest),
+            jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest));
 
         HttpEntity<DomesticPaymentRequest> request = new HttpEntity<>(domesticPaymentRequest, headers);
 
         log.info("Calling submit payment API, with interaction ID {}", headers.getInteractionId());
 
         try {
-            ResponseEntity<DomesticPaymentResponse> response = restTemplate.exchange(
+            ResponseEntity<DomesticPaymentResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_RESOURCE),
                 HttpMethod.POST,
                 request,
@@ -104,7 +110,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         log.info("Calling get payment API, with interaction ID {}", headers.getInteractionId());
 
         try {
-            ResponseEntity<DomesticPaymentResponse> response = restTemplate.exchange(
+            ResponseEntity<DomesticPaymentResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_RESOURCE) + "/{domesticPaymentId}",
                 HttpMethod.GET,
                 request,

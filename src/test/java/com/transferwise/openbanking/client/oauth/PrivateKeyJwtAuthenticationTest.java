@@ -1,7 +1,7 @@
 package com.transferwise.openbanking.client.oauth;
 
 import com.transferwise.common.baseutils.ExceptionUtils;
-import com.transferwise.openbanking.client.aspsp.AspspDetails;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
@@ -41,7 +41,7 @@ class PrivateKeyJwtAuthenticationTest {
         AspspDetails aspspDetails = aAspspDefinition();
 
         String signedPayload = "signed-payload";
-        Mockito.when(jwtClaimsSigner.signPayload(
+        Mockito.when(jwtClaimsSigner.createSignature(
             Mockito.argThat(jwtClaims ->
                 ExceptionUtils.doUnchecked(() ->
                     jwtClaims.getIssuer().equals(aspspDetails.getClientId()) &&

@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 public class OpenBankingHeaders extends FapiHeaders {
 
     private static final String IDEMPOTENCY_KEY = "x-idempotency-key";
+    private static final String JWS_SIGNATURE = "x-jws-signature";
 
     /**
      * Builds the HTTP headers common for all API requests.
@@ -39,6 +40,26 @@ public class OpenBankingHeaders extends FapiHeaders {
         return headers;
     }
 
+    /**
+     * Builds the HTTP headers common for all POST API requests, which require a JWS signature as part of the headers.
+     *
+     * @param financialId    The ASPSP financial ID value to use as the x-fapi-financial-id header value
+     * @param bearerToken    The bearer token to use for the Authorization header value
+     * @param idempotencyKey The idempotency key for the request, to use as the x-idempotency-key header value
+     * @param jwsSignature   The JWS signature for the request, to use as the x-jws-signature header value
+     * @return The built HTTP headers
+     */
+    public static OpenBankingHeaders postHeaders(String financialId,
+                                                 String bearerToken,
+                                                 String idempotencyKey,
+                                                 String jwsSignature) {
+        OpenBankingHeaders headers = defaultHeaders(financialId, bearerToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setIdempotencyKey(idempotencyKey);
+        headers.setJwsSignature(jwsSignature);
+        return headers;
+    }
+
     private void setBaseValues(String financialId, String bearerToken) {
         super.setBaseValues();
 
@@ -48,5 +69,9 @@ public class OpenBankingHeaders extends FapiHeaders {
 
     private void setIdempotencyKey(String idempotencyKey) {
         set(IDEMPOTENCY_KEY, idempotencyKey);
+    }
+
+    private void setJwsSignature(String jwsSignature) {
+        set(JWS_SIGNATURE, jwsSignature);
     }
 }

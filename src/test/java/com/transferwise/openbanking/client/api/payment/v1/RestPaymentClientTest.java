@@ -15,7 +15,8 @@ import com.transferwise.openbanking.client.api.payment.v1.domain.SetupPaymentReq
 import com.transferwise.openbanking.client.api.payment.v1.domain.SetupPaymentRequestData;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SubmitPaymentRequest;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SubmitPaymentRequestData;
-import com.transferwise.openbanking.client.aspsp.AspspDetails;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
+import com.transferwise.openbanking.client.configuration.TppConfiguration;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
@@ -50,6 +51,8 @@ class RestPaymentClientTest {
     @Mock
     private IdempotencyKeyGenerator<SetupPaymentRequest, SubmitPaymentRequest> idempotencyKeyGenerator;
 
+    private TppConfiguration tppConfiguration;
+
     private MockRestServiceServer mockAspspServer;
 
     private RestPaymentClient restPaymentClient;
@@ -61,10 +64,12 @@ class RestPaymentClientTest {
 
     @BeforeEach
     void init() {
+        tppConfiguration = aTppConfiguration();
+
         RestTemplate restTemplate = new RestTemplate();
         mockAspspServer = MockRestServiceServer.createServer(restTemplate);
 
-        restPaymentClient = new RestPaymentClient(oAuthClient, idempotencyKeyGenerator, restTemplate);
+        restPaymentClient = new RestPaymentClient(tppConfiguration, restTemplate, oAuthClient, idempotencyKeyGenerator);
     }
 
     @Test
@@ -138,7 +143,7 @@ class RestPaymentClientTest {
                 Mockito.argThat(request ->
                     request.getRequestBody().get("grant_type").equals("authorization_code") &&
                     request.getRequestBody().get("code").equals(authorisationCode) &&
-                    request.getRequestBody().get("redirect_uri").equals(aspspDetails.getTppRedirectUrl())),
+                    request.getRequestBody().get("redirect_uri").equals(tppConfiguration.getRedirectUrl())),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -242,10 +247,15 @@ class RestPaymentClientTest {
         mockAspspServer.verify();
     }
 
+    private TppConfiguration aTppConfiguration() {
+        return TppConfiguration.builder()
+            .redirectUrl("tpp-redirect-url")
+            .build();
+    }
+
     private AspspDetails aAspspDefinition() {
         return TestAspspDetails.builder()
             .apiBaseUrl("https://aspsp.co.uk")
-            .tppRedirectUrl("tpp-redirect-url")
             .paymentApiMinorVersion("1")
             .build();
     }

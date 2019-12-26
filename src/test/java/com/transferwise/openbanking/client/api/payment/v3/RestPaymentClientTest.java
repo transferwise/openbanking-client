@@ -18,8 +18,10 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPayment
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentConsentStatus;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentStatus;
-import com.transferwise.openbanking.client.aspsp.AspspDetails;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
+import com.transferwise.openbanking.client.configuration.TppConfiguration;
 import com.transferwise.openbanking.client.error.ApiCallException;
+import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
@@ -45,6 +47,8 @@ class RestPaymentClientTest {
 
     private static final String IDEMPOTENCY_KEY = "idempotency-key";
 
+    private static final String DETACHED_JWS_SIGNATURE = "detached-jws-signature";
+
     private static ObjectMapper objectMapper;
 
     @Mock
@@ -52,6 +56,11 @@ class RestPaymentClientTest {
 
     @Mock
     private IdempotencyKeyGenerator<DomesticPaymentConsentRequest, DomesticPaymentRequest> idempotencyKeyGenerator;
+
+    @Mock
+    private JwtClaimsSigner jwtClaimsSigner;
+
+    private TppConfiguration tppConfiguration;
 
     private MockRestServiceServer mockAspspServer;
 
@@ -64,10 +73,16 @@ class RestPaymentClientTest {
 
     @BeforeEach
     void init() {
+        tppConfiguration = aTppConfiguration();
+
         RestTemplate restTemplate = new RestTemplate();
         mockAspspServer = MockRestServiceServer.createServer(restTemplate);
 
-        restPaymentClient = new RestPaymentClient(oAuthClient, idempotencyKeyGenerator, restTemplate);
+        restPaymentClient = new RestPaymentClient(tppConfiguration,
+            restTemplate,
+            oAuthClient,
+            idempotencyKeyGenerator,
+            jwtClaimsSigner);
     }
 
     @Test
@@ -87,6 +102,9 @@ class RestPaymentClientTest {
         Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(domesticPaymentConsentRequest))
             .thenReturn(IDEMPOTENCY_KEY);
 
+        Mockito.when(jwtClaimsSigner.createDetachedSignature(domesticPaymentConsentRequest))
+            .thenReturn(DETACHED_JWS_SIGNATURE);
+
         DomesticPaymentConsentResponse mockPaymentConsentResponse = aDomesticPaymentConsentResponse();
         String jsonResponse = objectMapper.writeValueAsString(mockPaymentConsentResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents"))
@@ -95,6 +113,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getFinancialId()))
             .andExpect(MockRestRequestMatchers.header("x-idempotency-key", IDEMPOTENCY_KEY))
+            .andExpect(MockRestRequestMatchers.header("x-jws-signature", DETACHED_JWS_SIGNATURE))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andExpect(MockRestRequestMatchers.content().json(objectMapper.writeValueAsString(domesticPaymentConsentRequest)))
@@ -143,12 +162,15 @@ class RestPaymentClientTest {
                 Mockito.argThat(request ->
                     request.getRequestBody().get("grant_type").equals("authorization_code") &&
                     request.getRequestBody().get("code").equals(authorisationCode) &&
-                    request.getRequestBody().get("redirect_uri").equals(aspspDetails.getTppRedirectUrl())),
+                    request.getRequestBody().get("redirect_uri").equals(tppConfiguration.getRedirectUrl())),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
         Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest))
             .thenReturn(IDEMPOTENCY_KEY);
+
+        Mockito.when(jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest))
+            .thenReturn(DETACHED_JWS_SIGNATURE);
 
         DomesticPaymentResponse mockDomesticPaymentResponse = aDomesticPaymentResponse();
         String jsonResponse = objectMapper.writeValueAsString(mockDomesticPaymentResponse);
@@ -158,6 +180,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getFinancialId()))
             .andExpect(MockRestRequestMatchers.header("x-idempotency-key", IDEMPOTENCY_KEY))
+            .andExpect(MockRestRequestMatchers.header("x-jws-signature", DETACHED_JWS_SIGNATURE))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andExpect(MockRestRequestMatchers.content().json(objectMapper.writeValueAsString(domesticPaymentRequest)))
@@ -225,6 +248,8 @@ class RestPaymentClientTest {
 
         Assertions.assertEquals(mockDomesticPaymentResponse, domesticPaymentResponse);
 
+        Mockito.verify(jwtClaimsSigner, Mockito.never()).createDetachedSignature(Mockito.any());
+
         mockAspspServer.verify();
     }
 
@@ -245,6 +270,12 @@ class RestPaymentClientTest {
             () -> restPaymentClient.getDomesticPayment(domesticPaymentId, aspspDetails));
 
         mockAspspServer.verify();
+    }
+
+    private TppConfiguration aTppConfiguration() {
+        return TppConfiguration.builder()
+            .redirectUrl("tpp-redirect-url")
+            .build();
     }
 
     private AspspDetails aAspspDefinition() {

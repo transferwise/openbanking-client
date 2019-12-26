@@ -4,7 +4,7 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPayment
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentRequest;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
-import com.transferwise.openbanking.client.aspsp.AspspDetails;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
 
 /**
  * An interface specifying the operations for a client supporting version 3 single immediate domestic payments.

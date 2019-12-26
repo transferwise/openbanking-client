@@ -1,6 +1,6 @@
 package com.transferwise.openbanking.client.api.registration;
 
-import com.transferwise.openbanking.client.aspsp.AspspDetails;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
 import org.junit.jupiter.api.Assertions;

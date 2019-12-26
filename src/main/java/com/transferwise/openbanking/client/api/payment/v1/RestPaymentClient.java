@@ -7,7 +7,8 @@ import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSetupRes
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSubmissionResponse;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SetupPaymentRequest;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SubmitPaymentRequest;
-import com.transferwise.openbanking.client.aspsp.AspspDetails;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
+import com.transferwise.openbanking.client.configuration.TppConfiguration;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
@@ -27,14 +28,13 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     private static final String PAYMENT_SUBMISSION_RESOURCE = "payment-submissions";
 
     private final IdempotencyKeyGenerator<SetupPaymentRequest, SubmitPaymentRequest> idempotencyKeyGenerator;
-    private final RestOperations restTemplate;
 
-    public RestPaymentClient(OAuthClient oAuthClient,
-                             IdempotencyKeyGenerator<SetupPaymentRequest, SubmitPaymentRequest> idempotencyKeyGenerator,
-                             RestOperations restTemplate) {
-        super(oAuthClient);
+    public RestPaymentClient(TppConfiguration tppConfiguration,
+                             RestOperations restOperations,
+                             OAuthClient oAuthClient,
+                             IdempotencyKeyGenerator<SetupPaymentRequest, SubmitPaymentRequest> idempotencyKeyGenerator) {
+        super(tppConfiguration, restOperations, oAuthClient);
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
-        this.restTemplate = restTemplate;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         log.info("Calling setup payment API, with interaction ID {}", headers.getInteractionId());
 
         try {
-            ResponseEntity<PaymentSetupResponse> response = restTemplate.exchange(
+            ResponseEntity<PaymentSetupResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_RESOURCE),
                 HttpMethod.POST,
                 request,
@@ -77,7 +77,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         log.info("Calling submit payment API, with interaction ID {}", headers.getInteractionId());
 
         try {
-            ResponseEntity<PaymentSubmissionResponse> response = restTemplate.exchange(
+            ResponseEntity<PaymentSubmissionResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_SUBMISSION_RESOURCE),
                 HttpMethod.POST,
                 request,
@@ -102,7 +102,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         log.info("Calling get submission API, with interaction ID {}", headers.getInteractionId());
 
         try {
-            ResponseEntity<PaymentSubmissionResponse> response = restTemplate.exchange(
+            ResponseEntity<PaymentSubmissionResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_SUBMISSION_RESOURCE) + "/{paymentSubmissionId}",
                 HttpMethod.GET,
                 request,

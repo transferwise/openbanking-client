@@ -1,6 +1,6 @@
 package com.transferwise.openbanking.client.oauth;
 
-import com.transferwise.openbanking.client.aspsp.AspspDetails;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +42,6 @@ public class PrivateKeyJwtAuthentication implements ClientAuthentication {
         jwtClaims.setExpirationTimeMinutesInTheFuture(CLAIMS_VALID_FOR_MINUTES);
         jwtClaims.setJwtId(UUID.randomUUID().toString());
 
-        return jwtClaimsSigner.signPayload(jwtClaims, aspspDetails.getSigningAlgorithm());
+        return jwtClaimsSigner.createSignature(jwtClaims, aspspDetails.getSigningAlgorithm());
     }
 }

@@ -1,6 +1,6 @@
 package com.transferwise.openbanking.client.test;
 
-import com.transferwise.openbanking.client.aspsp.AspspDetails;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
 import lombok.Builder;
 import lombok.Data;
 
