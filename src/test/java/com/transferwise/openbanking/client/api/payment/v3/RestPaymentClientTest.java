@@ -104,7 +104,7 @@ class RestPaymentClientTest {
         Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(domesticPaymentConsentRequest))
             .thenReturn(IDEMPOTENCY_KEY);
 
-        Mockito.when(jwtClaimsSigner.createDetachedSignature(domesticPaymentConsentRequest))
+        Mockito.when(jwtClaimsSigner.createDetachedSignature(domesticPaymentConsentRequest, aspspDetails))
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
         DomesticPaymentConsentResponse mockPaymentConsentResponse = aDomesticPaymentConsentResponse();
@@ -171,7 +171,7 @@ class RestPaymentClientTest {
         Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest))
             .thenReturn(IDEMPOTENCY_KEY);
 
-        Mockito.when(jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest))
+        Mockito.when(jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest, aspspDetails))
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
         DomesticPaymentResponse mockDomesticPaymentResponse = aDomesticPaymentResponse();
@@ -250,7 +250,7 @@ class RestPaymentClientTest {
 
         Assertions.assertEquals(mockDomesticPaymentResponse, domesticPaymentResponse);
 
-        Mockito.verify(jwtClaimsSigner, Mockito.never()).createDetachedSignature(Mockito.any());
+        Mockito.verify(jwtClaimsSigner, Mockito.never()).createDetachedSignature(Mockito.any(), Mockito.any());
 
         mockAspspServer.verify();
     }

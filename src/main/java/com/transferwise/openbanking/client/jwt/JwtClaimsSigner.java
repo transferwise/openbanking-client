@@ -3,6 +3,7 @@ package com.transferwise.openbanking.client.jwt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.TppConfiguration;
 import com.transferwise.openbanking.client.error.ClientException;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +14,6 @@ import org.jose4j.jwt.NumericDate;
 import org.jose4j.jwx.HeaderParameterNames;
 import org.jose4j.lang.JoseException;
 
-import java.security.Key;
-
 /**
  * Provides functionality for signing JWT claims, for use in requests to ASPSPs.
  */
@@ -23,12 +22,12 @@ public class JwtClaimsSigner {
 
     private static final String TRUST_ANCHOR_VALUE = "openbanking.org.uk";
 
-    private final ObjectMapper objectMapper;
-    private final Key signingPrivateKey;
+    private final KeySupplier keySupplier;
     private final TppConfiguration tppConfiguration;
+    private final ObjectMapper objectMapper;
 
-    public JwtClaimsSigner(Key signingPrivateKey, TppConfiguration tppConfiguration) {
-        this.signingPrivateKey = signingPrivateKey;
+    public JwtClaimsSigner(KeySupplier keySupplier, TppConfiguration tppConfiguration) {
+        this.keySupplier = keySupplier;
         this.tppConfiguration = tppConfiguration;
         this.objectMapper = defaultObjectMapper();
     }
@@ -42,13 +41,12 @@ public class JwtClaimsSigner {
     /**
      * Sign the given claims to produce a JWS string.
      *
-     * @param jwtClaims        The JWT claims to sign
-     * @param signingAlgorithm The algorithm to use for the signing, see {@link org.jose4j.jws.AlgorithmIdentifiers}
-     *                         for possible values
+     * @param jwtClaims    The JWT claims to sign
+     * @param aspspDetails The details of the ASPSP which the JWS will be sent to
      * @return The signed claims as a compact and URL friendly string
      */
-    public String createSignature(JwtClaims jwtClaims, String signingAlgorithm) {
-        return signJsonPayload(jwtClaims.toJson(), signingAlgorithm);
+    public String createSignature(JwtClaims jwtClaims, AspspDetails aspspDetails) {
+        return signJsonPayload(jwtClaims.toJson(), aspspDetails);
     }
 
     /**
@@ -57,14 +55,13 @@ public class JwtClaimsSigner {
      * This method provides full flexibility in the claims that can be signed, the Jackson JSON {@link ObjectMapper}
      * class will be used to convert the claims to a JSON string prior to signing.
      *
-     * @param jwtClaims        The JWT claims to sign
-     * @param signingAlgorithm The algorithm to use for the signing, see {@link org.jose4j.jws.AlgorithmIdentifiers}
-     *                         for possible values
+     * @param jwtClaims    The JWT claims to sign
+     * @param aspspDetails The details of the ASPSP which the JWS will be sent to
      * @return The signed claims as a compact and URL friendly string
      */
-    public String createSignature(Object jwtClaims, String signingAlgorithm) {
+    public String createSignature(Object jwtClaims, AspspDetails aspspDetails) {
         try {
-            return signJsonPayload(objectMapper.writeValueAsString(jwtClaims), signingAlgorithm);
+            return signJsonPayload(objectMapper.writeValueAsString(jwtClaims), aspspDetails);
         } catch (JsonProcessingException e) {
             throw new ClientException("Unable to serialise JWT claims", e);
         }
@@ -76,10 +73,11 @@ public class JwtClaimsSigner {
      * This means the signature is created with the payload present, but the compact serialised JWS does not include
      * the payload, to allow the payload to be checked for modification in transit using the signature.
      *
-     * @param jwtClaims The JWT claims to sign
+     * @param jwtClaims    The JWT claims to sign
+     * @param aspspDetails The details of the ASPSP which the JWS will be sent to
      * @return The signed claims as a detached compact and URL friendly string.
      */
-    public String createDetachedSignature(Object jwtClaims) {
+    public String createDetachedSignature(Object jwtClaims, AspspDetails aspspDetails) {
         String payload;
         try {
             payload = objectMapper.writeValueAsString(jwtClaims);
@@ -89,9 +87,9 @@ public class JwtClaimsSigner {
 
         JsonWebSignature jsonWebSignature = new JsonWebSignature();
         jsonWebSignature.setPayload(payload);
-        jsonWebSignature.setKey(signingPrivateKey);
+        jsonWebSignature.setKey(keySupplier.getSigningKey(aspspDetails));
         jsonWebSignature.setAlgorithmHeaderValue(AlgorithmIdentifiers.RSA_PSS_USING_SHA256);
-        jsonWebSignature.setKeyIdHeaderValue(tppConfiguration.getSigningKeyId());
+        jsonWebSignature.setKeyIdHeaderValue(aspspDetails.getSigningKeyId());
         jsonWebSignature.setHeader(HeaderParameterNames.BASE64URL_ENCODE_PAYLOAD, false);
         jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_IAT, NumericDate.now().getValue());
         jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_ISS,
@@ -109,12 +107,12 @@ public class JwtClaimsSigner {
         }
     }
 
-    private String signJsonPayload(String payload, String signingAlgorithm) {
+    private String signJsonPayload(String payload, AspspDetails aspspDetails) {
         JsonWebSignature jsonWebSignature = new JsonWebSignature();
         jsonWebSignature.setPayload(payload);
-        jsonWebSignature.setKey(signingPrivateKey);
-        jsonWebSignature.setAlgorithmHeaderValue(signingAlgorithm);
-        jsonWebSignature.setKeyIdHeaderValue(tppConfiguration.getSigningKeyId());
+        jsonWebSignature.setKey(keySupplier.getSigningKey(aspspDetails));
+        jsonWebSignature.setAlgorithmHeaderValue(aspspDetails.getSigningAlgorithm());
+        jsonWebSignature.setKeyIdHeaderValue(aspspDetails.getSigningKeyId());
 
         try {
             return jsonWebSignature.getCompactSerialization();

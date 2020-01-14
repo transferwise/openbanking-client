@@ -17,6 +17,7 @@ public class TestAspspDetails implements AspspDetails {
     private String clientId;
     private String clientSecret;
     private String signingAlgorithm;
+    private String signingKeyId;
     private String paymentApiMinorVersion;
 
     @Override

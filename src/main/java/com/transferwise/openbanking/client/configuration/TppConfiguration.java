@@ -22,11 +22,6 @@ public class TppConfiguration {
     private String softwareStatementId;
 
     /**
-     * The ID of the key, within the Open Banking directory, used for signing data to send to ASPSPs.
-     */
-    private String signingKeyId;
-
-    /**
      * The URL that ASPSPs will redirect the user back to once the authorisation process is finished.
      */
     private String redirectUrl;

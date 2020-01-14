@@ -2,7 +2,9 @@ package com.transferwise.openbanking.client.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.api.payment.common.domain.InstructedAmount;
+import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.TppConfiguration;
+import com.transferwise.openbanking.client.test.TestAspspDetails;
 import org.jose4j.jwa.AlgorithmConstraints;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -28,6 +31,8 @@ class JwtClaimsSignerTest {
 
     private static ObjectMapper objectMapper;
 
+    private KeySupplier keySupplier;
+
     private TppConfiguration tppConfiguration;
 
     private JwtClaimsSigner jwtClaimsSigner;
@@ -40,8 +45,11 @@ class JwtClaimsSignerTest {
 
     @BeforeEach
     void init() {
+        keySupplier = Mockito.mock(KeySupplier.class);
+
         tppConfiguration = aTppConfiguration();
-        jwtClaimsSigner = new JwtClaimsSigner(keyPair.getPrivate(), tppConfiguration);
+
+        jwtClaimsSigner = new JwtClaimsSigner(keySupplier, tppConfiguration);
     }
 
     @Test
@@ -49,37 +57,46 @@ class JwtClaimsSignerTest {
         JwtClaims jwtClaims = new JwtClaims();
         jwtClaims.setStringClaim("a-claim", "a-value");
         Map<String, Object> expectedJwtClaims = Map.of("a-claim", "a-value");
+        AspspDetails aspspDetails = aAspspDetails();
 
-        String serialisedSignature = jwtClaimsSigner.createSignature(jwtClaims, AlgorithmIdentifiers.RSA_PSS_USING_SHA256);
+        Mockito.when(keySupplier.getSigningKey(aspspDetails)).thenReturn(keyPair.getPrivate());
+
+        String serialisedSignature = jwtClaimsSigner.createSignature(jwtClaims, aspspDetails);
         JsonWebSignature jsonWebSignature = parseSignature(serialisedSignature);
 
         Assertions.assertEquals(expectedJwtClaims,
             objectMapper.readValue(jsonWebSignature.getPayload(), Map.class));
-        Assertions.assertEquals(tppConfiguration.getSigningKeyId(), jsonWebSignature.getKeyIdHeaderValue());
+        Assertions.assertEquals(aspspDetails.getSigningKeyId(), jsonWebSignature.getKeyIdHeaderValue());
     }
 
     @Test
     void createSignatureWithCustomPayloadProducesValidSignature() throws Exception {
         InstructedAmount jwtClaims = new InstructedAmount("10.50", "GBP");
         Map<String, Object> expectedJwtClaims = Map.of("Amount", "10.50", "Currency", "GBP");
+        AspspDetails aspspDetails = aAspspDetails();
 
-        String serialisedSignature = jwtClaimsSigner.createSignature(jwtClaims, AlgorithmIdentifiers.RSA_PSS_USING_SHA256);
+        Mockito.when(keySupplier.getSigningKey(aspspDetails)).thenReturn(keyPair.getPrivate());
+
+        String serialisedSignature = jwtClaimsSigner.createSignature(jwtClaims, aspspDetails);
         JsonWebSignature jsonWebSignature = parseSignature(serialisedSignature);
 
         Assertions.assertEquals(expectedJwtClaims,
             objectMapper.readValue(jsonWebSignature.getPayload(), Map.class));
-        Assertions.assertEquals(tppConfiguration.getSigningKeyId(), jsonWebSignature.getKeyIdHeaderValue());
+        Assertions.assertEquals(aspspDetails.getSigningKeyId(), jsonWebSignature.getKeyIdHeaderValue());
     }
 
     @Test
     void createDetachedSignatureProducesValidSignature() throws Exception {
         InstructedAmount jwtClaims = new InstructedAmount("10.50", "GBP");
+        AspspDetails aspspDetails = aAspspDetails();
 
-        String serialisedSignature = jwtClaimsSigner.createDetachedSignature(jwtClaims);
+        Mockito.when(keySupplier.getSigningKey(aspspDetails)).thenReturn(keyPair.getPrivate());
+
+        String serialisedSignature = jwtClaimsSigner.createDetachedSignature(jwtClaims, aspspDetails);
         JsonWebSignature jsonWebSignature = parseDetachedSignature(serialisedSignature, jwtClaims);
 
         Assertions.assertTrue(jsonWebSignature.verifySignature());
-        Assertions.assertEquals(tppConfiguration.getSigningKeyId(), jsonWebSignature.getKeyIdHeaderValue());
+        Assertions.assertEquals(aspspDetails.getSigningKeyId(), jsonWebSignature.getKeyIdHeaderValue());
         Assertions.assertEquals(Boolean.FALSE,
             jsonWebSignature.getObjectHeader(HeaderParameterNames.BASE64URL_ENCODE_PAYLOAD));
         Assertions.assertEquals(tppConfiguration.getOrganisationId() + "/" + tppConfiguration.getSoftwareStatementId(),
@@ -109,8 +126,14 @@ class JwtClaimsSignerTest {
         TppConfiguration tppConfiguration = new TppConfiguration();
         tppConfiguration.setOrganisationId("organisation-id");
         tppConfiguration.setSoftwareStatementId("software-statement-id");
-        tppConfiguration.setSigningKeyId("signing-key-id");
         return tppConfiguration;
+    }
+
+    private AspspDetails aAspspDetails() {
+        return TestAspspDetails.builder()
+            .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
+            .signingKeyId("signing-key-id")
+            .build();
     }
 
     private JsonWebSignature parseSignature(String serialisedSignature) throws Exception {

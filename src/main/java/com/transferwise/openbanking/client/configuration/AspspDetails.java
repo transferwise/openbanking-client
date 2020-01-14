@@ -106,6 +106,13 @@ public interface AspspDetails {
     }
 
     /**
+     * Get the ID of the key, within the Open Banking directory, to use for signing data to send to ASPSPs.
+     *
+     * @return the signing key ID.
+     */
+    String getSigningKeyId();
+
+    /**
      * Get the minor version of the payments API that should be used when making calls to the ASPSP payments API.
      *
      * @return the payments API minor version to use, defaults to 1

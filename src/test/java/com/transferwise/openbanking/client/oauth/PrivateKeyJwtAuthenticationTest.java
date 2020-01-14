@@ -50,7 +50,7 @@ class PrivateKeyJwtAuthenticationTest {
                         jwtClaims.getIssuedAt() != null &&
                         jwtClaims.getExpirationTime().isAfter(jwtClaims.getIssuedAt()) &&
                         jwtClaims.getJwtId() != null)),
-            Mockito.eq(aspspDetails.getSigningAlgorithm())))
+            Mockito.eq(aspspDetails)))
             .thenReturn(signedPayload);
 
         privateKeyJwtAuthentication.addClientAuthentication(getAccessTokenRequest, aspspDetails);

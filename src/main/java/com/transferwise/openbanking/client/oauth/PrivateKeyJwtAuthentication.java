@@ -42,6 +42,6 @@ public class PrivateKeyJwtAuthentication implements ClientAuthentication {
         jwtClaims.setExpirationTimeMinutesInTheFuture(CLAIMS_VALID_FOR_MINUTES);
         jwtClaims.setJwtId(UUID.randomUUID().toString());
 
-        return jwtClaimsSigner.createSignature(jwtClaims, aspspDetails.getSigningAlgorithm());
+        return jwtClaimsSigner.createSignature(jwtClaims, aspspDetails);
     }
 }
