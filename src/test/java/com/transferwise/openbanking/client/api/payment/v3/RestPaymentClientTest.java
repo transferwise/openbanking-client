@@ -16,6 +16,7 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPayment
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentData;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentRequest;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
+import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponseData;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentConsentStatus;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentStatus;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
@@ -344,9 +345,12 @@ class RestPaymentClientTest {
     }
 
     private DomesticPaymentResponse aDomesticPaymentResponse() {
-        return DomesticPaymentResponse.builder()
+        DomesticPaymentResponseData data = DomesticPaymentResponseData.builder()
             .domesticPaymentId("domestic-payment-id")
             .status(PaymentStatus.ACCEPTED_SETTLEMENT_IN_PROCESS)
+            .build();
+        return DomesticPaymentResponse.builder()
+            .data(data)
             .build();
     }
 

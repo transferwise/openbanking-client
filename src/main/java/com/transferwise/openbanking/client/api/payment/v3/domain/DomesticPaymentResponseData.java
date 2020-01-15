@@ -11,9 +11,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+// TODO: replace this with a full definition of the fields
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DomesticPaymentResponse {
+public class DomesticPaymentResponseData {
 
-    @JsonProperty("Data")
-    private DomesticPaymentResponseData data;
+    @JsonProperty("DomesticPaymentId")
+    private String domesticPaymentId;
+
+    @JsonProperty("Status")
+    private PaymentStatus status;
 }
