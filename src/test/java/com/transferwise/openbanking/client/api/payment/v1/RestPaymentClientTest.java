@@ -2,15 +2,16 @@ package com.transferwise.openbanking.client.api.payment.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
-import com.transferwise.openbanking.client.api.payment.common.domain.CreditorAccount;
-import com.transferwise.openbanking.client.api.payment.common.domain.Initiation;
 import com.transferwise.openbanking.client.api.payment.common.domain.InstructedAmount;
+import com.transferwise.openbanking.client.api.payment.common.domain.RemittanceInformation;
+import com.transferwise.openbanking.client.api.payment.common.domain.Risk;
+import com.transferwise.openbanking.client.api.payment.v1.domain.AccountIdentificationCode;
+import com.transferwise.openbanking.client.api.payment.v1.domain.CreditorAccount;
+import com.transferwise.openbanking.client.api.payment.v1.domain.Initiation;
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSetupResponse;
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSetupResponseData;
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSubmissionResponse;
 import com.transferwise.openbanking.client.api.payment.v1.domain.PaymentSubmissionResponseData;
-import com.transferwise.openbanking.client.api.payment.common.domain.RemittanceInformation;
-import com.transferwise.openbanking.client.api.payment.common.domain.Risk;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SetupPaymentRequest;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SetupPaymentRequestData;
 import com.transferwise.openbanking.client.api.payment.v1.domain.SubmitPaymentRequest;
@@ -262,7 +263,7 @@ class RestPaymentClientTest {
 
     private SetupPaymentRequest aSetupPaymentRequest() {
         InstructedAmount instructedAmount = new InstructedAmount("1000.00", "GBP");
-        CreditorAccount creditorAccount = new CreditorAccount("SortCodeAccountNumber",
+        CreditorAccount creditorAccount = new CreditorAccount(AccountIdentificationCode.SORT_CODE_ACCOUNT_NUMBER,
             "112233123456",
             "TransferWise Ltd");
         RemittanceInformation remittanceInformation = new RemittanceInformation("reference");
@@ -278,7 +279,7 @@ class RestPaymentClientTest {
 
     private SubmitPaymentRequest aSubmitPaymentRequest() {
         InstructedAmount instructedAmount = new InstructedAmount("1000.00", "GBP");
-        CreditorAccount creditorAccount = new CreditorAccount("SortCodeAccountNumber",
+        CreditorAccount creditorAccount = new CreditorAccount(AccountIdentificationCode.SORT_CODE_ACCOUNT_NUMBER,
             "112233123456",
             "TransferWise Ltd");
         RemittanceInformation remittanceInformation = new RemittanceInformation("reference");

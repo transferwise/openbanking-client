@@ -2,11 +2,12 @@ package com.transferwise.openbanking.client.api.payment.v3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
-import com.transferwise.openbanking.client.api.payment.common.domain.CreditorAccount;
-import com.transferwise.openbanking.client.api.payment.common.domain.Initiation;
 import com.transferwise.openbanking.client.api.payment.common.domain.InstructedAmount;
 import com.transferwise.openbanking.client.api.payment.common.domain.RemittanceInformation;
 import com.transferwise.openbanking.client.api.payment.common.domain.Risk;
+import com.transferwise.openbanking.client.api.payment.v3.domain.AccountIdentificationCode;
+import com.transferwise.openbanking.client.api.payment.v3.domain.CreditorAccount;
+import com.transferwise.openbanking.client.api.payment.v3.domain.Initiation;
 import com.transferwise.openbanking.client.api.payment.v3.domain.Authorisation;
 import com.transferwise.openbanking.client.api.payment.v3.domain.AuthorisationType;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentData;
@@ -292,7 +293,7 @@ class RestPaymentClientTest {
             .authorisationType(AuthorisationType.SINGLE)
             .build();
         InstructedAmount instructedAmount = new InstructedAmount("1000.00", "GBP");
-        CreditorAccount creditorAccount = new CreditorAccount("SortCodeAccountNumber",
+        CreditorAccount creditorAccount = new CreditorAccount(AccountIdentificationCode.SORT_CODE_ACCOUNT_NUMBER,
             "112233123456",
             "TransferWise Ltd");
         RemittanceInformation remittanceInformation = new RemittanceInformation("reference");
@@ -314,7 +315,7 @@ class RestPaymentClientTest {
 
     private DomesticPaymentRequest aDomesticPaymentRequest() {
         InstructedAmount instructedAmount = new InstructedAmount("1000.00", "GBP");
-        CreditorAccount creditorAccount = new CreditorAccount("SortCodeAccountNumber",
+        CreditorAccount creditorAccount = new CreditorAccount(AccountIdentificationCode.SORT_CODE_ACCOUNT_NUMBER,
             "112233123456",
             "TransferWise Ltd");
         RemittanceInformation remittanceInformation = new RemittanceInformation("reference");

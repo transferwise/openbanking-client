@@ -1,6 +1,8 @@
-package com.transferwise.openbanking.client.api.payment.common.domain;
+package com.transferwise.openbanking.client.api.payment.v1.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.transferwise.openbanking.client.api.payment.common.domain.InstructedAmount;
+import com.transferwise.openbanking.client.api.payment.common.domain.RemittanceInformation;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
