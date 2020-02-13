@@ -48,19 +48,24 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling setup payment API, with interaction ID {}", headers.getInteractionId());
 
+        PaymentSetupResponse paymentSetupResponse;
         try {
             ResponseEntity<PaymentSetupResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_RESOURCE),
                 HttpMethod.POST,
                 request,
                 PaymentSetupResponse.class);
-            return response.getBody();
+            paymentSetupResponse = response.getBody();
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to setup payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
         } catch (RestClientException e) {
             throw new ApiCallException("Call to setup payment endpoint failed, and no response body returned", e);
         }
+
+        validateResponse(paymentSetupResponse);
+
+        return paymentSetupResponse;
     }
 
     @Override
@@ -76,19 +81,24 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling submit payment API, with interaction ID {}", headers.getInteractionId());
 
+        PaymentSubmissionResponse paymentSubmissionResponse;
         try {
             ResponseEntity<PaymentSubmissionResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_SUBMISSION_RESOURCE),
                 HttpMethod.POST,
                 request,
                 PaymentSubmissionResponse.class);
-            return response.getBody();
+            paymentSubmissionResponse = response.getBody();
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to submit payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
         } catch (RestClientException e) {
             throw new ApiCallException("Call to submit payment endpoint failed, and no response body returned", e);
         }
+
+        validateResponse(paymentSubmissionResponse);
+
+        return paymentSubmissionResponse;
     }
 
     @Override
@@ -101,6 +111,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling get submission API, with interaction ID {}", headers.getInteractionId());
 
+        PaymentSubmissionResponse paymentSubmissionResponse;
         try {
             ResponseEntity<PaymentSubmissionResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_SUBMISSION_RESOURCE) + "/{paymentSubmissionId}",
@@ -108,13 +119,17 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                 request,
                 PaymentSubmissionResponse.class,
                 paymentSubmissionId);
-            return response.getBody();
+            paymentSubmissionResponse = response.getBody();
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to get payment submission endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
         } catch (RestClientException e) {
             throw new ApiCallException("Call to get payment submission endpoint failed, and no response body returned", e);
         }
+
+        validateResponse(paymentSubmissionResponse);
+
+        return paymentSubmissionResponse;
     }
 
     private String generateApiUrl(AspspDetails aspspDetails, String resource) {
@@ -122,5 +137,25 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             aspspDetails.getApiBaseUrl("1", resource),
             aspspDetails.getPaymentApiMinorVersion(),
             resource);
+    }
+
+    private void validateResponse(PaymentSetupResponse response) {
+        if (response == null ||
+            response.getData() == null ||
+            response.getData().getPaymentId() == null ||
+            response.getData().getPaymentId().isBlank()) {
+            throw new ApiCallException("Empty or partial payment setup response returned " + response);
+        }
+    }
+
+    private void validateResponse(PaymentSubmissionResponse response) {
+        if (response == null ||
+            response.getData() == null ||
+            response.getData().getPaymentId() == null ||
+            response.getData().getPaymentId().isBlank() ||
+            response.getData().getPaymentSubmissionId() == null ||
+            response.getData().getPaymentSubmissionId().isBlank()) {
+            throw new ApiCallException("Empty or partial payment submission response returned " + response);
+        }
     }
 }

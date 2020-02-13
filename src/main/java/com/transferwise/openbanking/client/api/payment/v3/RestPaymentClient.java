@@ -55,19 +55,24 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling create payment consent API, with interaction ID {}", headers.getInteractionId());
 
+        DomesticPaymentConsentResponse domesticPaymentConsentResponse;
         try {
             ResponseEntity<DomesticPaymentConsentResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE),
                 HttpMethod.POST,
                 request,
                 DomesticPaymentConsentResponse.class);
-            return response.getBody();
+            domesticPaymentConsentResponse = response.getBody();
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to create payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
         } catch (RestClientException e) {
             throw new ApiCallException("Call to create payment consent endpoint failed, and no response body returned", e);
         }
+
+        validateResponse(domesticPaymentConsentResponse);
+
+        return domesticPaymentConsentResponse;
     }
 
     @Override
@@ -84,19 +89,24 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling submit payment API, with interaction ID {}", headers.getInteractionId());
 
+        DomesticPaymentResponse domesticPaymentResponse;
         try {
             ResponseEntity<DomesticPaymentResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_RESOURCE),
                 HttpMethod.POST,
                 request,
                 DomesticPaymentResponse.class);
-            return response.getBody();
+            domesticPaymentResponse = response.getBody();
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to submit payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
         } catch (RestClientException e) {
             throw new ApiCallException("Call to submit payment endpoint failed, and no response body returned", e);
         }
+
+        validateResponse(domesticPaymentResponse);
+
+        return domesticPaymentResponse;
     }
 
     @Override
@@ -109,6 +119,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling get payment API, with interaction ID {}", headers.getInteractionId());
 
+        DomesticPaymentResponse domesticPaymentResponse;
         try {
             ResponseEntity<DomesticPaymentResponse> response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_RESOURCE) + "/{domesticPaymentId}",
@@ -116,13 +127,17 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                 request,
                 DomesticPaymentResponse.class,
                 domesticPaymentId);
-            return response.getBody();
+            domesticPaymentResponse = response.getBody();
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to get payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
         } catch (RestClientException e) {
             throw new ApiCallException("Call to get payment endpoint failed, and no response body returned", e);
         }
+
+        validateResponse(domesticPaymentResponse);
+
+        return domesticPaymentResponse;
     }
 
     private String generateApiUrl(AspspDetails aspspDetails, String resource) {
@@ -130,5 +145,25 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             aspspDetails.getApiBaseUrl("3", resource),
             aspspDetails.getPaymentApiMinorVersion(),
             resource);
+    }
+
+    private void validateResponse(DomesticPaymentConsentResponse response) {
+        if (response == null ||
+            response.getData() == null ||
+            response.getData().getStatus() == null ||
+            response.getData().getConsentId() == null ||
+            response.getData().getConsentId().isBlank()) {
+            throw new ApiCallException("Empty or partial domestic payment consent response returned " + response);
+        }
+    }
+
+    private void validateResponse(DomesticPaymentResponse response) {
+        if (response == null ||
+            response.getData() == null ||
+            response.getData().getStatus() == null ||
+            response.getData().getDomesticPaymentId() == null ||
+            response.getData().getDomesticPaymentId().isBlank()) {
+            throw new ApiCallException("Empty or partial domestic payment response returned " + response);
+        }
     }
 }

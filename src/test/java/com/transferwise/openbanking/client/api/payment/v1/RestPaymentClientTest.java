@@ -28,6 +28,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,7 +44,10 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.stream.Stream;
+
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class RestPaymentClientTest {
 
     private static final String IDEMPOTENCY_KEY = "idempotency-key";
@@ -132,6 +140,31 @@ class RestPaymentClientTest {
         mockAspspServer.verify();
     }
 
+    @ParameterizedTest
+    @ArgumentsSource(PartialPaymentSetupResponses.class)
+    void setupPaymentThrowsApiCallExceptionOnPartialResponse(PaymentSetupResponse response) throws Exception {
+
+        SetupPaymentRequest setupPaymentRequest = aSetupPaymentRequest();
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(Mockito.any(SetupPaymentRequest.class)))
+            .thenReturn(IDEMPOTENCY_KEY);
+
+        String jsonResponse = objectMapper.writeValueAsString(response);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v1.1/payments"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.setupPayment(setupPaymentRequest, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
     @Test
     void submitPayment() throws Exception {
         SubmitPaymentRequest submitPaymentRequest = aSubmitPaymentRequest();
@@ -196,6 +229,31 @@ class RestPaymentClientTest {
         mockAspspServer.verify();
     }
 
+    @ParameterizedTest
+    @ArgumentsSource(PartialPaymentSubmissionResponses.class)
+    void submitPaymentThrowsApiCallExceptionOnPartialResponse(PaymentSubmissionResponse response) throws Exception {
+        SubmitPaymentRequest submitPaymentRequest = aSubmitPaymentRequest();
+        AspspDetails aspspDetails = aAspspDefinition();
+        String authorisationCode = "authorisation-code";
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(SubmitPaymentRequest.class)))
+            .thenReturn(IDEMPOTENCY_KEY);
+
+        String jsonResponse = objectMapper.writeValueAsString(response);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v1.1/payment-submissions"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.submitPayment(submitPaymentRequest, authorisationCode, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
     @Test
     void getPaymentSubmission() throws Exception {
         String paymentSubmissionId = "payment-submission-id";
@@ -241,6 +299,29 @@ class RestPaymentClientTest {
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v1.1/payment-submissions/" + paymentSubmissionId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withServerError());
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getPaymentSubmission(paymentSubmissionId, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(PartialPaymentSubmissionResponses.class)
+    void getPaymentSubmissionThrowsApiCallExceptionOnPartialResponse(PaymentSubmissionResponse response)
+        throws Exception {
+
+        String paymentSubmissionId = "payment-submission-id";
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
+        String jsonResponse = objectMapper.writeValueAsString(response);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v1.1/payment-submissions/" + paymentSubmissionId))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         Assertions.assertThrows(ApiCallException.class,
             () -> restPaymentClient.getPaymentSubmission(paymentSubmissionId, aspspDetails));
@@ -318,5 +399,59 @@ class RestPaymentClientTest {
         return AccessTokenResponse.builder()
             .accessToken("access-token")
             .build();
+    }
+
+    private static class PartialPaymentSetupResponses implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+            return Stream.of(
+                Arguments.of(nullData()),
+                Arguments.of(ofData(null)),
+                Arguments.of(ofData("")),
+                Arguments.of(ofData(" "))
+            );
+        }
+
+        private PaymentSetupResponse nullData() {
+            return new PaymentSetupResponse();
+        }
+
+        private PaymentSetupResponse ofData(String paymentId) {
+            PaymentSetupResponseData data = new PaymentSetupResponseData();
+            data.setPaymentId(paymentId);
+            PaymentSetupResponse response = new PaymentSetupResponse();
+            response.setData(data);
+            return response;
+        }
+    }
+
+    private static class PartialPaymentSubmissionResponses implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+            return Stream.of(
+                Arguments.of(nullData()),
+                Arguments.of(ofData(null, "123")),
+                Arguments.of(ofData("", "123")),
+                Arguments.of(ofData(" ", "123")),
+                Arguments.of(ofData("123", null)),
+                Arguments.of(ofData("123", "")),
+                Arguments.of(ofData("123", " "))
+            );
+        }
+
+        private PaymentSubmissionResponse nullData() {
+            return new PaymentSubmissionResponse();
+        }
+
+        private PaymentSubmissionResponse ofData(String paymentId, String paymentSubmissionId) {
+            PaymentSubmissionResponseData data = new PaymentSubmissionResponseData();
+            data.setPaymentId(paymentId);
+            data.setPaymentSubmissionId(paymentSubmissionId);
+            PaymentSubmissionResponse response = new PaymentSubmissionResponse();
+            response.setData(data);
+            return response;
+        }
     }
 }

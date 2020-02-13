@@ -6,10 +6,9 @@ import com.transferwise.openbanking.client.api.payment.common.domain.InstructedA
 import com.transferwise.openbanking.client.api.payment.common.domain.RemittanceInformation;
 import com.transferwise.openbanking.client.api.payment.common.domain.Risk;
 import com.transferwise.openbanking.client.api.payment.v3.domain.AccountIdentificationCode;
-import com.transferwise.openbanking.client.api.payment.v3.domain.CreditorAccount;
-import com.transferwise.openbanking.client.api.payment.v3.domain.Initiation;
 import com.transferwise.openbanking.client.api.payment.v3.domain.Authorisation;
 import com.transferwise.openbanking.client.api.payment.v3.domain.AuthorisationType;
+import com.transferwise.openbanking.client.api.payment.v3.domain.CreditorAccount;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentData;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentRequest;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentResponse;
@@ -18,6 +17,7 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPayment
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentRequest;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponseData;
+import com.transferwise.openbanking.client.api.payment.v3.domain.Initiation;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentConsentStatus;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentStatus;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
@@ -33,6 +33,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -44,7 +49,10 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.stream.Stream;
+
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class RestPaymentClientTest {
 
     private static final String IDEMPOTENCY_KEY = "idempotency-key";
@@ -152,6 +160,32 @@ class RestPaymentClientTest {
         mockAspspServer.verify();
     }
 
+    @ParameterizedTest
+    @ArgumentsSource(PartialDomesticPaymentConsentResponses.class)
+    void createDomesticPaymentConsentThrowsApiCallExceptionOnPartialResponse(DomesticPaymentConsentResponse response)
+        throws Exception{
+
+        DomesticPaymentConsentRequest domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(Mockito.any(DomesticPaymentConsentRequest.class)))
+            .thenReturn(IDEMPOTENCY_KEY);
+
+        String jsonResponse = objectMapper.writeValueAsString(response);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.createDomesticPaymentConsent(domesticPaymentConsentRequest, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
     @Test
     void submitDomesticPayment() throws Exception {
         DomesticPaymentRequest domesticPaymentRequest = aDomesticPaymentRequest();
@@ -221,6 +255,33 @@ class RestPaymentClientTest {
         mockAspspServer.verify();
     }
 
+    @ParameterizedTest
+    @ArgumentsSource(PartialDomesticPaymentResponses.class)
+    void submitDomesticPaymentThrowsApiCallExceptionOnPartialResponse(DomesticPaymentResponse response)
+        throws Exception {
+
+        DomesticPaymentRequest domesticPaymentRequest = aDomesticPaymentRequest();
+        AspspDetails aspspDetails = aAspspDefinition();
+        String authorisationCode = "authorisation-code";
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(DomesticPaymentRequest.class)))
+            .thenReturn(IDEMPOTENCY_KEY);
+
+        String jsonResponse = objectMapper.writeValueAsString(response);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payments"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.submitDomesticPayment(domesticPaymentRequest, authorisationCode, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
     @Test
     void getDomesticPayment() throws Exception {
         String domesticPaymentId = "domestic-payment-id";
@@ -267,6 +328,27 @@ class RestPaymentClientTest {
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payments/" + domesticPaymentId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withServerError());
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getDomesticPayment(domesticPaymentId, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(PartialDomesticPaymentResponses.class)
+    void getDomesticPaymentThrowsApiCallExceptionPartialResponse(DomesticPaymentResponse response) throws Exception {
+        String domesticPaymentId = "domestic-payment-id";
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
+        String jsonResponse = objectMapper.writeValueAsString(response);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payments/" + domesticPaymentId))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         Assertions.assertThrows(ApiCallException.class,
             () -> restPaymentClient.getDomesticPayment(domesticPaymentId, aspspDetails));
@@ -359,5 +441,61 @@ class RestPaymentClientTest {
         return AccessTokenResponse.builder()
             .accessToken("access-token")
             .build();
+    }
+
+    private static class PartialDomesticPaymentConsentResponses implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+            return Stream.of(
+                Arguments.of(nullData()),
+                Arguments.of(ofData(null, PaymentConsentStatus.CONSUMED)),
+                Arguments.of(ofData("", PaymentConsentStatus.CONSUMED)),
+                Arguments.of(ofData(" ", PaymentConsentStatus.CONSUMED)),
+                Arguments.of(ofData("123", null))
+            );
+        }
+
+        private DomesticPaymentConsentResponse nullData() {
+            return new DomesticPaymentConsentResponse();
+        }
+
+        private DomesticPaymentConsentResponse ofData(String consentId, PaymentConsentStatus status) {
+            DomesticPaymentConsentResponseData data = DomesticPaymentConsentResponseData.builder()
+                .consentId(consentId)
+                .status(status)
+                .build();
+            return DomesticPaymentConsentResponse.builder()
+                .data(data)
+                .build();
+        }
+    }
+
+    private static class PartialDomesticPaymentResponses implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+            return Stream.of(
+                Arguments.of(nullData()),
+                Arguments.of(ofData(null, PaymentStatus.PENDING)),
+                Arguments.of(ofData("", PaymentStatus.PENDING)),
+                Arguments.of(ofData(" ", PaymentStatus.PENDING)),
+                Arguments.of(ofData("123", null))
+            );
+        }
+
+        private DomesticPaymentResponse nullData() {
+            return new DomesticPaymentResponse();
+        }
+
+        private DomesticPaymentResponse ofData(String domesticPaymentId, PaymentStatus status) {
+            DomesticPaymentResponseData data = DomesticPaymentResponseData.builder()
+                .domesticPaymentId(domesticPaymentId)
+                .status(status)
+                .build();
+            return DomesticPaymentResponse.builder()
+                .data(data)
+                .build();
+        }
     }
 }
