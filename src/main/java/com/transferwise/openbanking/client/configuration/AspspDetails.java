@@ -120,4 +120,14 @@ public interface AspspDetails {
     default String getPaymentApiMinorVersion() {
         return "1";
     }
+
+    /**
+     * Whether or not the ASPSP expects client registration requests to use the 'application/jose' content type, rather
+     * than the 'application/jwt' content type.
+     *
+     * @return <code>true</code> if the jose content type should be used, <code>false</code> otherwise
+     */
+    default boolean registrationUsesJoseContentType() {
+        return false;
+    }
 }

@@ -24,7 +24,11 @@ public class RestRegistrationClient implements RegistrationClient {
     public String registerClient(String signedClaims, AspspDetails aspspDetails) {
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.valueOf("application/jwt"));
+        if (aspspDetails.registrationUsesJoseContentType()) {
+            headers.setContentType(MediaType.valueOf("application/jose"));
+        } else {
+            headers.setContentType(MediaType.valueOf("application/jwt"));
+        }
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         // as we're using a raw String as the body type, we need to manually set the header
         headers.setAcceptCharset(Collections.singletonList(StandardCharsets.UTF_8));

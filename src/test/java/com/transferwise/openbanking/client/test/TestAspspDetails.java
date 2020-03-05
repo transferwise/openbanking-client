@@ -19,9 +19,15 @@ public class TestAspspDetails implements AspspDetails {
     private String signingAlgorithm;
     private String signingKeyId;
     private String paymentApiMinorVersion;
+    private boolean registrationUsesJoseContentType;
 
     @Override
     public String getApiBaseUrl(String majorVersion, String resource) {
         return apiBaseUrl;
+    }
+
+    @Override
+    public boolean registrationUsesJoseContentType() {
+        return registrationUsesJoseContentType;
     }
 }
