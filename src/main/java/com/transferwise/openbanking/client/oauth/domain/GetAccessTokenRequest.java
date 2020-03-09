@@ -58,6 +58,10 @@ public class GetAccessTokenRequest {
         return this;
     }
 
+    public String getAuthorisationCode() {
+        return requestBody.get(CODE_PARAM);
+    }
+
     public GetAccessTokenRequest setRedirectUri(String redirectUri) {
         requestBody.put(REDIRECT_URI_PARAM, redirectUri);
         return this;
