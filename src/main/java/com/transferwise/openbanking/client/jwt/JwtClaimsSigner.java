@@ -90,15 +90,22 @@ public class JwtClaimsSigner {
         jsonWebSignature.setKey(keySupplier.getSigningKey(aspspDetails));
         jsonWebSignature.setAlgorithmHeaderValue(AlgorithmIdentifiers.RSA_PSS_USING_SHA256);
         jsonWebSignature.setKeyIdHeaderValue(aspspDetails.getSigningKeyId());
-        jsonWebSignature.setHeader(HeaderParameterNames.BASE64URL_ENCODE_PAYLOAD, false);
         jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_IAT, NumericDate.now().getValue());
         jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_ISS,
             tppConfiguration.getOrganisationId() + "/" + tppConfiguration.getSoftwareStatementId());
         jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_TAN, TRUST_ANCHOR_VALUE);
-        jsonWebSignature.setCriticalHeaderNames(HeaderParameterNames.BASE64URL_ENCODE_PAYLOAD,
-            OpenBankingJwsHeaders.OPEN_BANKING_IAT,
-            OpenBankingJwsHeaders.OPEN_BANKING_ISS,
-            OpenBankingJwsHeaders.OPEN_BANKING_TAN);
+
+        if (aspspDetails.detachedSignaturesRequireB64Header()) {
+            jsonWebSignature.setHeader(HeaderParameterNames.BASE64URL_ENCODE_PAYLOAD, false);
+            jsonWebSignature.setCriticalHeaderNames(HeaderParameterNames.BASE64URL_ENCODE_PAYLOAD,
+                OpenBankingJwsHeaders.OPEN_BANKING_IAT,
+                OpenBankingJwsHeaders.OPEN_BANKING_ISS,
+                OpenBankingJwsHeaders.OPEN_BANKING_TAN);
+        } else {
+            jsonWebSignature.setCriticalHeaderNames(OpenBankingJwsHeaders.OPEN_BANKING_IAT,
+                OpenBankingJwsHeaders.OPEN_BANKING_ISS,
+                OpenBankingJwsHeaders.OPEN_BANKING_TAN);
+        }
 
         try {
             return jsonWebSignature.getDetachedContentCompactSerialization();

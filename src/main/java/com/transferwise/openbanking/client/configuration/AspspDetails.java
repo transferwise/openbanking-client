@@ -130,4 +130,13 @@ public interface AspspDetails {
     default boolean registrationUsesJoseContentType() {
         return false;
     }
+
+    /**
+     * Whether or not the ASPSP expects detached message signatures to contain the 'b64' header.
+     *
+     * @return <code>true</code> if the b64 header should be included, <code>false</code> otherwise
+     */
+    default boolean detachedSignaturesRequireB64Header() {
+        return true;
+    }
 }
