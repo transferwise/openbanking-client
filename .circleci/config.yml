@@ -2,7 +2,7 @@ version: 2
 jobs:
   test:
     docker:
-      - image: arti.tw.ee/circle_openjdk12:latest
+      - image: arti.tw.ee/circle_openjdk13:latest
         user: circleci
     resource_class: small
     steps:
@@ -26,7 +26,7 @@ jobs:
             - "~/.gradle"
   release:
     docker:
-      - image: arti.tw.ee/circle_openjdk12:latest
+      - image: arti.tw.ee/circle_openjdk13:latest
         user: circleci
     resource_class: small
     steps:
