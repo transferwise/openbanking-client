@@ -110,6 +110,37 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     }
 
     @Override
+    public DomesticPaymentConsentResponse getDomesticPaymentConsent(String consentId, AspspDetails aspspDetails) {
+
+        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getFinancialId(),
+            getClientCredentialsToken(aspspDetails));
+
+        HttpEntity<?> request = new HttpEntity<>(headers);
+
+        log.info("Calling get payment consent API, with interaction ID {}", headers.getInteractionId());
+
+        DomesticPaymentConsentResponse domesticPaymentConsentResponse;
+        try {
+            ResponseEntity<DomesticPaymentConsentResponse> response = restOperations.exchange(
+                generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE) + "/{consentId}",
+                HttpMethod.GET,
+                request,
+                DomesticPaymentConsentResponse.class,
+                consentId);
+            domesticPaymentConsentResponse = response.getBody();
+        } catch (RestClientResponseException e) {
+            throw new ApiCallException("Call to get payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e);
+        } catch (RestClientException e) {
+            throw new ApiCallException("Call to get payment consent endpoint failed, and no response body returned", e);
+        }
+
+        validateResponse(domesticPaymentConsentResponse);
+
+        return domesticPaymentConsentResponse;
+    }
+
+    @Override
     public DomesticPaymentResponse getDomesticPayment(String domesticPaymentId, AspspDetails aspspDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getFinancialId(),

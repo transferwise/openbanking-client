@@ -42,6 +42,18 @@ public interface PaymentClient {
                                                   AspspDetails aspspDetails);
 
     /**
+     * Get the details of a previously created domestic payment consent.
+     *
+     * @param consentId The ID of the domestic payment consent to get the details of
+     * @param aspspDetails The details of the ASPSP to send the request to
+     * @return The details of the domestic payment consent
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
+     *                                                                   to the ASPSP or the HTTP call to the ASPSP
+     *                                                                   failed
+     */
+    DomesticPaymentConsentResponse getDomesticPaymentConsent(String consentId, AspspDetails aspspDetails);
+
+    /**
      * Get the details of a previously submitted domestic payment.
      *
      * @param domesticPaymentId The ID of the domestic payment to get the details of

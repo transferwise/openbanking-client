@@ -283,6 +283,82 @@ class RestPaymentClientTest {
     }
 
     @Test
+    void getDomesticPaymentConsent() throws Exception {
+        String consentId = "consent-id";
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    request.getRequestBody().get("grant_type").equals("client_credentials") &&
+                        request.getRequestBody().get("scope").equals("payments")),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(accessTokenResponse);
+
+        DomesticPaymentConsentResponse mockDomesticPaymentConsentResponse = aDomesticPaymentConsentResponse();
+        String jsonResponse = objectMapper.writeValueAsString(mockDomesticPaymentConsentResponse);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
+            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getFinancialId()))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        DomesticPaymentConsentResponse domesticPaymentConsentResponse = restPaymentClient.getDomesticPaymentConsent(
+            consentId,
+            aspspDetails);
+
+        Assertions.assertEquals(mockDomesticPaymentConsentResponse, domesticPaymentConsentResponse);
+
+        Mockito.verify(jwtClaimsSigner, Mockito.never()).createDetachedSignature(Mockito.any(), Mockito.any());
+
+        mockAspspServer.verify();
+    }
+
+    @Test
+    void getDomesticPaymentConsentThrowsApiCallExceptionOnApiCallFailure() {
+        String consentId = "consent-id";
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andRespond(MockRestResponseCreators.withServerError());
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getDomesticPaymentConsent(consentId, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(PartialDomesticPaymentConsentResponses.class)
+    void getDomesticPaymentConsentThrowsApiCallExceptionPartialResponse(DomesticPaymentConsentResponse response)
+        throws Exception {
+        String consentId = "consent-id";
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
+        String jsonResponse = objectMapper.writeValueAsString(response);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getDomesticPaymentConsent(consentId, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
+    @Test
     void getDomesticPayment() throws Exception {
         String domesticPaymentId = "domestic-payment-id";
         AspspDetails aspspDetails = aAspspDefinition();
