@@ -8,8 +8,8 @@ plugins {
     id 'java'
     id 'checkstyle'
     id 'pmd'
-    id 'com.github.spotbugs' version '2.0.1'
-    id 'net.researchgate.release' version '2.6.0'
+    id 'com.github.spotbugs' version '4.3.0'
+    id 'net.researchgate.release' version '2.8.1'
 }
 
 ext.artifactoryUser = "$System.env.ARTIFACTORY_USER"
@@ -19,8 +19,8 @@ apply from: 'https://artifacts.tw.ee/artifactory/ivy-release-local/com/transferw
 
 group = 'com.transferwise'
 
-sourceCompatibility = 12
-targetCompatibility = 12
+sourceCompatibility = JavaVersion.VERSION_12
+targetCompatibility = JavaVersion.VERSION_12
 
 ext {
     libs = [
@@ -78,16 +78,32 @@ jar {
 
 checkstyle {
     configFile = new File(rootDir, "checkstyle.xml")
-    toolVersion = '8.26'
     sourceSets = [project.sourceSets.main]
 }
 
-tasks.withType(com.github.spotbugs.SpotBugsTask) {
+tasks.withType(Checkstyle) {
     reports {
         xml.enabled = false
         html.enabled = true
     }
-    excludeFilter file('spotbugs_exclude_filter.xml')
+}
+
+spotbugs {
+    excludeFilter = file('spotbugs_exclude_filter.xml')
+}
+
+spotbugsMain {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+spotbugsTest {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
 }
 
 pmd {
@@ -96,8 +112,15 @@ pmd {
     ruleSets = []
 }
 
+tasks.withType(Pmd) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
 wrapper {
-    gradleVersion = '6.0.1'
+    gradleVersion = '6.5'
 }
 
 release {
