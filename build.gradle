@@ -66,6 +66,8 @@ dependencies {
     testImplementation("org.springframework:spring-test:${libs.spring}")
 
     testImplementation("com.transferwise.common:tw-base-utils:1.2.5")
+
+    testImplementation("org.bouncycastle:bcpkix-jdk15on:1.65")
 }
 
 jar {

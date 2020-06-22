@@ -20,6 +20,7 @@ public class TestAspspDetails implements AspspDetails {
     private String signingKeyId;
     private String paymentApiMinorVersion;
     private boolean registrationUsesJoseContentType;
+    private boolean detachedSignatureUsesDirectoryIssFormat;
 
     @Override
     public String getApiBaseUrl(String majorVersion, String resource) {
@@ -29,5 +30,10 @@ public class TestAspspDetails implements AspspDetails {
     @Override
     public boolean registrationUsesJoseContentType() {
         return registrationUsesJoseContentType;
+    }
+
+    @Override
+    public boolean detachedSignatureUsesDirectoryIssFormat() {
+        return detachedSignatureUsesDirectoryIssFormat;
     }
 }

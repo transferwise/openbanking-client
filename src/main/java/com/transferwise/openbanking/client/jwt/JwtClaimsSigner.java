@@ -14,6 +14,9 @@ import org.jose4j.jwt.NumericDate;
 import org.jose4j.jwx.HeaderParameterNames;
 import org.jose4j.lang.JoseException;
 
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+
 /**
  * Provides functionality for signing JWT claims, for use in requests to ASPSPs.
  */
@@ -21,6 +24,8 @@ import org.jose4j.lang.JoseException;
 public class JwtClaimsSigner {
 
     private static final String TRUST_ANCHOR_VALUE = "openbanking.org.uk";
+
+    private static final String X509_CERTIFICATE_TYPE = "X.509";
 
     private final KeySupplier keySupplier;
     private final TppConfiguration tppConfiguration;
@@ -91,8 +96,7 @@ public class JwtClaimsSigner {
         jsonWebSignature.setAlgorithmHeaderValue(AlgorithmIdentifiers.RSA_PSS_USING_SHA256);
         jsonWebSignature.setKeyIdHeaderValue(aspspDetails.getSigningKeyId());
         jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_IAT, NumericDate.now().getValue());
-        jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_ISS,
-            tppConfiguration.getOrganisationId() + "/" + tppConfiguration.getSoftwareStatementId());
+        jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_ISS, generateIssClaim(aspspDetails));
         jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_TAN, TRUST_ANCHOR_VALUE);
 
         if (aspspDetails.detachedSignaturesRequireB64Header()) {
@@ -111,6 +115,21 @@ public class JwtClaimsSigner {
             return jsonWebSignature.getDetachedContentCompactSerialization();
         } catch (JoseException e) {
             throw new ClientException("Unable to create detached JSON web signature", e);
+        }
+    }
+
+    private String generateIssClaim(AspspDetails aspspDetails) {
+        if (aspspDetails.detachedSignatureUsesDirectoryIssFormat()) {
+            return tppConfiguration.getOrganisationId() + "/" + tppConfiguration.getSoftwareStatementId();
+        } else {
+            Certificate signingCertificate = keySupplier.getSigningCertificate(aspspDetails);
+            if (X509_CERTIFICATE_TYPE.equalsIgnoreCase(signingCertificate.getType())) {
+                return ((X509Certificate) signingCertificate).getSubjectX500Principal().getName();
+            } else {
+                throw new ClientException(String.format(
+                    "Unknown signing certificate type supplied, 'X.509' required, but got '%s'",
+                    signingCertificate.getType()));
+            }
         }
     }
 

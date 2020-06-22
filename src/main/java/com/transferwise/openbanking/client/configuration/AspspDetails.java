@@ -139,4 +139,16 @@ public interface AspspDetails {
     default boolean detachedSignaturesRequireB64Header() {
         return true;
     }
+
+    /**
+     * Whether or not the ASPSP expects detached message signatures to use the Open Banking directory format for the
+     * 'http://openbanking.org.uk/iss' claim, i.e. '{{org-id}}/{{software-statement-id}}', or to use the signing
+     * certificate subject value.
+     *
+     * @return <code>true</code> if the detached signature should use the Open Banking directory format for the ISS
+     * claim, <code>false</code> otherwise
+     */
+    default boolean detachedSignatureUsesDirectoryIssFormat() {
+        return true;
+    }
 }
