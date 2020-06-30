@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum PaymentStatus {
+    ACCEPTED_CREDIT_SETTLEMENT_COMPLETED("AcceptedCreditSettlementCompleted"),
+    ACCEPTED_WITHOUT_POSTING("AcceptedWithoutPosting"),
     ACCEPTED_SETTLEMENT_COMPLETED("AcceptedSettlementCompleted"),
     ACCEPTED_SETTLEMENT_IN_PROCESS("AcceptedSettlementInProcess"),
     PENDING("Pending"),
