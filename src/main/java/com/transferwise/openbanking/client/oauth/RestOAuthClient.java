@@ -39,9 +39,9 @@ public class RestOAuthClient implements OAuthClient {
         requestHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         // If we provide the body as a MultiValueMap to HttpEntity, then when FormHttpMessageConverter writes the map
-        // as the request body, it also changes the content type header to include the charset (UTF-8). Certain banks
-        // do not support the charset being included however, e.g. AIB, so we instead convert the map to a string
-        // ourselves to avoid this happening.
+        // as the request body, it also changes the content type header to include the charset (UTF-8). Certain ASPSPs
+        // do not support the charset being included however, so we instead convert the map to a string ourselves to
+        // avoid this happening.
         Map<String, String> requestBody = getAccessTokenRequest.getRequestBody();
         String encodedRequestBody = encodeForm(requestBody);
 
