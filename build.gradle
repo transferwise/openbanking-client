@@ -19,8 +19,8 @@ apply from: 'https://artifacts.tw.ee/artifactory/ivy-release-local/com/transferw
 
 group = 'com.transferwise'
 
-sourceCompatibility = JavaVersion.VERSION_12
-targetCompatibility = JavaVersion.VERSION_12
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 ext {
     libs = [

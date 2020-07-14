@@ -1,7 +1,7 @@
 # openbanking-client
 
 ![Apache 2](https://img.shields.io/hexpm/l/plug.svg)
-![Java 1.8](https://img.shields.io/badge/Java-12-blue.svg)
+![Java 1.8](https://img.shields.io/badge/Java-11-blue.svg)
 
 Java client for using the Open Banking API, exposed by an ASPSP, as a TPP. The library supports a subset of the full 
 API:  
