@@ -7,6 +7,7 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPayment
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentRequest;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
+import com.transferwise.openbanking.client.api.payment.v3.domain.FundsConfirmationResponse;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.TppConfiguration;
 import com.transferwise.openbanking.client.error.ApiCallException;
@@ -171,6 +172,40 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         return domesticPaymentResponse;
     }
 
+    @Override
+    public FundsConfirmationResponse getFundsConfirmation(String consentId,
+                                                          String authorizationCode,
+                                                          AspspDetails aspspDetails) {
+
+        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getFinancialId(),
+            exchangeAuthorizationCode(authorizationCode, aspspDetails));
+
+        HttpEntity<?> request = new HttpEntity<>(headers);
+
+        log.info("Calling get confirmation of funds API, with interaction ID {}", headers.getInteractionId());
+
+        FundsConfirmationResponse fundsConfirmationResponse;
+        try {
+            ResponseEntity<FundsConfirmationResponse> response = restOperations.exchange(
+                generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE) + "/{consentId}/funds-confirmation",
+                HttpMethod.GET,
+                request,
+                FundsConfirmationResponse.class,
+                consentId);
+            fundsConfirmationResponse = response.getBody();
+        } catch (RestClientResponseException e) {
+            throw new ApiCallException("Call to get confirmation of funds endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e);
+        } catch (RestClientException e) {
+            throw new ApiCallException("Call to get confirmation of funds endpoint failed, and no response body returned",
+                e);
+        }
+
+        validateResponse(fundsConfirmationResponse);
+
+        return fundsConfirmationResponse;
+    }
+
     private String generateApiUrl(AspspDetails aspspDetails, String resource) {
         return String.format(ENDPOINT_PATH_FORMAT,
             aspspDetails.getApiBaseUrl("3", resource),
@@ -195,6 +230,12 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             response.getData().getDomesticPaymentId() == null ||
             response.getData().getDomesticPaymentId().isBlank()) {
             throw new ApiCallException("Empty or partial domestic payment response returned " + response);
+        }
+    }
+
+    private void validateResponse(FundsConfirmationResponse response) {
+        if (response == null || response.getData() == null) {
+            throw new ApiCallException("Empty or partial funds confirmation response returned " + response);
         }
     }
 }

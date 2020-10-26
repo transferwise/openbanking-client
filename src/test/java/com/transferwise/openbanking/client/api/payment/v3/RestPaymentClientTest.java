@@ -17,6 +17,9 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPayment
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentRequest;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponseData;
+import com.transferwise.openbanking.client.api.payment.v3.domain.FundsAvailableResult;
+import com.transferwise.openbanking.client.api.payment.v3.domain.FundsConfirmationResponse;
+import com.transferwise.openbanking.client.api.payment.v3.domain.FundsConfirmationResponseData;
 import com.transferwise.openbanking.client.api.payment.v3.domain.Initiation;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentConsentStatus;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentStatus;
@@ -432,6 +435,85 @@ class RestPaymentClientTest {
         mockAspspServer.verify();
     }
 
+    @Test
+    void getFundsConfirmation() throws Exception {
+        String consentId = "consent-id";
+        String authorisationCode = "authorisation-code";
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    request.getRequestBody().get("grant_type").equals("authorization_code") &&
+                        request.getRequestBody().get("code").equals(authorisationCode) &&
+                        request.getRequestBody().get("redirect_uri").equals(tppConfiguration.getRedirectUrl())),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(accessTokenResponse);
+
+        FundsConfirmationResponse mockFundsConfirmationResponse = aFundsConfirmationResponse();
+        String jsonResponse = objectMapper.writeValueAsString(mockFundsConfirmationResponse);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
+            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getFinancialId()))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        FundsConfirmationResponse fundsConfirmationResponse = restPaymentClient.getFundsConfirmation(consentId,
+            authorisationCode,
+            aspspDetails);
+
+        Assertions.assertEquals(mockFundsConfirmationResponse, fundsConfirmationResponse);
+
+        Mockito.verify(jwtClaimsSigner, Mockito.never()).createDetachedSignature(Mockito.any(), Mockito.any());
+
+        mockAspspServer.verify();
+    }
+
+    @Test
+    void getFundsConfirmationThrowsApiCallExceptionOnApiCallFailure() {
+        String consentId = "consent-id";
+        String authorisationCode = "authorisation-code";
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andRespond(MockRestResponseCreators.withServerError());
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getFundsConfirmation(consentId, authorisationCode, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(PartialFundsConfirmationResponses.class)
+    void getFundsConfirmationThrowsApiCallExceptionPartialResponse(FundsConfirmationResponse response) throws Exception {
+        String consentId = "consent-id";
+        String authorisationCode = "authorisation-code";
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
+        String jsonResponse = objectMapper.writeValueAsString(response);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getFundsConfirmation(consentId, authorisationCode, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
     private TppConfiguration aTppConfiguration() {
         return TppConfiguration.builder()
             .redirectUrl("tpp-redirect-url")
@@ -519,6 +601,18 @@ class RestPaymentClientTest {
             .build();
     }
 
+    private FundsConfirmationResponse aFundsConfirmationResponse() {
+        FundsAvailableResult fundsAvailableResult = FundsAvailableResult.builder()
+            .fundsAvailable(true)
+            .build();
+        FundsConfirmationResponseData data = FundsConfirmationResponseData.builder()
+            .fundsAvailableResult(fundsAvailableResult)
+            .build();
+        return FundsConfirmationResponse.builder()
+            .data(data)
+            .build();
+    }
+
     private static class PartialDomesticPaymentConsentResponses implements ArgumentsProvider {
 
         @Override
@@ -572,6 +666,20 @@ class RestPaymentClientTest {
             return DomesticPaymentResponse.builder()
                 .data(data)
                 .build();
+        }
+    }
+
+    private static class PartialFundsConfirmationResponses implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+            return Stream.of(
+                Arguments.of(nullData())
+            );
+        }
+
+        private FundsConfirmationResponse nullData() {
+            return new FundsConfirmationResponse();
         }
     }
 }
