@@ -12,6 +12,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,6 +29,8 @@ import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 class RestOAuthClientTest {
@@ -94,6 +101,27 @@ class RestOAuthClientTest {
         mockAspspServer.verify();
     }
 
+    @ParameterizedTest
+    @ArgumentsSource(PartialAccessTokenResponses.class)
+    void getAccessTokenThrowsApiCallExceptionOnApiCallFailureOnPartialResponse(AccessTokenResponse response)
+        throws Exception {
+
+        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        String jsonResponse = objectMapper.writeValueAsString(response);
+
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getTokenUrl()))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
+
     private AspspDetails aAspspDefinition() {
         return TestAspspDetails.builder()
             .tokenUrl("/token-url")
@@ -104,5 +132,28 @@ class RestOAuthClientTest {
         return AccessTokenResponse.builder()
             .accessToken("access-token")
             .build();
+    }
+
+    private static class PartialAccessTokenResponses implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+            return Stream.of(
+                Arguments.of(nullData()),
+                Arguments.of(ofData(null)),
+                Arguments.of(ofData("")),
+                Arguments.of(ofData(" "))
+            );
+        }
+
+        private AccessTokenResponse nullData() {
+            return new AccessTokenResponse();
+        }
+
+        private AccessTokenResponse ofData(String accessToken) {
+            return AccessTokenResponse.builder()
+                .accessToken(accessToken)
+                .build();
+        }
     }
 }

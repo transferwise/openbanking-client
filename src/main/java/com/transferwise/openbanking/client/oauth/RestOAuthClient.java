@@ -51,18 +51,23 @@ public class RestOAuthClient implements OAuthClient {
             requestBody.get("grant_type"),
             requestHeaders.getInteractionId());
 
+        AccessTokenResponse accessTokenResponse;
         try {
             ResponseEntity<AccessTokenResponse> response = restTemplate.exchange(aspspDetails.getTokenUrl(),
                 HttpMethod.POST,
                 request,
                 AccessTokenResponse.class);
-            return response.getBody();
+            accessTokenResponse = response.getBody();
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to token endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
         } catch (RestClientException e) {
             throw new ApiCallException("Call to token endpoint failed, and no response body returned", e);
         }
+
+        validateResponse(accessTokenResponse);
+
+        return accessTokenResponse;
     }
 
     private String encodeForm(Map<String, String> form) {
@@ -73,5 +78,11 @@ public class RestOAuthClient implements OAuthClient {
         }
 
         return URLEncodedUtils.format(nameValuePairs, StandardCharsets.UTF_8.name());
+    }
+
+    private void validateResponse(AccessTokenResponse response) {
+        if (response == null || response.getAccessToken() == null || response.getAccessToken().isBlank()) {
+            throw new ApiCallException("Empty or partial access token response returned " + response);
+        }
     }
 }
