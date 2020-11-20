@@ -5,7 +5,7 @@ buildscript {
 }
 
 plugins {
-    id 'java'
+    id 'java-library'
     id 'checkstyle'
     id 'pmd'
     id 'com.github.spotbugs' version '4.6.0'
@@ -39,15 +39,15 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework:spring-web:${libs.spring}")
+    api("org.springframework:spring-web:${libs.spring}")
 
     implementation('org.apache.httpcomponents:httpclient:4.5.13')
 
-    implementation("com.fasterxml.jackson.core:jackson-annotations:${libs.jackson}")
-    implementation("com.fasterxml.jackson.core:jackson-databind:${libs.jackson}")
+    api("com.fasterxml.jackson.core:jackson-annotations:${libs.jackson}")
+    api("com.fasterxml.jackson.core:jackson-databind:${libs.jackson}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${libs.jackson}")
 
-    implementation('org.bitbucket.b_c:jose4j:0.7.2')
+    api('org.bitbucket.b_c:jose4j:0.7.2')
 
     compileOnly("org.projectlombok:lombok:${libs.lombok}")
     testCompileOnly("org.projectlombok:lombok:${libs.lombok}")
