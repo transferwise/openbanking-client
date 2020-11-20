@@ -7,7 +7,6 @@ Java client for using the Open Banking API, exposed by an ASPSP, as a TPP. The l
 API:  
 
 - Support for registering as a TPP client with an ASPSP
-- Support for version 1 [single immediate domestic payments](https://openbanking.atlassian.net/wiki/spaces/DZ/pages/5786479/Payment+Initiation+API+Specification+-+v1.1.0)
 - Support for version 3 [single immediate domestic payments](https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937984109/Domestic+Payments+v3.1)
 - Support for the following OAuth client authentication methods
     - Mutual TLS
@@ -105,6 +104,14 @@ DomesticPaymentConsentResponse paymentConsentResponse = paymentClient.createDome
 //
 // Step 4 - submit the payment for execution
 //
+
+//
+// Step 4a (optional) - check for sufficient funds on the source account 
+//
+
+FundsConfirmationResponse fundsConfirmationResponse = paymentClient.getFundsConfirmation(consentId, 
+    authorizationCode, 
+    aspspDetails);
 
 DomesticPaymentRequest paymentRequest = DomesticPaymentRequest.builder()
     // set the properties according to the payment attempt
