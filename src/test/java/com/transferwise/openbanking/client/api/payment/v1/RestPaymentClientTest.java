@@ -90,8 +90,8 @@ class RestPaymentClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    request.getRequestBody().get("grant_type").equals("client_credentials") &&
-                        request.getRequestBody().get("scope").equals("payments")),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -175,9 +175,9 @@ class RestPaymentClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    request.getRequestBody().get("grant_type").equals("authorization_code") &&
-                    request.getRequestBody().get("code").equals(authorisationCode) &&
-                    request.getRequestBody().get("redirect_uri").equals(tppConfiguration.getRedirectUrl())),
+                    "authorization_code".equals(request.getRequestBody().get("grant_type")) &&
+                        authorisationCode.equals(request.getRequestBody().get("code")) &&
+                        tppConfiguration.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -263,8 +263,8 @@ class RestPaymentClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    request.getRequestBody().get("grant_type").equals("client_credentials") &&
-                        request.getRequestBody().get("scope").equals("payments")),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 

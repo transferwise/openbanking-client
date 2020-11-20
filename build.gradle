@@ -122,7 +122,7 @@ tasks.withType(Pmd) {
 }
 
 wrapper {
-    gradleVersion = '6.5'
+    gradleVersion = '6.7.1'
 }
 
 release {
