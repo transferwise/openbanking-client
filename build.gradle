@@ -12,10 +12,12 @@ plugins {
     id 'net.researchgate.release' version '2.8.1'
 }
 
-ext.artifactoryUser = "$System.env.ARTIFACTORY_USER"
-ext.artifactoryPassword = "$System.env.ARTIFACTORY_PASSWORD"
+ext.projectName = "Openbanking client"
+ext.projectDescription = "Openbanking client"
+ext.projectArtifactName = "openbanking-client"
+ext.projectGitHubRepoName = "openbanking-client"
 
-apply from: 'https://artifacts.tw.ee/artifactory/ivy-release-local/com/transferwise/gradle-scripts/1.0.8/libUpload.gradle'
+apply from: 'build.common.gradle'
 
 group = 'com.transferwise'
 
