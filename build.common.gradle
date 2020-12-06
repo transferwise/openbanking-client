@@ -27,7 +27,9 @@ apply plugin: "idea"
 apply plugin: "com.github.spotbugs"
 apply plugin: "groovy"
 
-apply plugin: "signing"
+/* block for oss publication */
+//apply plugin: "signing"
+/* end */
 
 group = "com.transferwise.common"
 
@@ -116,9 +118,9 @@ publishing {
 	}
 
 	/* block for oss publication */
-	signing {
-		sign publishing.publications.mavenJava
-	}
+//	signing {
+//		sign publishing.publications.mavenJava
+//	}
 	/* end */
 
 	javadoc {
@@ -136,13 +138,15 @@ publishing {
 			}
 		}
 
-		maven {
-			url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-			credentials {
-				username = sonatypeUser
-				password = sonatypePassword
-			}
-		}
+		/* block for oss publication */
+//		maven {
+//			url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+//			credentials {
+//				username = sonatypeUser
+//				password = sonatypePassword
+//			}
+//		}
+		/* end */
 	}
 }
 
