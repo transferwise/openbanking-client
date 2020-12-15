@@ -6,14 +6,14 @@ plugins {
 }
 
 ext.projectName = "Openbanking client"
-ext.projectDescription = "Openbanking client"
+ext.projectDescription = "Java client for using the UK Open Banking API."
 ext.projectArtifactName = "openbanking-client"
 ext.projectGitHubRepoName = "openbanking-client"
 ext.authorName = "Michael Scott"
 ext.authorGithub = "mscott-tw"
 ext.authorEmail = "michael.scott@transferwise.com"
 
-apply from: 'build.common.gradle'
+apply from: 'build.publishing.gradle'
 
 group = 'com.transferwise'
 

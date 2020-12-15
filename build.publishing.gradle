@@ -1,5 +1,5 @@
-ext.sonatypeUser = project.hasProperty("sonatypeUser") ? project.sonatypeUser : System.env.SONATYPE_USER as String
-ext.sonatypePassword = project.hasProperty("sonatypePassword") ? project.sonatypePassword : System.env.SONATYPE_PASSWORD as String
+ext.sonatypeUser = System.env.SONATYPE_USER as String
+ext.sonatypePassword = System.env.SONATYPE_PASSWORD as String
 
 ext.projectScmUrl = "https://github.com/transferwise/${projectGitHubRepoName}"
 ext.projectScmConnection = "scm:git:git://github.com/transferwise/${projectGitHubRepoName}.git"
@@ -68,12 +68,6 @@ publishing {
 
 	signing {
 		sign publishing.publications.mavenJava
-	}
-
-	javadoc {
-		if (JavaVersion.current().isJava9Compatible()) {
-			options.addBooleanOption('html5', true)
-		}
 	}
 
 	repositories {
