@@ -4,21 +4,9 @@ ext.sonatypePassword = project.hasProperty("sonatypePassword") ? project.sonatyp
 ext.projectScmUrl = "https://github.com/transferwise/${projectGitHubRepoName}"
 ext.projectScmConnection = "scm:git:git://github.com/transferwise/${projectGitHubRepoName}.git"
 
-buildscript {
-	repositories {
-		mavenLocal()
-	}
-}
 
 apply plugin: "maven-publish"
-
-/* block for oss publication */
 apply plugin: "signing"
-/* end */
-
-repositories {
-	mavenLocal()
-}
 
 java {
 	withSourcesJar()
@@ -78,11 +66,9 @@ publishing {
 		}
 	}
 
-	/* block for oss publication */
 	signing {
 		sign publishing.publications.mavenJava
 	}
-	/* end */
 
 	javadoc {
 		if (JavaVersion.current().isJava9Compatible()) {
@@ -91,7 +77,6 @@ publishing {
 	}
 
 	repositories {
-		/* block for oss publication */
 		maven {
 			url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
 			credentials {
@@ -99,6 +84,5 @@ publishing {
 				password = sonatypePassword
 			}
 		}
-		/* end */
 	}
 }
