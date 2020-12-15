@@ -10,6 +10,8 @@ buildscript {
 	}
 }
 
+apply plugin: "maven-publish"
+
 /* block for oss publication */
 apply plugin: "signing"
 /* end */
