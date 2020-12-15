@@ -70,9 +70,9 @@ publishing {
 				}
 				developers {
 					developer {
-						id = 'onukristo'
-						name = 'Kristo Kuusküll'
-						email = "kristo.kuuskull@transferwise.com"
+						id = authorGithub
+						name = authorName
+						email = authorEmail
 						organization = "Transferwise Ltd"
 						organizationUrl = "https://github.com/transferwise"
 					}

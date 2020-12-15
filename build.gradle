@@ -9,6 +9,9 @@ ext.projectName = "Openbanking client"
 ext.projectDescription = "Openbanking client"
 ext.projectArtifactName = "openbanking-client"
 ext.projectGitHubRepoName = "openbanking-client"
+ext.authorName = "Michael Scott"
+ext.authorGithub = "mscott-tw"
+ext.authorEmail = "michael.scott@transferwise.com"
 
 apply from: 'build.common.gradle'
 
