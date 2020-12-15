@@ -1,6 +1,3 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent
-
 ext.sonatypeUser = project.hasProperty("sonatypeUser") ? project.sonatypeUser : System.env.SONATYPE_USER as String
 ext.sonatypePassword = project.hasProperty("sonatypePassword") ? project.sonatypePassword : System.env.SONATYPE_PASSWORD as String
 
