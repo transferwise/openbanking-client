@@ -3,7 +3,6 @@ ext.sonatypePassword = project.hasProperty("sonatypePassword") ? project.sonatyp
 
 ext.projectScmUrl = "https://github.com/transferwise/${projectGitHubRepoName}"
 ext.projectScmConnection = "scm:git:git://github.com/transferwise/${projectGitHubRepoName}.git"
-ext.springBootVersion = "2.3.5.RELEASE"
 
 buildscript {
 	repositories {
@@ -11,24 +10,15 @@ buildscript {
 	}
 }
 
-apply plugin: "java-library"
-apply plugin: "maven-publish"
-apply plugin: "idea"
-apply plugin: "groovy"
-
 /* block for oss publication */
 apply plugin: "signing"
 /* end */
-
-group = "com.transferwise.common"
 
 repositories {
 	mavenLocal()
 }
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_1_8
-	targetCompatibility = JavaVersion.VERSION_1_8
 	withSourcesJar()
 	withJavadocJar()
 }
