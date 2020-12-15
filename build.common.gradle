@@ -13,9 +13,6 @@ ext.springBootVersion = "2.3.5.RELEASE"
 
 buildscript {
 	repositories {
-		maven {
-			setUrl("https://arti.tw.ee/artifactory/plugins-release")
-		}
 		mavenLocal()
 	}
 }
@@ -34,9 +31,6 @@ apply plugin: "groovy"
 group = "com.transferwise.common"
 
 repositories {
-	maven {
-		setUrl("https://arti.tw.ee/artifactory/libs-release")
-	}
 	mavenLocal()
 }
 
