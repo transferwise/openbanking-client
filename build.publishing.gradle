@@ -13,22 +13,6 @@ java {
 	withJavadocJar()
 }
 
-jar {
-	manifest {
-		attributes(
-				"Implementation-Title": projectName,
-				"Implementation-Version": archiveVersion
-		)
-	}
-}
-
-compileJava {
-	options.encoding = 'utf-8'
-	options.compilerArgs << '-parameters'
-	options.compilerArgs << '-Xlint'
-	options.compilerArgs << '-Xlint:-processing'
-}
-
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
