@@ -1,0 +1,66 @@
+ext.sonatypeUser = System.env.SONATYPE_USER as String
+ext.sonatypePassword = System.env.SONATYPE_PASSWORD as String
+
+ext.projectScmUrl = "https://github.com/transferwise/${projectGitHubRepoName}"
+ext.projectScmConnection = "scm:git:git://github.com/transferwise/${projectGitHubRepoName}.git"
+
+
+apply plugin: "maven-publish"
+apply plugin: "signing"
+
+java {
+	withSourcesJar()
+	withJavadocJar()
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+			afterEvaluate {
+				artifactId = projectArtifactName
+			}
+
+			pom {
+				name = projectName
+				description = projectDescription
+				url = projectScmUrl
+				packaging = "jar"
+				licenses {
+					license {
+						name = 'The Apache License, Version 2.0, Copyright 2019 TransferWise Ltd'
+						url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+					}
+				}
+				developers {
+					developer {
+						id = authorGithub
+						name = authorName
+						email = authorEmail
+						organization = "Transferwise Ltd"
+						organizationUrl = "https://github.com/transferwise"
+					}
+				}
+				scm {
+					connection = projectScmConnection
+					developerConnection = projectScmConnection
+					url = projectScmUrl
+				}
+			}
+		}
+	}
+
+	signing {
+		sign publishing.publications.mavenJava
+	}
+
+	repositories {
+		maven {
+			url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+			credentials {
+				username = sonatypeUser
+				password = sonatypePassword
+			}
+		}
+	}
+}

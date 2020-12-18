@@ -5,6 +5,16 @@ plugins {
     id 'com.github.spotbugs' version '4.6.0'
 }
 
+ext.projectName = "Openbanking client"
+ext.projectDescription = "Java client for using the UK Open Banking API."
+ext.projectArtifactName = "openbanking-client"
+ext.projectGitHubRepoName = "openbanking-client"
+ext.authorName = "Michael Scott"
+ext.authorGithub = "mscott-tw"
+ext.authorEmail = "michael.scott@transferwise.com"
+
+apply from: 'build.publishing.gradle'
+
 group = 'com.transferwise'
 
 sourceCompatibility = JavaVersion.VERSION_11
