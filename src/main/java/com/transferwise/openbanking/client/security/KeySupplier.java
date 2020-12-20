@@ -1,4 +1,4 @@
-package com.transferwise.openbanking.client.jwt;
+package com.transferwise.openbanking.client.security;
 
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 
@@ -26,4 +26,12 @@ public interface KeySupplier {
      * @return The signing certificate
      */
     Certificate getSigningCertificate(AspspDetails aspspDetails);
+
+    /**
+     * Get the certificate to use for the secure (TLS) connection to an ASPSP.
+     *
+     * @param aspspDetails The details of the ASPSP the connection will be made to
+     * @return The transport certificate
+     */
+    Certificate getTransportCertificate(AspspDetails aspspDetails);
 }

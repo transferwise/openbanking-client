@@ -1,9 +1,12 @@
 package com.transferwise.openbanking.client.configuration;
 
+import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -25,4 +28,10 @@ public class TppConfiguration {
      * The URL that ASPSPs will redirect the user back to once the authorisation process is finished.
      */
     private String redirectUrl;
+
+    /**
+     * The permissions that the TPP has, according to the National Competent Authority (the FCA), and wants to use when
+     * registering with an ASPSP.
+     */
+    private List<RegistrationPermission> permissions;
 }

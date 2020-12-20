@@ -4,14 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.api.payment.common.domain.InstructedAmount;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.TppConfiguration;
+import com.transferwise.openbanking.client.security.KeySupplier;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
-import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.cert.X509v3CertificateBuilder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import com.transferwise.openbanking.client.test.TestKeyUtils;
 import org.jose4j.jwa.AlgorithmConstraints;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
@@ -24,20 +19,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.math.BigInteger;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.cert.X509Certificate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Map;
 
 class JwtClaimsSignerTest {
 
     private static final AlgorithmConstraints PS256_ALGORITHM = new AlgorithmConstraints(
-        AlgorithmConstraints.ConstraintType.WHITELIST, AlgorithmIdentifiers.RSA_PSS_USING_SHA256);
+        AlgorithmConstraints.ConstraintType.PERMIT, AlgorithmIdentifiers.RSA_PSS_USING_SHA256);
 
     private static KeyPair keyPair;
     private static X509Certificate certificate;
@@ -52,8 +42,8 @@ class JwtClaimsSignerTest {
 
     @BeforeAll
     static void initAll() throws Exception {
-        keyPair = aKeyPair();
-        certificate = aCertificate();
+        keyPair = TestKeyUtils.aKeyPair();
+        certificate = TestKeyUtils.aCertificate(keyPair);
         objectMapper = new ObjectMapper();
     }
 
@@ -164,27 +154,6 @@ class JwtClaimsSignerTest {
                 OpenBankingJwsHeaders.OPEN_BANKING_ISS,
                 OpenBankingJwsHeaders.OPEN_BANKING_TAN),
             jsonWebSignature.getObjectHeader(HeaderParameterNames.CRITICAL));
-    }
-
-    private static KeyPair aKeyPair() throws Exception {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048);
-        return keyPairGenerator.generateKeyPair();
-    }
-
-    private static X509Certificate aCertificate() throws Exception {
-        X509v3CertificateBuilder certificateBuilder = new JcaX509v3CertificateBuilder(
-            new X500Name("CN=OpenBanking Pre-Production Issuing CA,O=OpenBanking,C=GB"),
-            BigInteger.ONE,
-            Date.from(LocalDateTime.now().minusWeeks(1).toInstant(ZoneOffset.UTC)),
-            Date.from(LocalDateTime.now().plusWeeks(1).toInstant(ZoneOffset.UTC)),
-            new X500Name("CN=ORGANISATION_ID,O=TransferWise LTD,C=GB"),
-            keyPair.getPublic());
-        ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256WithRSA")
-            .build(keyPair.getPrivate());
-        return new JcaX509CertificateConverter()
-            .setProvider(new BouncyCastleProvider())
-            .getCertificate(certificateBuilder.build(contentSigner));
     }
 
     private TppConfiguration aTppConfiguration() {
