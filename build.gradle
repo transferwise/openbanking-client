@@ -43,7 +43,7 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind:${libs.jackson}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${libs.jackson}")
 
-    api('org.bitbucket.b_c:jose4j:0.7.2')
+    api('org.bitbucket.b_c:jose4j:0.7.3')
 
     compileOnly("org.projectlombok:lombok:${libs.lombok}")
     testCompileOnly("org.projectlombok:lombok:${libs.lombok}")
