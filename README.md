@@ -6,7 +6,7 @@
 Java client for using the Open Banking API, exposed by an ASPSP, as a TPP. The library supports a subset of the full 
 API:  
 
-- Support for registering as a TPP client with an ASPSP
+- Support for version 3 [dynamic client registration](https://openbankinguk.github.io/dcr-docs-pub/v3.2/dynamic-client-registration.html)
 - Support for version 3 [single immediate domestic payments](https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937984109/Domestic+Payments+v3.1)
 - Support for the following OAuth client authentication methods
     - Mutual TLS
@@ -34,7 +34,9 @@ RestTemplate restTemplate = new RestTemplate();
 KeySupplier signingKeySupplier = new ExampleKeySupplier();
 JwtClaimsSigner jwtClaimsSigner = new JwtClaimsSigner(signingKeySupplier, tppConfiguration);
 
-RegistrationClient registrationClient = new RestRegistrationClient(restTemplate);
+RegistrationClient registrationClient = new RestRegistrationClient(jwtClaimsSigner, restTemplate);
+
+RegistrationRequestService registrationRequestService = new RegistrationRequestService(keySupplier, tppConfiguration);
 
 // supplies the details of the ASPSP implementation required to make the API calls
 AspspDetails aspspDetails = new ExampleAspspDetails();
@@ -43,11 +45,12 @@ AspspDetails aspspDetails = new ExampleAspspDetails();
 // Step 2 - register with the ASPSP
 // 
 
-// set the properties according to your organisation and the ASPSP
-JwtClaims registrationClaims = new JwtClaims();
-String signedClaims = jwtClaimsSigner.createSignature(registrationClaims, aspspDetails);
+ClientRegistrationRequest clientRegistrationRequest = registrationRequestService.generateRegistrationRequest(
+        softwareStatement, 
+        aspspDetails);
 
-String registrationResponseBody = registrationClient.registerClient(signedClaims, aspspDetails);
+ClientRegistrationResponse clientRegistrationResponse = registrationClient.registerClient(clientRegistrationRequest, 
+        aspspDetails);
 ```
 
 ### V3 Payments

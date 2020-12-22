@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.TppConfiguration;
 import com.transferwise.openbanking.client.error.ClientException;
+import com.transferwise.openbanking.client.security.KeySupplier;
 import lombok.RequiredArgsConstructor;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;

@@ -1,6 +1,11 @@
 package com.transferwise.openbanking.client.configuration;
 
+import com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod;
+import com.transferwise.openbanking.client.oauth.domain.GrantType;
+import com.transferwise.openbanking.client.oauth.domain.ResponseType;
 import org.jose4j.jws.AlgorithmIdentifiers;
+
+import java.util.List;
 
 /**
  * Defines the integration details with a specific ASPSP.
@@ -49,12 +54,23 @@ public interface AspspDetails {
     /**
      * Get the URL the ASPSP exposes for registering this service as a client with the ASPSP.
      *
-     * <p>Not all banks support a registration API, therefore not all implementations implement this method.
+     * <p>Not all ASPSPs support a registration API, therefore not all implementations implement this method.
      *
      * @return the client registration URL
      */
     default String getRegistrationUrl() {
         throw new UnsupportedOperationException("getRegistrationUrl not implemented");
+    }
+
+    /**
+     * Get the URL to use as the intended audience value for a JWT generated for a client registration.
+     *
+     * <p>Not all ASPSPs support a registration API, therefore not all implementations implement this method.
+     *
+     * @return the JWT intended audience URL
+     */
+    default String getRegistrationIssuerUrl() {
+        throw new UnsupportedOperationException("getRegistrationIssuerUrl not implemented");
     }
 
     /**
@@ -69,6 +85,13 @@ public interface AspspDetails {
     default String getTokenIssuerUrl() {
         throw new UnsupportedOperationException("getTokenIssuerUrl not implemented");
     }
+
+    /**
+     * Get the authentication method to use for identifying ourselves as a client to the ASPSP.
+     *
+     * @return the client authentication method to use
+     */
+    ClientAuthenticationMethod getClientAuthenticationMethod();
 
     /**
      * Get the ID value to use for identifying ourselves as a client to the ASPSP.
@@ -113,6 +136,26 @@ public interface AspspDetails {
     String getSigningKeyId();
 
     /**
+     * Get the OAuth grant types, that the ASPSP supports and the TPP may request, to specify to the ASPSP during
+     * registration.
+     *
+     * @return the grant types to specify, defaults to all types
+     */
+    default List<GrantType> getGrantTypes() {
+        return List.of(GrantType.values());
+    }
+
+    /**
+     * Get the OAUth response types, that the ASPSP supports and the TPP may request, to specify to the ASPSP during
+     * registration.
+     *
+     * @return the response types to specify, defaults to all types
+     */
+    default List<ResponseType> getResponseTypes() {
+        return List.of(ResponseType.values());
+    }
+
+    /**
      * Get the minor version of the payments API that should be used when making calls to the ASPSP payments API.
      *
      * @return the payments API minor version to use, defaults to 1
@@ -150,5 +193,18 @@ public interface AspspDetails {
      */
     default boolean detachedSignatureUsesDirectoryIssFormat() {
         return true;
+    }
+
+    /**
+     * Whether or not the ASPSP requires the JWT ID (jti) claim, within client registration requests, to use only lower
+     * case characters.
+     *
+     * <p>This is false by default, as Version 3 of the registration API specifies it should be an uppercase v4 UUID,
+     * however some ASPSPs do not follow this requirement and instead require lowercase characters.
+     *
+     * @return <code>true</code> if the jti claim should contain only lowercase characters, <code>false</code> otherwise
+     */
+    default boolean registrationRequiresLowerCaseJtiClaim() {
+        return false;
     }
 }
