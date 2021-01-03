@@ -1,0 +1,44 @@
+version: 2
+
+jobs:
+
+  oss-publish:
+    environment:
+      ENV_TEST_CONTAINERS_ENABLED: false
+      ENV_OSS_KEY_ID: B586C72E
+    docker:
+      - image: arti.tw.ee/circle_openjdk13
+        user: circleci
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: ./gradlew build --console=plain --no-daemon
+      - run:
+          name: Prepare gpg
+          command: |
+            echo $ENV_OSS_KEY > oss.key
+            gpg --import oss.key
+            gpg --list-keys
+            rm -f oss.key
+            gpg --list-keys
+      - run:
+          name: Publish
+          command: ./gradlew publish -Psigning.secretKeyRingFile=/home/circleci/.gnupg/secring.gpg
+            -Psigning.password=${ENV_OSS_KEY_PASSWORD}
+            -Psigning.keyId=${ENV_OSS_KEY_ID} --console=plain --no-daemon
+
+workflows:
+  version: 2
+  publish:
+    jobs:
+      - hold:
+          type: approval
+      - oss-publish
+        context: oss-sonatype
+        requires:
+          - hold
+#        filters:
+#          branches:
+#            only:
+#              - master
