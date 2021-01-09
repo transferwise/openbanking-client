@@ -1,11 +1,11 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
 import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentRequest;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentResponse;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentRequest;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
-import com.transferwise.openbanking.client.api.payment.v3.domain.FundsConfirmationResponse;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsent4;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsentResponse5;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticResponse5;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteFundsConfirmationResponse1;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 
@@ -25,9 +25,8 @@ public interface PaymentClient {
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
      *                                                                   failed
      */
-    DomesticPaymentConsentResponse createDomesticPaymentConsent(
-        DomesticPaymentConsentRequest domesticPaymentConsentRequest,
-        AspspDetails aspspDetails,
+    OBWriteDomesticConsentResponse5 createDomesticPaymentConsent(OBWriteDomesticConsent4 domesticPaymentConsentRequest,
+                                                                 AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails);
 
     /**
@@ -47,22 +46,22 @@ public interface PaymentClient {
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
      *                                                                   failed
      */
-    DomesticPaymentResponse submitDomesticPayment(DomesticPaymentRequest domesticPaymentRequest,
-                                                  AuthorizationContext authorizationContext,
-                                                  AspspDetails aspspDetails,
+    OBWriteDomesticResponse5 submitDomesticPayment(OBWriteDomestic2 domesticPaymentRequest,
+                                                   AuthorizationContext authorizationContext,
+                                                   AspspDetails aspspDetails,
                                                   SoftwareStatementDetails softwareStatementDetails);
 
     /**
      * Get the details of a previously created domestic payment consent.
      *
-     * @param consentId The ID of the domestic payment consent to get the details of
+     * @param consentId    The ID of the domestic payment consent to get the details of
      * @param aspspDetails The details of the ASPSP to send the request to
      * @return The details of the domestic payment consent
      * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
      *                                                                   failed
      */
-    DomesticPaymentConsentResponse getDomesticPaymentConsent(String consentId, AspspDetails aspspDetails);
+    OBWriteDomesticConsentResponse5 getDomesticPaymentConsent(String consentId, AspspDetails aspspDetails);
 
     /**
      * Get the details of a previously submitted domestic payment.
@@ -74,7 +73,7 @@ public interface PaymentClient {
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
      *                                                                   failed
      */
-    DomesticPaymentResponse getDomesticPayment(String domesticPaymentId, AspspDetails aspspDetails);
+    OBWriteDomesticResponse5 getDomesticPayment(String domesticPaymentId, AspspDetails aspspDetails);
 
     /**
      * Get confirmation of whether not funds are available for a domestic payment consent, which has been authorised
@@ -93,7 +92,7 @@ public interface PaymentClient {
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
      *                                                                   failed
      */
-    FundsConfirmationResponse getFundsConfirmation(String consentId,
-                                                   AuthorizationContext authorizationContext,
-                                                   AspspDetails aspspDetails);
+    OBWriteFundsConfirmationResponse1 getFundsConfirmation(String consentId,
+                                                           AuthorizationContext authorizationContext,
+                                                           AspspDetails aspspDetails);
 }
