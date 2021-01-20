@@ -1,6 +1,7 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.payment.common.domain.InstructedAmount;
 import com.transferwise.openbanking.client.api.payment.common.domain.RemittanceInformation;
@@ -24,7 +25,6 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.Initiation;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentConsentStatus;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentStatus;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
-import com.transferwise.openbanking.client.configuration.TppConfiguration;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
@@ -73,8 +73,6 @@ class RestPaymentClientTest {
     @Mock
     private JwtClaimsSigner jwtClaimsSigner;
 
-    private TppConfiguration tppConfiguration;
-
     private MockRestServiceServer mockAspspServer;
 
     private RestPaymentClient restPaymentClient;
@@ -86,13 +84,10 @@ class RestPaymentClientTest {
 
     @BeforeEach
     void init() {
-        tppConfiguration = aTppConfiguration();
-
         RestTemplate restTemplate = new RestTemplate();
         mockAspspServer = MockRestServiceServer.createServer(restTemplate);
 
-        restPaymentClient = new RestPaymentClient(tppConfiguration,
-            restTemplate,
+        restPaymentClient = new RestPaymentClient(restTemplate,
             oAuthClient,
             idempotencyKeyGenerator,
             jwtClaimsSigner);
@@ -193,15 +188,15 @@ class RestPaymentClientTest {
     void submitDomesticPayment() throws Exception {
         DomesticPaymentRequest domesticPaymentRequest = aDomesticPaymentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
-        String authorisationCode = "authorisation-code";
+        AuthorizationContext authorizationContext = aAuthorizationContext();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
                     "authorization_code".equals(request.getRequestBody().get("grant_type")) &&
-                        authorisationCode.equals(request.getRequestBody().get("code")) &&
-                        tppConfiguration.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
+                        authorizationContext.getAuthorizationCode().equals(request.getRequestBody().get("code")) &&
+                        authorizationContext.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -227,7 +222,7 @@ class RestPaymentClientTest {
 
         DomesticPaymentResponse domesticPaymentResponse = restPaymentClient.submitDomesticPayment(
             domesticPaymentRequest,
-            authorisationCode,
+            authorizationContext,
             aspspDetails);
 
         Assertions.assertEquals(mockDomesticPaymentResponse, domesticPaymentResponse);
@@ -239,7 +234,7 @@ class RestPaymentClientTest {
     void submitDomesticPaymentThrowsApiCallExceptionOnApiCallFailure() {
         DomesticPaymentRequest domesticPaymentRequest = aDomesticPaymentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
-        String authorisationCode = "authorisation-code";
+        AuthorizationContext authorizationContext = aAuthorizationContext();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
@@ -253,7 +248,7 @@ class RestPaymentClientTest {
             .andRespond(MockRestResponseCreators.withBadRequest());
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restPaymentClient.submitDomesticPayment(domesticPaymentRequest, authorisationCode, aspspDetails));
+            () -> restPaymentClient.submitDomesticPayment(domesticPaymentRequest, authorizationContext, aspspDetails));
 
         mockAspspServer.verify();
     }
@@ -265,7 +260,7 @@ class RestPaymentClientTest {
 
         DomesticPaymentRequest domesticPaymentRequest = aDomesticPaymentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
-        String authorisationCode = "authorisation-code";
+        AuthorizationContext authorizationContext = aAuthorizationContext();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
@@ -280,7 +275,7 @@ class RestPaymentClientTest {
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restPaymentClient.submitDomesticPayment(domesticPaymentRequest, authorisationCode, aspspDetails));
+            () -> restPaymentClient.submitDomesticPayment(domesticPaymentRequest, authorizationContext, aspspDetails));
 
         mockAspspServer.verify();
     }
@@ -438,7 +433,7 @@ class RestPaymentClientTest {
     @Test
     void getFundsConfirmation() throws Exception {
         String consentId = "consent-id";
-        String authorisationCode = "authorisation-code";
+        AuthorizationContext authorizationContext = aAuthorizationContext();
         AspspDetails aspspDetails = aAspspDefinition();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -446,8 +441,8 @@ class RestPaymentClientTest {
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
                     "authorization_code".equals(request.getRequestBody().get("grant_type")) &&
-                        authorisationCode.equals(request.getRequestBody().get("code")) &&
-                        tppConfiguration.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
+                        authorizationContext.getAuthorizationCode().equals(request.getRequestBody().get("code")) &&
+                        authorizationContext.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -462,7 +457,7 @@ class RestPaymentClientTest {
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         FundsConfirmationResponse fundsConfirmationResponse = restPaymentClient.getFundsConfirmation(consentId,
-            authorisationCode,
+            authorizationContext,
             aspspDetails);
 
         Assertions.assertEquals(mockFundsConfirmationResponse, fundsConfirmationResponse);
@@ -475,7 +470,7 @@ class RestPaymentClientTest {
     @Test
     void getFundsConfirmationThrowsApiCallExceptionOnApiCallFailure() {
         String consentId = "consent-id";
-        String authorisationCode = "authorisation-code";
+        AuthorizationContext authorizationContext = aAuthorizationContext();
         AspspDetails aspspDetails = aAspspDefinition();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -487,7 +482,7 @@ class RestPaymentClientTest {
             .andRespond(MockRestResponseCreators.withServerError());
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restPaymentClient.getFundsConfirmation(consentId, authorisationCode, aspspDetails));
+            () -> restPaymentClient.getFundsConfirmation(consentId, authorizationContext, aspspDetails));
 
         mockAspspServer.verify();
     }
@@ -496,7 +491,7 @@ class RestPaymentClientTest {
     @ArgumentsSource(PartialFundsConfirmationResponses.class)
     void getFundsConfirmationThrowsApiCallExceptionPartialResponse(FundsConfirmationResponse response) throws Exception {
         String consentId = "consent-id";
-        String authorisationCode = "authorisation-code";
+        AuthorizationContext authorizationContext = aAuthorizationContext();
         AspspDetails aspspDetails = aAspspDefinition();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -509,15 +504,9 @@ class RestPaymentClientTest {
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restPaymentClient.getFundsConfirmation(consentId, authorisationCode, aspspDetails));
+            () -> restPaymentClient.getFundsConfirmation(consentId, authorizationContext, aspspDetails));
 
         mockAspspServer.verify();
-    }
-
-    private TppConfiguration aTppConfiguration() {
-        return TppConfiguration.builder()
-            .redirectUrl("tpp-redirect-url")
-            .build();
     }
 
     private AspspDetails aAspspDefinition() {
@@ -610,6 +599,13 @@ class RestPaymentClientTest {
             .build();
         return FundsConfirmationResponse.builder()
             .data(data)
+            .build();
+    }
+
+    private AuthorizationContext aAuthorizationContext() {
+        return AuthorizationContext.builder()
+            .authorizationCode("authorisation-code")
+            .redirectUrl("https://tpp.co.uk")
             .build();
     }
 

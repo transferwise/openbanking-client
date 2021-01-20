@@ -47,7 +47,7 @@ public class RegistrationRequestService {
             .tokenEndpointAuthMethod(clientAuthenticationMethod.getMethodName())
             .idTokenSignedResponseAlg(signingAlgorithm)
             .requestObjectSigningAlg(signingAlgorithm)
-            .redirectUris(List.of(tppConfiguration.getRedirectUrl()));
+            .redirectUris(tppConfiguration.getRedirectUrls());
 
         if (ClientAuthenticationMethod.TLS_CLIENT_AUTH == clientAuthenticationMethod) {
             requestBuilder.tlsClientAuthSubjectDn(getTransportCertificateSubjectName(aspspDetails));

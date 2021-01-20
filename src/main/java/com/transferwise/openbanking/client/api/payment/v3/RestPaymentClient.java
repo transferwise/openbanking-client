@@ -1,6 +1,7 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
 import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
+import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.payment.common.BasePaymentClient;
 import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentRequest;
@@ -9,7 +10,6 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPayment
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.domain.FundsConfirmationResponse;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
-import com.transferwise.openbanking.client.configuration.TppConfiguration;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
@@ -32,12 +32,11 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     private final IdempotencyKeyGenerator<DomesticPaymentConsentRequest, DomesticPaymentRequest> idempotencyKeyGenerator;
     private final JwtClaimsSigner jwtClaimsSigner;
 
-    public RestPaymentClient(TppConfiguration tppConfiguration,
-                             RestOperations restOperations,
+    public RestPaymentClient(RestOperations restOperations,
                              OAuthClient oAuthClient,
                              IdempotencyKeyGenerator<DomesticPaymentConsentRequest, DomesticPaymentRequest> idempotencyKeyGenerator,
                              JwtClaimsSigner jwtClaimsSigner) {
-        super(tppConfiguration, restOperations, oAuthClient);
+        super(restOperations, oAuthClient);
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
         this.jwtClaimsSigner = jwtClaimsSigner;
     }
@@ -78,11 +77,11 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
     @Override
     public DomesticPaymentResponse submitDomesticPayment(DomesticPaymentRequest domesticPaymentRequest,
-                                                         String authorizationCode,
+                                                         AuthorizationContext authorizationContext,
                                                          AspspDetails aspspDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getFinancialId(),
-            exchangeAuthorizationCode(authorizationCode, aspspDetails),
+            exchangeAuthorizationCode(authorizationContext, aspspDetails),
             idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest),
             jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest, aspspDetails));
 
@@ -174,11 +173,11 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
     @Override
     public FundsConfirmationResponse getFundsConfirmation(String consentId,
-                                                          String authorizationCode,
+                                                          AuthorizationContext authorizationContext,
                                                           AspspDetails aspspDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getFinancialId(),
-            exchangeAuthorizationCode(authorizationCode, aspspDetails));
+            exchangeAuthorizationCode(authorizationContext, aspspDetails));
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 

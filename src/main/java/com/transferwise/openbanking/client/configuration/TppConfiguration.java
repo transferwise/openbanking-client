@@ -25,9 +25,9 @@ public class TppConfiguration {
     private String softwareStatementId;
 
     /**
-     * The URL that ASPSPs will redirect the user back to once the authorisation process is finished.
+     * The URLs that ASPSPs can redirect the user back to once the authorisation process is finished.
      */
-    private String redirectUrl;
+    private List<String> redirectUrls;
 
     /**
      * The permissions that the TPP has, according to the National Competent Authority (the FCA), and wants to use when
