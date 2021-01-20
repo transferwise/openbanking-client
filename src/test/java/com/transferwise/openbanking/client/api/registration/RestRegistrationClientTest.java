@@ -6,6 +6,8 @@ import com.transferwise.openbanking.client.api.registration.domain.ClientRegistr
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
+import com.transferwise.openbanking.client.oauth.OAuthClient;
+import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -30,13 +32,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("PMD.UnusedPrivateMethod") // PMD considers argumentsForRegisterClientTest unused
+@SuppressWarnings({"PMD.UnusedPrivateMethod", "PMD.AvoidDuplicateLiterals"}) // PMD considers argumentsForRegisterClientTest unused
 class RestRegistrationClientTest {
 
     private static ObjectMapper objectMapper;
 
     @Mock
     private JwtClaimsSigner jwtClaimsSigner;
+
+    @Mock
+    private OAuthClient oAuthClient;
 
     private MockRestServiceServer mockAspspServer;
 
@@ -52,7 +57,7 @@ class RestRegistrationClientTest {
         RestTemplate restTemplate = new RestTemplate();
         mockAspspServer = MockRestServiceServer.createServer(restTemplate);
 
-        restRegistrationClient = new RestRegistrationClient(jwtClaimsSigner, restTemplate);
+        restRegistrationClient = new RestRegistrationClient(jwtClaimsSigner, oAuthClient, restTemplate);
     }
 
     @ParameterizedTest
@@ -106,6 +111,77 @@ class RestRegistrationClientTest {
         mockAspspServer.verify();
     }
 
+    @ParameterizedTest
+    @MethodSource("argumentsForRegisterClientTest")
+    void updateRegistration(boolean registrationUsesJoseContentType, String expectedContentType)
+        throws Exception {
+
+        ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
+        AspspDetails aspspDetails = aAspspDefinition(registrationUsesJoseContentType);
+
+        AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
+            .accessToken("access-token")
+            .build();
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        !request.getRequestBody().containsKey("scope")),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(mockAccessTokenResponse);
+
+        String signedClaims = "signed-claims";
+        Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
+            .thenReturn(signedClaims);
+
+        ClientRegistrationResponse mockResponse = ClientRegistrationResponse.builder()
+            .clientId("client-id")
+            .build();
+        String jsonResponse = objectMapper.writeValueAsString(mockResponse);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, expectedContentType))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT_CHARSET,
+                StandardCharsets.UTF_8.name().toLowerCase()))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer access-token"))
+            .andExpect(MockRestRequestMatchers.content().string(signedClaims))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        ClientRegistrationResponse registrationResponse = restRegistrationClient.updateRegistration(
+            clientRegistrationRequest,
+            aspspDetails);
+
+        Assertions.assertEquals(mockResponse, registrationResponse);
+
+        mockAspspServer.verify();
+    }
+
+    @Test
+    void updateRegistrationThrowsApiCallExceptionOnApiCallFailure() {
+        ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
+        AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
+            .accessToken("access-token")
+            .build();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(mockAccessTokenResponse);
+
+        String signedClaims = "signed-claims";
+        Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
+            .thenReturn(signedClaims);
+
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
+            .andRespond(MockRestResponseCreators.withServerError());
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restRegistrationClient.updateRegistration(clientRegistrationRequest, aspspDetails));
+
+        mockAspspServer.verify();
+    }
+
     private static ClientRegistrationRequest aRegistrationClaims() {
         return ClientRegistrationRequest.builder()
             .jti("jwt-id")
@@ -115,6 +191,7 @@ class RestRegistrationClientTest {
     private static AspspDetails aAspspDefinition() {
         return TestAspspDetails.builder()
             .registrationUrl("/registration-url")
+            .clientId("client-id")
             .build();
     }
 
@@ -122,6 +199,7 @@ class RestRegistrationClientTest {
         return TestAspspDetails.builder()
             .registrationUrl("/registration-url")
             .registrationUsesJoseContentType(registrationUsesJoseContentType)
+            .clientId("client-id")
             .build();
     }
 
