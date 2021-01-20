@@ -3,6 +3,20 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2021-01-20
+### Added 
+- The `RegistrationClient` interface has a new method to update an existing client registration with an ASPSP
+- There is now support for multiple TPP redirect URLs, the `RegistrationRequestService` now supports generating a 
+  registration request with multiple TPP redirect URLs, and the `PaymentClient` now supports multiple TPP redirect URLs
+  when exchanging an authorization code as part of creating a domestic payment or checking funds availability
+### Changed
+- The `ID_TOKEN` value in the `ResponseType` enum is replaced with `CODE_AND_ID_TOKEN`, so that the enum defines only
+  the possible values required for the v3.2 client registration API, where it gets used for
+- The `AspspDetails` interface method `getResponseTypes` now returns only `CODE_AND_ID_TOKEN` by default, instead of 
+  the separate `CODE` and `ID_TOKEN` values, to align the default value with the defaults of the v3.2 client 
+  registration API
+- The `TppConfiguration` class string field `redirectUrl` is replaced with a list of strings field `redirectUrls`  
+
 ## [1.0.1] - 2020-12-28
 ### Changed
 - Updated various dependencies to the latest versions, notably updating to Spring 5.3. 

@@ -13,7 +13,7 @@ public interface RegistrationClient {
      * Register as a TPP client with an ASPSP.
      *
      * @param clientRegistrationRequest The details (JWT claims) of the registration request
-     * @param aspspDetails The details of the ASPSP to send the request to
+     * @param aspspDetails              The details of the ASPSP to send the request to
      * @return The response body from the ASPSP, containing the details of the registration
      * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
@@ -21,4 +21,18 @@ public interface RegistrationClient {
      */
     ClientRegistrationResponse registerClient(ClientRegistrationRequest clientRegistrationRequest,
                                               AspspDetails aspspDetails);
+
+    /**
+     * Update an existing TPP client registration with an ASPSP.
+     *
+     * @param clientRegistrationRequest The details (JWT claims) of the new registration request, this MUST contain
+     *                                  both the claims to change, and those which are unchanged
+     * @param aspspDetails              THe details of the ASPSP to send the request to
+     * @return The response body from the ASPSP, containing the details of the updated registration
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
+     *                                                                   to the ASPSP or the HTTP call to the ASPSP
+     *                                                                   failed
+     */
+    ClientRegistrationResponse updateRegistration(ClientRegistrationRequest clientRegistrationRequest,
+                                                  AspspDetails aspspDetails);
 }

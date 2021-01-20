@@ -1,7 +1,6 @@
 package com.transferwise.openbanking.client.api.payment.common;
 
 import com.transferwise.openbanking.client.configuration.AspspDetails;
-import com.transferwise.openbanking.client.configuration.TppConfiguration;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
@@ -17,7 +16,6 @@ public class BasePaymentClient {
 
     private static final String PAYMENTS_SCOPE = "payments";
 
-    protected final TppConfiguration tppConfiguration;
     protected final RestOperations restOperations;
 
     private final OAuthClient oAuthClient;
@@ -27,9 +25,10 @@ public class BasePaymentClient {
         return getAccessToken(getAccessTokenRequest, aspspDetails);
     }
 
-    protected String exchangeAuthorizationCode(String authorizationCode, AspspDetails aspspDetails) {
-        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.authorizationCodeRequest(authorizationCode,
-            tppConfiguration.getRedirectUrl());
+    protected String exchangeAuthorizationCode(AuthorizationContext authorizationContext, AspspDetails aspspDetails) {
+        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.authorizationCodeRequest(
+            authorizationContext.getAuthorizationCode(),
+            authorizationContext.getRedirectUrl());
         return getAccessToken(getAccessTokenRequest, aspspDetails);
     }
 

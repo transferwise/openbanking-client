@@ -1,10 +1,13 @@
 package com.transferwise.openbanking.client.api.registration;
 
-import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
+import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
+import com.transferwise.openbanking.client.oauth.OAuthClient;
+import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
+import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -24,6 +27,7 @@ import java.util.List;
 public class RestRegistrationClient implements RegistrationClient {
 
     private final JwtClaimsSigner jwtClaimsSigner;
+    private final OAuthClient oAuthClient;
     private final RestOperations restTemplate;
 
     @Override
@@ -66,5 +70,56 @@ public class RestRegistrationClient implements RegistrationClient {
         } catch (RestClientException e) {
             throw new ApiCallException("Call to register client endpoint failed, and no response body returned", e);
         }
+    }
+
+    @Override
+    public ClientRegistrationResponse updateRegistration(ClientRegistrationRequest clientRegistrationRequest,
+                                                         AspspDetails aspspDetails) {
+
+        HttpHeaders headers = new HttpHeaders();
+        if (aspspDetails.registrationUsesJoseContentType()) {
+            headers.setContentType(MediaType.valueOf("application/jose"));
+        } else {
+            headers.setContentType(MediaType.valueOf("application/jwt"));
+        }
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        // as we're using a raw String as the body type, we need to manually set the header
+        headers.setAcceptCharset(List.of(StandardCharsets.UTF_8));
+        headers.setBearerAuth(getClientCredentialsToken(aspspDetails));
+
+        String signedClaims = jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails);
+        HttpEntity<String> request = new HttpEntity<>(signedClaims, headers);
+
+        log.debug("Sending update registration request to '{}' with headers '{}' and body '{}'",
+            aspspDetails.getRegistrationUrl(),
+            request.getHeaders(),
+            request.getBody());
+
+        try {
+            ResponseEntity<ClientRegistrationResponse> response = restTemplate.exchange(
+                aspspDetails.getRegistrationUrl() + "/{clientId}",
+                HttpMethod.PUT,
+                request,
+                ClientRegistrationResponse.class,
+                aspspDetails.getClientId());
+
+            log.debug("Received update registration response with headers '{}' and body '{}'",
+                response.getHeaders(),
+                response.getBody());
+
+            return response.getBody();
+        } catch (RestClientResponseException e) {
+            throw new ApiCallException("Call to update registration endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e);
+        } catch (RestClientException e) {
+            throw new ApiCallException("Call to update registration endpoint failed, and no response body returned", e);
+        }
+    }
+
+    private String getClientCredentialsToken(AspspDetails aspspDetails) {
+        // for the registration operations, a scope doesn't need to be specified in the client credentials grant
+        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest();
+        AccessTokenResponse accessTokenResponse = oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);
+        return accessTokenResponse.getAccessToken();
     }
 }

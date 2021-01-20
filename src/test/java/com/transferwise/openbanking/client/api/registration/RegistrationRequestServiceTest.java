@@ -79,8 +79,7 @@ class RegistrationRequestServiceTest {
             clientRegistrationRequest.getRequestObjectSigningAlg());
         Assertions.assertEquals(tppConfiguration.getSoftwareStatementId(), clientRegistrationRequest.getIss());
         Assertions.assertEquals(tppConfiguration.getSoftwareStatementId(), clientRegistrationRequest.getSoftwareId());
-        Assertions.assertEquals(List.of(tppConfiguration.getRedirectUrl()),
-            clientRegistrationRequest.getRedirectUris());
+        Assertions.assertEquals(tppConfiguration.getRedirectUrls(), clientRegistrationRequest.getRedirectUris());
     }
 
     @Test
@@ -166,7 +165,7 @@ class RegistrationRequestServiceTest {
         return TppConfiguration.builder()
             .softwareStatementId("software-statement-id")
             .permissions(List.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS))
-            .redirectUrl("tpp-redirect-url")
+            .redirectUrls(List.of("https://tpp.co.uk/1", "https://tpp.co.uk/2"))
             .build();
     }
 }

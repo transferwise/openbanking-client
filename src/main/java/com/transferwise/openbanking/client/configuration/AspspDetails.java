@@ -149,10 +149,10 @@ public interface AspspDetails {
      * Get the OAUth response types, that the ASPSP supports and the TPP may request, to specify to the ASPSP during
      * registration.
      *
-     * @return the response types to specify, defaults to all types
+     * @return the response types to specify, defaults to <code>CODE_AND_ID_TOKEN</code>
      */
     default List<ResponseType> getResponseTypes() {
-        return List.of(ResponseType.values());
+        return List.of(ResponseType.CODE_AND_ID_TOKEN);
     }
 
     /**

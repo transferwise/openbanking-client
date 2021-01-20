@@ -1,5 +1,6 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
+import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentRequest;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentRequest;
@@ -35,8 +36,7 @@ public interface PaymentClient {
      * or otherwise stores access tokens, then the issue is avoided.
      *
      * @param domesticPaymentRequest The details of the payment to submit for execution
-     * @param authorizationCode      The payment authorization code returned by the ASPSP, as a result of a successful
-     *                               payment authorization by the account holder
+     * @param authorizationContext   The successful payment authorisation data
      * @param aspspDetails           The details of the ASPSP to send the request to
      * @return The result, from the ASPSP, of the domestic payment submission request
      * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
@@ -44,7 +44,7 @@ public interface PaymentClient {
      *                                                                   failed
      */
     DomesticPaymentResponse submitDomesticPayment(DomesticPaymentRequest domesticPaymentRequest,
-                                                  String authorizationCode,
+                                                  AuthorizationContext authorizationContext,
                                                   AspspDetails aspspDetails);
 
     /**
@@ -80,16 +80,15 @@ public interface PaymentClient {
      * {@link com.transferwise.openbanking.client.error.ApiCallException} will be thrown. If the implementation caches
      * or otherwise stores access tokens, then the issue is avoided.
      *
-     * @param consentId         The ID of the domestic payment consent to get the funds confirmation for
-     * @param authorizationCode The payment authorization code returned by the ASPSP, as a result of a successful
-     *                          payment authorization by the account holder
-     * @param aspspDetails      The details of the ASPSP to send the request to
+     * @param consentId            The ID of the domestic payment consent to get the funds confirmation for
+     * @param authorizationContext The successful payment authorisation data
+     * @param aspspDetails         The details of the ASPSP to send the request to
      * @return The confirmation of funds for the domestic payment consent
      * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
      *                                                                   failed
      */
     FundsConfirmationResponse getFundsConfirmation(String consentId,
-                                                   String authorizationCode,
+                                                   AuthorizationContext authorizationContext,
                                                    AspspDetails aspspDetails);
 }
