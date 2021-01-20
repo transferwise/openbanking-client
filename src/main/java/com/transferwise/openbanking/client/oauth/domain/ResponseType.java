@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 public enum ResponseType {
 
     CODE("code"),
-    ID_TOKEN("id_token");
+    CODE_AND_ID_TOKEN("code id_token");
 
     private final String value;
 
