@@ -26,11 +26,6 @@ public class GetAccessTokenRequest {
     private final Map<String, String> requestBody = new HashMap<>();
     private final FapiHeaders requestHeaders = FapiHeaders.defaultHeaders();
 
-    public static GetAccessTokenRequest clientCredentialsRequest() {
-        return new GetAccessTokenRequest()
-            .setGrantType(CLIENT_CREDENTIALS_GRANT_TYPE);
-    }
-
     public static GetAccessTokenRequest clientCredentialsRequest(String scope) {
         return new GetAccessTokenRequest()
             .setGrantType(CLIENT_CREDENTIALS_GRANT_TYPE)
