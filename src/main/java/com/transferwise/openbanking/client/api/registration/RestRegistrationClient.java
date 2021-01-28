@@ -117,8 +117,8 @@ public class RestRegistrationClient implements RegistrationClient {
     }
 
     private String getClientCredentialsToken(AspspDetails aspspDetails) {
-        // for the registration operations, a scope doesn't need to be specified in the client credentials grant
-        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest();
+        // the spec states a scope value isn't strictly needed, but some ASPSPs do actually require it
+        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("openid");
         AccessTokenResponse accessTokenResponse = oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);
         return accessTokenResponse.getAccessToken();
     }
