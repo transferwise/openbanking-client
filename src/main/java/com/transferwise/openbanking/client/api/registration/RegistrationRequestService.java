@@ -26,6 +26,19 @@ public class RegistrationRequestService {
     private final KeySupplier keySupplier;
     private final TppConfiguration tppConfiguration;
 
+    /**
+     * Generate the claims for a client registration request to a given ASPSP, which can then be signed and used as the
+     * request body for calls to the ASPSP's client registration API.
+     * <p>
+     * The claims are generated based on the details defined in the supplied {@link AspspDetails} and the
+     * current values in the {@link TppConfiguration}.
+     * <p>
+     * The generated claims can then be further modified prior to being signed and sent to the ASPSP.
+     *
+     * @param softwareStatement The software statement assertion, issued by the Open Banking directory
+     * @param aspspDetails The details of the ASPSP, for which the registration claims will be sent to
+     * @return The generated registration claims
+     */
     public ClientRegistrationRequest generateRegistrationRequest(String softwareStatement, AspspDetails aspspDetails) {
         Instant now = Instant.now();
 

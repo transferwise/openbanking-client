@@ -126,7 +126,7 @@ class RestRegistrationClientTest {
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
                     "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "openid".equals(request.getRequestBody().get("scope"))),
+                        "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(mockAccessTokenResponse);
 
