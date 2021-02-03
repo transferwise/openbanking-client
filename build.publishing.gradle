@@ -51,6 +51,9 @@ publishing {
 	}
 
 	signing {
+    	def signingKey = System.env.OSS_SIGNING_KEY as String
+		def signingPassword = System.env.OSS_SIGNING_PASSWORD as String
+		useInMemoryPgpKeys(signingKey, signingPassword)
 		sign publishing.publications.mavenJava
 	}
 
