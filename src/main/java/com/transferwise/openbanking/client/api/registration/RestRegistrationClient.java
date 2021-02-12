@@ -119,10 +119,10 @@ public class RestRegistrationClient implements RegistrationClient {
     private String getClientCredentialsToken(AspspDetails aspspDetails) {
         // The spec states a scope value isn't strictly needed, but some ASPSPs do actually require it, additionally
         // some do not accept the general `openid` scope and require either `accounts` or `payments` scope.
-        // We could take the value from the `TppConfiguration.permissions` property, but if the TPP is trying to update
-        // the scope of their registration, this will contain a permission that we can't use here. So rather than trying
-        // to figure out what the TPP has vs what they are requesting, we use `payments` as given this library only has
-        // payments support it's most likely the TPP currently has this permission on their registration.
+        // We could take the value from the `SoftwareStatementDetails.permissions` property, but if the TPP is trying to
+        // update the scope of their registration, this will contain a permission that we can't use here. So rather than
+        // trying to figure out what the TPP has vs what they are requesting, we use `payments` as given this library
+        // only has payments support it's most likely the TPP currently has this permission on their registration.
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
         AccessTokenResponse accessTokenResponse = oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);
         return accessTokenResponse.getAccessToken();

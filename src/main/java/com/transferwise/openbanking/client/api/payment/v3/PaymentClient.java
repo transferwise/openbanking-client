@@ -7,6 +7,7 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPayment
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.domain.FundsConfirmationResponse;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
+import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 
 /**
  * An interface specifying the operations for a client supporting version 3 single immediate domestic payments.
@@ -18,6 +19,7 @@ public interface PaymentClient {
      *
      * @param domesticPaymentConsentRequest The details of the payment to setup
      * @param aspspDetails                  The details of the ASPSP to send the request to
+     * @param softwareStatementDetails      The details of the software statement that the ASPSP registration uses
      * @return The result, from the ASPSP, of the domestic payment consent request
      * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
@@ -25,7 +27,8 @@ public interface PaymentClient {
      */
     DomesticPaymentConsentResponse createDomesticPaymentConsent(
         DomesticPaymentConsentRequest domesticPaymentConsentRequest,
-        AspspDetails aspspDetails);
+        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails);
 
     /**
      * Submits a created and approved immediate domestic payment for execution by the ASPSP.
@@ -35,9 +38,10 @@ public interface PaymentClient {
      * {@link com.transferwise.openbanking.client.error.ApiCallException} will be thrown. If the implementation caches
      * or otherwise stores access tokens, then the issue is avoided.
      *
-     * @param domesticPaymentRequest The details of the payment to submit for execution
-     * @param authorizationContext   The successful payment authorisation data
-     * @param aspspDetails           The details of the ASPSP to send the request to
+     * @param domesticPaymentRequest   The details of the payment to submit for execution
+     * @param authorizationContext     The successful payment authorisation data
+     * @param aspspDetails             The details of the ASPSP to send the request to
+     * @param softwareStatementDetails The details of the software statement that the ASPSP registration uses
      * @return The result, from the ASPSP, of the domestic payment submission request
      * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
@@ -45,7 +49,8 @@ public interface PaymentClient {
      */
     DomesticPaymentResponse submitDomesticPayment(DomesticPaymentRequest domesticPaymentRequest,
                                                   AuthorizationContext authorizationContext,
-                                                  AspspDetails aspspDetails);
+                                                  AspspDetails aspspDetails,
+                                                  SoftwareStatementDetails softwareStatementDetails);
 
     /**
      * Get the details of a previously created domestic payment consent.

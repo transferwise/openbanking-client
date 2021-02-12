@@ -3,7 +3,7 @@ package com.transferwise.openbanking.client.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.api.payment.common.domain.InstructedAmount;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
-import com.transferwise.openbanking.client.configuration.TppConfiguration;
+import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.security.KeySupplier;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
 import com.transferwise.openbanking.client.test.TestKeyUtils;
@@ -36,8 +36,6 @@ class JwtClaimsSignerTest {
 
     private KeySupplier keySupplier;
 
-    private TppConfiguration tppConfiguration;
-
     private JwtClaimsSigner jwtClaimsSigner;
 
     @BeforeAll
@@ -51,9 +49,7 @@ class JwtClaimsSignerTest {
     void init() {
         keySupplier = Mockito.mock(KeySupplier.class);
 
-        tppConfiguration = aTppConfiguration();
-
-        jwtClaimsSigner = new JwtClaimsSigner(keySupplier, tppConfiguration);
+        jwtClaimsSigner = new JwtClaimsSigner(keySupplier);
     }
 
     @Test
@@ -93,17 +89,21 @@ class JwtClaimsSignerTest {
     void createDetachedSignatureProducesValidSignature() throws Exception {
         InstructedAmount jwtClaims = anInstructedAmount();
         AspspDetails aspspDetails = aAspspDetails();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         Mockito.when(keySupplier.getSigningKey(aspspDetails)).thenReturn(keyPair.getPrivate());
 
-        String serialisedSignature = jwtClaimsSigner.createDetachedSignature(jwtClaims, aspspDetails);
+        String serialisedSignature = jwtClaimsSigner.createDetachedSignature(jwtClaims,
+            aspspDetails,
+            softwareStatementDetails);
         JsonWebSignature jsonWebSignature = parseDetachedSignature(serialisedSignature, jwtClaims);
 
         Assertions.assertTrue(jsonWebSignature.verifySignature());
         Assertions.assertEquals(aspspDetails.getSigningKeyId(), jsonWebSignature.getKeyIdHeaderValue());
         Assertions.assertEquals(Boolean.FALSE,
             jsonWebSignature.getObjectHeader(HeaderParameterNames.BASE64URL_ENCODE_PAYLOAD));
-        Assertions.assertEquals(tppConfiguration.getOrganisationId() + "/" + tppConfiguration.getSoftwareStatementId(),
+        Assertions.assertEquals(
+            softwareStatementDetails.getOrganisationId() + "/" + softwareStatementDetails.getSoftwareStatementId(),
             jsonWebSignature.getHeader(OpenBankingJwsHeaders.OPEN_BANKING_ISS));
         Assertions.assertEquals("openbanking.org.uk",
             jsonWebSignature.getHeader(OpenBankingJwsHeaders.OPEN_BANKING_TAN));
@@ -128,11 +128,14 @@ class JwtClaimsSignerTest {
             .signingKeyId("signing-key-id")
             .detachedSignatureUsesDirectoryIssFormat(false)
             .build();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         Mockito.when(keySupplier.getSigningKey(aspspDetails)).thenReturn(keyPair.getPrivate());
         Mockito.when(keySupplier.getSigningCertificate(aspspDetails)).thenReturn(certificate);
 
-        String serialisedSignature = jwtClaimsSigner.createDetachedSignature(jwtClaims, aspspDetails);
+        String serialisedSignature = jwtClaimsSigner.createDetachedSignature(jwtClaims,
+            aspspDetails,
+            softwareStatementDetails);
         JsonWebSignature jsonWebSignature = parseDetachedSignature(serialisedSignature, jwtClaims);
 
         Assertions.assertTrue(jsonWebSignature.verifySignature());
@@ -156,8 +159,8 @@ class JwtClaimsSignerTest {
             jsonWebSignature.getObjectHeader(HeaderParameterNames.CRITICAL));
     }
 
-    private TppConfiguration aTppConfiguration() {
-        TppConfiguration tppConfiguration = new TppConfiguration();
+    private SoftwareStatementDetails aSoftwareStatementDetails() {
+        SoftwareStatementDetails tppConfiguration = new SoftwareStatementDetails();
         tppConfiguration.setOrganisationId("organisation-id");
         tppConfiguration.setSoftwareStatementId("software-statement-id");
         return tppConfiguration;

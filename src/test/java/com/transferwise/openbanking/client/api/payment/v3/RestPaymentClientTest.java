@@ -25,6 +25,7 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.Initiation;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentConsentStatus;
 import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentStatus;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
+import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
@@ -97,6 +98,7 @@ class RestPaymentClientTest {
     void createDomesticPaymentConsent() throws Exception {
         DomesticPaymentConsentRequest domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
@@ -110,7 +112,11 @@ class RestPaymentClientTest {
         Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(domesticPaymentConsentRequest))
             .thenReturn(IDEMPOTENCY_KEY);
 
-        Mockito.when(jwtClaimsSigner.createDetachedSignature(domesticPaymentConsentRequest, aspspDetails))
+        Mockito.when(
+            jwtClaimsSigner.createDetachedSignature(
+                domesticPaymentConsentRequest,
+                aspspDetails,
+                softwareStatementDetails))
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
         DomesticPaymentConsentResponse mockPaymentConsentResponse = aDomesticPaymentConsentResponse();
@@ -129,7 +135,8 @@ class RestPaymentClientTest {
 
         DomesticPaymentConsentResponse paymentConsentResponse = restPaymentClient.createDomesticPaymentConsent(
             domesticPaymentConsentRequest,
-            aspspDetails);
+            aspspDetails,
+            softwareStatementDetails);
 
         Assertions.assertEquals(mockPaymentConsentResponse, paymentConsentResponse);
 
@@ -140,6 +147,7 @@ class RestPaymentClientTest {
     void createDomesticPaymentConsentThrowsApiCallExceptionOnApiCallFailure() {
         DomesticPaymentConsentRequest domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
@@ -153,7 +161,10 @@ class RestPaymentClientTest {
             .andRespond(MockRestResponseCreators.withServerError());
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restPaymentClient.createDomesticPaymentConsent(domesticPaymentConsentRequest, aspspDetails));
+            () -> restPaymentClient.createDomesticPaymentConsent(
+                domesticPaymentConsentRequest,
+                aspspDetails,
+                softwareStatementDetails));
 
         mockAspspServer.verify();
     }
@@ -165,6 +176,7 @@ class RestPaymentClientTest {
 
         DomesticPaymentConsentRequest domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
@@ -179,7 +191,10 @@ class RestPaymentClientTest {
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restPaymentClient.createDomesticPaymentConsent(domesticPaymentConsentRequest, aspspDetails));
+            () -> restPaymentClient.createDomesticPaymentConsent(
+                domesticPaymentConsentRequest,
+                aspspDetails,
+                softwareStatementDetails));
 
         mockAspspServer.verify();
     }
@@ -188,6 +203,7 @@ class RestPaymentClientTest {
     void submitDomesticPayment() throws Exception {
         DomesticPaymentRequest domesticPaymentRequest = aDomesticPaymentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AuthorizationContext authorizationContext = aAuthorizationContext();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -203,7 +219,11 @@ class RestPaymentClientTest {
         Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest))
             .thenReturn(IDEMPOTENCY_KEY);
 
-        Mockito.when(jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest, aspspDetails))
+        Mockito.when(
+            jwtClaimsSigner.createDetachedSignature(
+                domesticPaymentRequest,
+                aspspDetails,
+                softwareStatementDetails))
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
         DomesticPaymentResponse mockDomesticPaymentResponse = aDomesticPaymentResponse();
@@ -223,7 +243,8 @@ class RestPaymentClientTest {
         DomesticPaymentResponse domesticPaymentResponse = restPaymentClient.submitDomesticPayment(
             domesticPaymentRequest,
             authorizationContext,
-            aspspDetails);
+            aspspDetails,
+            softwareStatementDetails);
 
         Assertions.assertEquals(mockDomesticPaymentResponse, domesticPaymentResponse);
 
@@ -234,6 +255,7 @@ class RestPaymentClientTest {
     void submitDomesticPaymentThrowsApiCallExceptionOnApiCallFailure() {
         DomesticPaymentRequest domesticPaymentRequest = aDomesticPaymentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AuthorizationContext authorizationContext = aAuthorizationContext();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -248,7 +270,11 @@ class RestPaymentClientTest {
             .andRespond(MockRestResponseCreators.withBadRequest());
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restPaymentClient.submitDomesticPayment(domesticPaymentRequest, authorizationContext, aspspDetails));
+            () -> restPaymentClient.submitDomesticPayment(
+                domesticPaymentRequest,
+                authorizationContext,
+                aspspDetails,
+                softwareStatementDetails));
 
         mockAspspServer.verify();
     }
@@ -260,6 +286,7 @@ class RestPaymentClientTest {
 
         DomesticPaymentRequest domesticPaymentRequest = aDomesticPaymentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AuthorizationContext authorizationContext = aAuthorizationContext();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -275,7 +302,11 @@ class RestPaymentClientTest {
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restPaymentClient.submitDomesticPayment(domesticPaymentRequest, authorizationContext, aspspDetails));
+            () -> restPaymentClient.submitDomesticPayment(
+                domesticPaymentRequest,
+                authorizationContext,
+                aspspDetails,
+                softwareStatementDetails));
 
         mockAspspServer.verify();
     }
@@ -310,7 +341,8 @@ class RestPaymentClientTest {
 
         Assertions.assertEquals(mockDomesticPaymentConsentResponse, domesticPaymentConsentResponse);
 
-        Mockito.verify(jwtClaimsSigner, Mockito.never()).createDetachedSignature(Mockito.any(), Mockito.any());
+        Mockito.verify(jwtClaimsSigner, Mockito.never())
+            .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
 
         mockAspspServer.verify();
     }
@@ -385,7 +417,8 @@ class RestPaymentClientTest {
 
         Assertions.assertEquals(mockDomesticPaymentResponse, domesticPaymentResponse);
 
-        Mockito.verify(jwtClaimsSigner, Mockito.never()).createDetachedSignature(Mockito.any(), Mockito.any());
+        Mockito.verify(jwtClaimsSigner, Mockito.never())
+            .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
 
         mockAspspServer.verify();
     }
@@ -462,7 +495,8 @@ class RestPaymentClientTest {
 
         Assertions.assertEquals(mockFundsConfirmationResponse, fundsConfirmationResponse);
 
-        Mockito.verify(jwtClaimsSigner, Mockito.never()).createDetachedSignature(Mockito.any(), Mockito.any());
+        Mockito.verify(jwtClaimsSigner, Mockito.never())
+            .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
 
         mockAspspServer.verify();
     }
@@ -514,6 +548,11 @@ class RestPaymentClientTest {
             .apiBaseUrl("https://aspsp.co.uk")
             .tppRedirectUrl("tpp-redirect-url")
             .paymentApiMinorVersion("1")
+            .build();
+    }
+
+    private SoftwareStatementDetails aSoftwareStatementDetails() {
+        return SoftwareStatementDetails.builder()
             .build();
     }
 

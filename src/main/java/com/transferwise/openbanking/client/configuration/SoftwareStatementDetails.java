@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TppConfiguration {
+public class SoftwareStatementDetails {
 
     /**
      * The TPP organisation ID, within the Open Banking directory.
