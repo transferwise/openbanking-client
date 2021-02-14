@@ -72,6 +72,7 @@ class RestRegistrationClientTest {
 
         ClientRegistrationResponse mockResponse = ClientRegistrationResponse.builder()
             .clientId("client-id")
+            .clientIdIssuedAt("100")
             .build();
         String jsonResponse = objectMapper.writeValueAsString(mockResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl()))
@@ -88,6 +89,34 @@ class RestRegistrationClientTest {
             aspspDetails);
 
         Assertions.assertEquals(mockResponse, registrationResponse);
+
+        mockAspspServer.verify();
+    }
+
+    @Test
+    void registerClientHandlesTimestampIssuedAtValues() {
+        ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
+        AspspDetails aspspDetails = aAspspDefinition(false);
+
+        String signedClaims = "signed-claims";
+        Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
+            .thenReturn(signedClaims);
+
+        String jsonResponse = "{" +
+            "\"client_id_issued_at\":\"2021-02-10T12:00:51.191+0000\"," +
+            "\"client_secret_expires_at\":\"2022-02-10T12:00:51.191+0000\"" +
+            "}";
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl()))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+
+        ClientRegistrationResponse registrationResponse = restRegistrationClient.registerClient(
+            clientRegistrationRequest,
+            aspspDetails);
+
+        Assertions.assertEquals("2021-02-10T12:00:51.191+0000", registrationResponse.getClientIdIssuedAt());
+        Assertions.assertEquals("2022-02-10T12:00:51.191+0000",
+            registrationResponse.getClientSecretExpiresAt());
 
         mockAspspServer.verify();
     }
