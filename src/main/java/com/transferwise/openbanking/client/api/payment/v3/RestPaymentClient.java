@@ -10,6 +10,7 @@ import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPayment
 import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.domain.FundsConfirmationResponse;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
+import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
@@ -44,12 +45,15 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     @Override
     public DomesticPaymentConsentResponse createDomesticPaymentConsent(
         DomesticPaymentConsentRequest domesticPaymentConsentRequest,
-        AspspDetails aspspDetails) {
+        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getFinancialId(),
             getClientCredentialsToken(aspspDetails),
             idempotencyKeyGenerator.generateKeyForSetup(domesticPaymentConsentRequest),
-            jwtClaimsSigner.createDetachedSignature(domesticPaymentConsentRequest, aspspDetails));
+            jwtClaimsSigner.createDetachedSignature(domesticPaymentConsentRequest,
+                aspspDetails,
+                softwareStatementDetails));
 
         HttpEntity<DomesticPaymentConsentRequest> request = new HttpEntity<>(domesticPaymentConsentRequest, headers);
 
@@ -78,12 +82,13 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     @Override
     public DomesticPaymentResponse submitDomesticPayment(DomesticPaymentRequest domesticPaymentRequest,
                                                          AuthorizationContext authorizationContext,
-                                                         AspspDetails aspspDetails) {
+                                                         AspspDetails aspspDetails,
+                                                         SoftwareStatementDetails softwareStatementDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getFinancialId(),
             exchangeAuthorizationCode(authorizationContext, aspspDetails),
             idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest),
-            jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest, aspspDetails));
+            jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest, aspspDetails, softwareStatementDetails));
 
         HttpEntity<DomesticPaymentRequest> request = new HttpEntity<>(domesticPaymentRequest, headers);
 

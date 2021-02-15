@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
-import com.transferwise.openbanking.client.configuration.TppConfiguration;
+import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ClientException;
 import com.transferwise.openbanking.client.security.KeySupplier;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +29,10 @@ public class JwtClaimsSigner {
     private static final String X509_CERTIFICATE_TYPE = "X.509";
 
     private final KeySupplier keySupplier;
-    private final TppConfiguration tppConfiguration;
     private final ObjectMapper objectMapper;
 
-    public JwtClaimsSigner(KeySupplier keySupplier, TppConfiguration tppConfiguration) {
+    public JwtClaimsSigner(KeySupplier keySupplier) {
         this.keySupplier = keySupplier;
-        this.tppConfiguration = tppConfiguration;
         this.objectMapper = defaultObjectMapper();
     }
 
@@ -79,11 +77,14 @@ public class JwtClaimsSigner {
      * This means the signature is created with the payload present, but the compact serialised JWS does not include
      * the payload, to allow the payload to be checked for modification in transit using the signature.
      *
-     * @param jwtClaims    The JWT claims to sign
-     * @param aspspDetails The details of the ASPSP which the JWS will be sent to
+     * @param jwtClaims                The JWT claims to sign
+     * @param aspspDetails             The details of the ASPSP which the JWS will be sent to
+     * @param softwareStatementDetails The details of the software statement that the ASPSP registration uses
      * @return The signed claims as a detached compact and URL friendly string.
      */
-    public String createDetachedSignature(Object jwtClaims, AspspDetails aspspDetails) {
+    public String createDetachedSignature(Object jwtClaims,
+                                          AspspDetails aspspDetails,
+                                          SoftwareStatementDetails softwareStatementDetails) {
         String payload;
         try {
             payload = objectMapper.writeValueAsString(jwtClaims);
@@ -97,7 +98,8 @@ public class JwtClaimsSigner {
         jsonWebSignature.setAlgorithmHeaderValue(AlgorithmIdentifiers.RSA_PSS_USING_SHA256);
         jsonWebSignature.setKeyIdHeaderValue(aspspDetails.getSigningKeyId());
         jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_IAT, NumericDate.now().getValue());
-        jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_ISS, generateIssClaim(aspspDetails));
+        jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_ISS,
+            generateIssClaim(aspspDetails, softwareStatementDetails));
         jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_TAN, TRUST_ANCHOR_VALUE);
 
         if (aspspDetails.detachedSignaturesRequireB64Header()) {
@@ -119,9 +121,10 @@ public class JwtClaimsSigner {
         }
     }
 
-    private String generateIssClaim(AspspDetails aspspDetails) {
+    private String generateIssClaim(AspspDetails aspspDetails, SoftwareStatementDetails softwareStatementDetails) {
         if (aspspDetails.detachedSignatureUsesDirectoryIssFormat()) {
-            return tppConfiguration.getOrganisationId() + "/" + tppConfiguration.getSoftwareStatementId();
+            return softwareStatementDetails.getOrganisationId() + "/" +
+                softwareStatementDetails.getSoftwareStatementId();
         } else {
             Certificate signingCertificate = keySupplier.getSigningCertificate(aspspDetails);
             if (X509_CERTIFICATE_TYPE.equalsIgnoreCase(signingCertificate.getType())) {
