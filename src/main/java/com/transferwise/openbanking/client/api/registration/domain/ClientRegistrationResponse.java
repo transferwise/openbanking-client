@@ -29,9 +29,13 @@ public class ClientRegistrationResponse {
 
     private String clientSecret;
 
-    private Integer clientIdIssuedAt;
+    // this should be an integer, containing seconds since epoch, but some ASPSPs incorrectly return a formatted
+    // timestamp, so we use a string to keep things simple and avoid de-serialisation issues
+    private String clientIdIssuedAt;
 
-    private Integer clientSecretExpiresAt;
+    // this should be an integer, containing seconds since epoch, but some ASPSPs incorrectly return a formatted
+    // timestamp, so we use a string to keep things simple and avoid de-serialisation issues
+    private String clientSecretExpiresAt;
 
     private List<String> redirectUris;
 

@@ -3,6 +3,20 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2021-02-15
+### Changed
+- Refactor the classes which use the `TppConfiguration` class as a class variable, to instead take an instance of the
+  class as a method parameter. This makes it easier to have multiple `TppConfiguration` in use at the same time,
+  without having to create separate instances of the classes which use it.
+- Rename the `TppConfiguration` class to `SoftwareStatementDetails`, to better describe what it now represents.
+- Rename the `RegistrationRequestService` `generateRegistrationRequest` `softwareStatement` method parameter to better
+  differentiate it and the `softwareStatementDetails` parameter.
+- Change the `clientIdIssuedAt` and `clientSecretExpiresAt` fields in the `ClientRegistrationResponse` class from type
+  `Integer` to type `String`, to handle ASPSPs that return timestamps in these fields instead of integers.
+- When requesting an access token for the update client registration API call, decide whether or not to include `openid`
+  in the scope parameter, based on the ASPSP integration details via the new 
+  `registrationAuthenticationRequiresOpenIdScope` method.
+
 ## [2.0.2] - 2021-02-01
 ### Changed
 - When requesting an access token for the update client registration API call, set the scope parameter to `payments`, 

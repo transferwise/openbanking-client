@@ -31,6 +31,7 @@ public class TestAspspDetails implements AspspDetails {
     private boolean registrationUsesJoseContentType;
     private boolean detachedSignatureUsesDirectoryIssFormat;
     private boolean registrationRequiresLowerCaseJtiClaim;
+    private boolean registrationAuthenticationRequiresOpenIdScope;
 
     @Override
     public String getApiBaseUrl(String majorVersion, String resource) {
@@ -50,5 +51,10 @@ public class TestAspspDetails implements AspspDetails {
     @Override
     public boolean registrationRequiresLowerCaseJtiClaim() {
         return registrationRequiresLowerCaseJtiClaim;
+    }
+
+    @Override
+    public boolean registrationAuthenticationRequiresOpenIdScope() {
+        return registrationAuthenticationRequiresOpenIdScope;
     }
 }
