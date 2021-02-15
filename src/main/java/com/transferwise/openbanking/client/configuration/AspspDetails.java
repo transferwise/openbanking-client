@@ -207,4 +207,14 @@ public interface AspspDetails {
     default boolean registrationRequiresLowerCaseJtiClaim() {
         return false;
     }
+
+    /**
+     * Whether or not the ASPSP requires the access token, used as the authorisation for get / update / delete client
+     * registration API calls, to have the openid scope.
+     *
+     * @return {@code true} if the authorisation must have the openid scope, {@code false} if it must not.
+     */
+    default boolean registrationAuthenticationRequiresOpenIdScope() {
+        return true;
+    }
 }
