@@ -49,7 +49,7 @@ public class RegistrationRequestService {
 
         ClientRegistrationRequest.ClientRegistrationRequestBuilder requestBuilder = ClientRegistrationRequest.builder()
             .iss(softwareStatementDetails.getSoftwareStatementId())
-            .aud(aspspDetails.getRegistrationIssuerUrl())
+            .aud(aspspDetails.getRegistrationAudience())
             .iat(now.getEpochSecond())
             .exp(now.plusSeconds(REGISTRATION_TOKEN_VALIDITY_SECONDS).getEpochSecond())
             .jti(generateJwtIdValue(aspspDetails))

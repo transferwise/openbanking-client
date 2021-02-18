@@ -63,14 +63,16 @@ public interface AspspDetails {
     }
 
     /**
-     * Get the URL to use as the intended audience value for a JWT generated for a client registration.
+     * Get the value to use as the intended audience claim within a client registration request. For most ASPSPs this
+     * will be ASPSP organisation ID (within the Open Banking directory), however some ASPSPs may require a different
+     * value.
      *
      * <p>Not all ASPSPs support a registration API, therefore not all implementations implement this method.
      *
-     * @return the JWT intended audience URL
+     * @return the intended audience claim value to use
      */
-    default String getRegistrationIssuerUrl() {
-        throw new UnsupportedOperationException("getRegistrationIssuerUrl not implemented");
+    default String getRegistrationAudience() {
+        return getOrganisationId();
     }
 
     /**

@@ -17,7 +17,7 @@ public class TestAspspDetails implements AspspDetails {
     private String apiBaseUrl;
     private String tokenUrl;
     private String registrationUrl;
-    private String registrationIssuerUrl;
+    private String registrationAudience;
     private String tokenIssuerUrl;
     private String tppRedirectUrl;
     private ClientAuthenticationMethod clientAuthenticationMethod;
