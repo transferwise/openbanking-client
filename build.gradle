@@ -31,7 +31,7 @@ ext {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
