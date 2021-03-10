@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 public class TestAspspDetails implements AspspDetails {
     private String internalId;
-    private String financialId;
+    private String organisationId;
     private String apiBaseUrl;
     private String tokenUrl;
     private String registrationUrl;

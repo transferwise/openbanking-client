@@ -23,17 +23,17 @@ public interface AspspDetails {
     String getInternalId();
 
     /**
-     * Get the identifier, assigned by a central service, of the ASPSP.
+     * Get the identifier, assigned by the Open Banking directory, for the ASPSP organisation.
      *
-     * <p>This value cannot be considered as a unique ASPSP identifier as the same value may be used across several banks
-     * within the same group.
+     * <p>This value cannot be considered as a unique ASPSP identifier as the same value may be used across several
+     * ASPSP brands within the same organisation.
      *
      * <p>This value also cannot be considered as a human friendly identifier, as values are randomly assigned and have
      * no correlation to the ASPSP name.
      *
-     * @return the financial identifier for the ASPSP
+     * @return the organisation identifier for the ASPSP
      */
-    String getFinancialId();
+    String getOrganisationId();
 
     /**
      * Get the base URL for the ASPSPs Open Banking API, to use as the prefix for an API call to the ASPSP.
