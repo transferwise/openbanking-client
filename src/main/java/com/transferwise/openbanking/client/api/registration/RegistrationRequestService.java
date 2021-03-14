@@ -48,7 +48,7 @@ public class RegistrationRequestService {
         String signingAlgorithm = aspspDetails.getSigningAlgorithm();
 
         ClientRegistrationRequest.ClientRegistrationRequestBuilder requestBuilder = ClientRegistrationRequest.builder()
-            .iss(softwareStatementDetails.getSoftwareStatementId())
+            .iss(aspspDetails.getRegistrationIssuer(softwareStatementDetails))
             .aud(aspspDetails.getRegistrationAudience())
             .iat(now.getEpochSecond())
             .exp(now.plusSeconds(REGISTRATION_TOKEN_VALIDITY_SECONDS).getEpochSecond())

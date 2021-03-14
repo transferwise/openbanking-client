@@ -47,6 +47,7 @@ class RegistrationRequestServiceTest {
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
             .registrationAudience("registration-issuer-url")
+            .registrationIssuer("organisation-id")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -75,7 +76,7 @@ class RegistrationRequestServiceTest {
             clientRegistrationRequest.getIdTokenSignedResponseAlg());
         Assertions.assertEquals(aspspDetails.getSigningAlgorithm(),
             clientRegistrationRequest.getRequestObjectSigningAlg());
-        Assertions.assertEquals(softwareStatementDetails.getSoftwareStatementId(), clientRegistrationRequest.getIss());
+        Assertions.assertEquals("organisation-id", clientRegistrationRequest.getIss());
         Assertions.assertEquals(softwareStatementDetails.getSoftwareStatementId(),
             clientRegistrationRequest.getSoftwareId());
         Assertions.assertEquals(softwareStatementDetails.getRedirectUrls(),

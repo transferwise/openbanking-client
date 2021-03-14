@@ -1,6 +1,7 @@
 package com.transferwise.openbanking.client.test;
 
 import com.transferwise.openbanking.client.configuration.AspspDetails;
+import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod;
 import com.transferwise.openbanking.client.oauth.domain.GrantType;
 import com.transferwise.openbanking.client.oauth.domain.ResponseType;
@@ -18,6 +19,7 @@ public class TestAspspDetails implements AspspDetails {
     private String tokenUrl;
     private String registrationUrl;
     private String registrationAudience;
+    private String registrationIssuer;
     private String tokenIssuerUrl;
     private String tppRedirectUrl;
     private ClientAuthenticationMethod clientAuthenticationMethod;
@@ -36,6 +38,11 @@ public class TestAspspDetails implements AspspDetails {
     @Override
     public String getApiBaseUrl(String majorVersion, String resource) {
         return apiBaseUrl;
+    }
+
+    @Override
+    public String getRegistrationIssuer(SoftwareStatementDetails softwareStatementDetails) {
+        return registrationIssuer;
     }
 
     @Override

@@ -76,6 +76,17 @@ public interface AspspDetails {
     }
 
     /**
+     * Get the value to use as the issuer claim within a client registration request. For most ASPSPs this will be the
+     * ID of the software statement used for the registration, however some ASPSPs may require a different value.
+     *
+     * @param softwareStatementDetails the details of the software statement being used for the registration
+     * @return the issuer claim value to use, defaults to the software statement ID
+     */
+    default String getRegistrationIssuer(SoftwareStatementDetails softwareStatementDetails) {
+        return softwareStatementDetails.getSoftwareStatementId();
+    }
+
+    /**
      * Get the URL to use as the intended audience value for a JWT generated for requesting an OAuth access token.
      *
      * <p>This URL is only applicable for certain client authentication methods, namely
