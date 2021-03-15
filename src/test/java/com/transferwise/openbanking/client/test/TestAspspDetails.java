@@ -20,7 +20,6 @@ public class TestAspspDetails implements AspspDetails {
     private String registrationUrl;
     private String registrationAudience;
     private String registrationIssuer;
-    private String tppRedirectUrl;
     private ClientAuthenticationMethod clientAuthenticationMethod;
     private String clientId;
     private String clientSecret;

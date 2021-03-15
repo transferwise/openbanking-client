@@ -546,7 +546,6 @@ class RestPaymentClientTest {
     private AspspDetails aAspspDefinition() {
         return TestAspspDetails.builder()
             .apiBaseUrl("https://aspsp.co.uk")
-            .tppRedirectUrl("tpp-redirect-url")
             .paymentApiMinorVersion("1")
             .build();
     }
