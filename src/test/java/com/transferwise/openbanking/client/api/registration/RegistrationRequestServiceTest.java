@@ -46,7 +46,8 @@ class RegistrationRequestServiceTest {
         String softwareStatement = "software-statement";
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
+            .registrationIssuer("organisation-id")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -67,7 +68,7 @@ class RegistrationRequestServiceTest {
         Assertions.assertEquals("openid payments", clientRegistrationRequest.getScope());
         Assertions.assertEquals(ApplicationType.WEB, clientRegistrationRequest.getApplicationType());
         Assertions.assertEquals(softwareStatement, clientRegistrationRequest.getSoftwareStatement());
-        Assertions.assertEquals(aspspDetails.getRegistrationIssuerUrl(), clientRegistrationRequest.getAud());
+        Assertions.assertEquals(aspspDetails.getRegistrationAudience(), clientRegistrationRequest.getAud());
         Assertions.assertEquals(aspspDetails.getGrantTypes(), clientRegistrationRequest.getGrantTypes());
         Assertions.assertEquals(aspspDetails.getClientAuthenticationMethod().getMethodName(),
             clientRegistrationRequest.getTokenEndpointAuthMethod());
@@ -75,7 +76,7 @@ class RegistrationRequestServiceTest {
             clientRegistrationRequest.getIdTokenSignedResponseAlg());
         Assertions.assertEquals(aspspDetails.getSigningAlgorithm(),
             clientRegistrationRequest.getRequestObjectSigningAlg());
-        Assertions.assertEquals(softwareStatementDetails.getSoftwareStatementId(), clientRegistrationRequest.getIss());
+        Assertions.assertEquals("organisation-id", clientRegistrationRequest.getIss());
         Assertions.assertEquals(softwareStatementDetails.getSoftwareStatementId(),
             clientRegistrationRequest.getSoftwareId());
         Assertions.assertEquals(softwareStatementDetails.getRedirectUrls(),
@@ -87,7 +88,7 @@ class RegistrationRequestServiceTest {
         String softwareStatement = "software-statement";
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.PRIVATE_KEY_JWT)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -108,7 +109,7 @@ class RegistrationRequestServiceTest {
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         softwareStatementDetails.setPermissions(List.of(RegistrationPermission.PAYMENTS));
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.PRIVATE_KEY_JWT)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -128,7 +129,7 @@ class RegistrationRequestServiceTest {
         String softwareStatement = "software-statement";
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.TLS_CLIENT_AUTH)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -153,7 +154,7 @@ class RegistrationRequestServiceTest {
         String softwareStatement = "software-statement";
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.PRIVATE_KEY_JWT)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)

@@ -48,7 +48,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails) {
 
-        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getFinancialId(),
+        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
             getClientCredentialsToken(aspspDetails),
             idempotencyKeyGenerator.generateKeyForSetup(domesticPaymentConsentRequest),
             jwtClaimsSigner.createDetachedSignature(domesticPaymentConsentRequest,
@@ -85,7 +85,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                                                          AspspDetails aspspDetails,
                                                          SoftwareStatementDetails softwareStatementDetails) {
 
-        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getFinancialId(),
+        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
             exchangeAuthorizationCode(authorizationContext, aspspDetails),
             idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest),
             jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest, aspspDetails, softwareStatementDetails));
@@ -117,7 +117,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     @Override
     public DomesticPaymentConsentResponse getDomesticPaymentConsent(String consentId, AspspDetails aspspDetails) {
 
-        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getFinancialId(),
+        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
             getClientCredentialsToken(aspspDetails));
 
         HttpEntity<?> request = new HttpEntity<>(headers);
@@ -148,7 +148,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     @Override
     public DomesticPaymentResponse getDomesticPayment(String domesticPaymentId, AspspDetails aspspDetails) {
 
-        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getFinancialId(),
+        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
             getClientCredentialsToken(aspspDetails));
 
         HttpEntity<?> request = new HttpEntity<>(headers);
@@ -181,7 +181,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                                                           AuthorizationContext authorizationContext,
                                                           AspspDetails aspspDetails) {
 
-        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getFinancialId(),
+        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
             exchangeAuthorizationCode(authorizationContext, aspspDetails));
 
         HttpEntity<?> request = new HttpEntity<>(headers);
