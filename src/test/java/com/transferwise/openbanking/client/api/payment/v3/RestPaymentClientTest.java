@@ -3,27 +3,24 @@ package com.transferwise.openbanking.client.api.payment.v3;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
-import com.transferwise.openbanking.client.api.payment.common.domain.InstructedAmount;
-import com.transferwise.openbanking.client.api.payment.common.domain.RemittanceInformation;
-import com.transferwise.openbanking.client.api.payment.common.domain.Risk;
-import com.transferwise.openbanking.client.api.payment.v3.domain.AccountIdentificationCode;
-import com.transferwise.openbanking.client.api.payment.v3.domain.Authorisation;
-import com.transferwise.openbanking.client.api.payment.v3.domain.AuthorisationType;
-import com.transferwise.openbanking.client.api.payment.v3.domain.CreditorAccount;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentData;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentRequest;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentResponse;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentResponseData;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentData;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentRequest;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponseData;
-import com.transferwise.openbanking.client.api.payment.v3.domain.FundsAvailableResult;
-import com.transferwise.openbanking.client.api.payment.v3.domain.FundsConfirmationResponse;
-import com.transferwise.openbanking.client.api.payment.v3.domain.FundsConfirmationResponseData;
-import com.transferwise.openbanking.client.api.payment.v3.domain.Initiation;
-import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentConsentStatus;
-import com.transferwise.openbanking.client.api.payment.v3.domain.PaymentStatus;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBExternalAccountIdentification4Code;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBRisk1;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2Data;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2DataInitiation;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2DataInitiationCreditorAccount;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2DataInitiationInstructedAmount;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2DataInitiationRemittanceInformation;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsent4;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsent4Data;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsent4DataAuthorisation;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsentResponse5;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsentResponse5Data;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticResponse5;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticResponse5Data;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteFundsConfirmationResponse1;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteFundsConfirmationResponse1Data;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteFundsConfirmationResponse1DataFundsAvailableResult;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
@@ -69,7 +66,7 @@ class RestPaymentClientTest {
     private OAuthClient oAuthClient;
 
     @Mock
-    private IdempotencyKeyGenerator<DomesticPaymentConsentRequest, DomesticPaymentRequest> idempotencyKeyGenerator;
+    private IdempotencyKeyGenerator<OBWriteDomesticConsent4, OBWriteDomestic2> idempotencyKeyGenerator;
 
     @Mock
     private JwtClaimsSigner jwtClaimsSigner;
@@ -96,7 +93,7 @@ class RestPaymentClientTest {
 
     @Test
     void createDomesticPaymentConsent() throws Exception {
-        DomesticPaymentConsentRequest domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
+        OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
@@ -119,7 +116,7 @@ class RestPaymentClientTest {
                 softwareStatementDetails))
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
-        DomesticPaymentConsentResponse mockPaymentConsentResponse = aDomesticPaymentConsentResponse();
+        OBWriteDomesticConsentResponse5 mockPaymentConsentResponse = aDomesticPaymentConsentResponse();
         String jsonResponse = objectMapper.writeValueAsString(mockPaymentConsentResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
@@ -133,7 +130,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.content().json(objectMapper.writeValueAsString(domesticPaymentConsentRequest)))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        DomesticPaymentConsentResponse paymentConsentResponse = restPaymentClient.createDomesticPaymentConsent(
+        OBWriteDomesticConsentResponse5 paymentConsentResponse = restPaymentClient.createDomesticPaymentConsent(
             domesticPaymentConsentRequest,
             aspspDetails,
             softwareStatementDetails);
@@ -145,7 +142,7 @@ class RestPaymentClientTest {
 
     @Test
     void createDomesticPaymentConsentThrowsApiCallExceptionOnApiCallFailure() {
-        DomesticPaymentConsentRequest domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
+        OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
@@ -153,7 +150,7 @@ class RestPaymentClientTest {
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(Mockito.any(DomesticPaymentConsentRequest.class)))
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(Mockito.any(OBWriteDomesticConsent4.class)))
             .thenReturn(IDEMPOTENCY_KEY);
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents"))
@@ -171,10 +168,10 @@ class RestPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentConsentResponses.class)
-    void createDomesticPaymentConsentThrowsApiCallExceptionOnPartialResponse(DomesticPaymentConsentResponse response)
+    void createDomesticPaymentConsentThrowsApiCallExceptionOnPartialResponse(OBWriteDomesticConsentResponse5 response)
         throws Exception{
 
-        DomesticPaymentConsentRequest domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
+        OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
@@ -182,7 +179,7 @@ class RestPaymentClientTest {
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(Mockito.any(DomesticPaymentConsentRequest.class)))
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(Mockito.any(OBWriteDomesticConsent4.class)))
             .thenReturn(IDEMPOTENCY_KEY);
 
         String jsonResponse = objectMapper.writeValueAsString(response);
@@ -201,7 +198,7 @@ class RestPaymentClientTest {
 
     @Test
     void submitDomesticPayment() throws Exception {
-        DomesticPaymentRequest domesticPaymentRequest = aDomesticPaymentRequest();
+        OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AuthorizationContext authorizationContext = aAuthorizationContext();
@@ -226,7 +223,7 @@ class RestPaymentClientTest {
                 softwareStatementDetails))
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
-        DomesticPaymentResponse mockDomesticPaymentResponse = aDomesticPaymentResponse();
+        OBWriteDomesticResponse5 mockDomesticPaymentResponse = aDomesticPaymentResponse();
         String jsonResponse = objectMapper.writeValueAsString(mockDomesticPaymentResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payments"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
@@ -240,8 +237,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.content().json(objectMapper.writeValueAsString(domesticPaymentRequest)))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        DomesticPaymentResponse domesticPaymentResponse = restPaymentClient.submitDomesticPayment(
-            domesticPaymentRequest,
+        OBWriteDomesticResponse5 domesticPaymentResponse = restPaymentClient.submitDomesticPayment(domesticPaymentRequest,
             authorizationContext,
             aspspDetails,
             softwareStatementDetails);
@@ -253,7 +249,7 @@ class RestPaymentClientTest {
 
     @Test
     void submitDomesticPaymentThrowsApiCallExceptionOnApiCallFailure() {
-        DomesticPaymentRequest domesticPaymentRequest = aDomesticPaymentRequest();
+        OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AuthorizationContext authorizationContext = aAuthorizationContext();
@@ -262,7 +258,7 @@ class RestPaymentClientTest {
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(DomesticPaymentRequest.class)))
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(OBWriteDomestic2.class)))
             .thenReturn(IDEMPOTENCY_KEY);
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payments"))
@@ -281,10 +277,10 @@ class RestPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentResponses.class)
-    void submitDomesticPaymentThrowsApiCallExceptionOnPartialResponse(DomesticPaymentResponse response)
+    void submitDomesticPaymentThrowsApiCallExceptionOnPartialResponse(OBWriteDomesticResponse5 response)
         throws Exception {
 
-        DomesticPaymentRequest domesticPaymentRequest = aDomesticPaymentRequest();
+        OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AuthorizationContext authorizationContext = aAuthorizationContext();
@@ -293,7 +289,7 @@ class RestPaymentClientTest {
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(DomesticPaymentRequest.class)))
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(OBWriteDomestic2.class)))
             .thenReturn(IDEMPOTENCY_KEY);
 
         String jsonResponse = objectMapper.writeValueAsString(response);
@@ -325,7 +321,7 @@ class RestPaymentClientTest {
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
-        DomesticPaymentConsentResponse mockDomesticPaymentConsentResponse = aDomesticPaymentConsentResponse();
+        OBWriteDomesticConsentResponse5 mockDomesticPaymentConsentResponse = aDomesticPaymentConsentResponse();
         String jsonResponse = objectMapper.writeValueAsString(mockDomesticPaymentConsentResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
@@ -335,7 +331,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        DomesticPaymentConsentResponse domesticPaymentConsentResponse = restPaymentClient.getDomesticPaymentConsent(
+        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = restPaymentClient.getDomesticPaymentConsent(
             consentId,
             aspspDetails);
 
@@ -368,7 +364,7 @@ class RestPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentConsentResponses.class)
-    void getDomesticPaymentConsentThrowsApiCallExceptionPartialResponse(DomesticPaymentConsentResponse response)
+    void getDomesticPaymentConsentThrowsApiCallExceptionPartialResponse(OBWriteDomesticConsentResponse5 response)
         throws Exception {
         String consentId = "consent-id";
         AspspDetails aspspDetails = aAspspDefinition();
@@ -402,7 +398,7 @@ class RestPaymentClientTest {
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
-        DomesticPaymentResponse mockDomesticPaymentResponse = aDomesticPaymentResponse();
+        OBWriteDomesticResponse5 mockDomesticPaymentResponse = aDomesticPaymentResponse();
         String jsonResponse = objectMapper.writeValueAsString(mockDomesticPaymentResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payments/" + domesticPaymentId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
@@ -412,7 +408,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        DomesticPaymentResponse domesticPaymentResponse = restPaymentClient.getDomesticPayment(domesticPaymentId,
+        OBWriteDomesticResponse5 domesticPaymentResponse = restPaymentClient.getDomesticPayment(domesticPaymentId,
             aspspDetails);
 
         Assertions.assertEquals(mockDomesticPaymentResponse, domesticPaymentResponse);
@@ -444,7 +440,7 @@ class RestPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentResponses.class)
-    void getDomesticPaymentThrowsApiCallExceptionPartialResponse(DomesticPaymentResponse response) throws Exception {
+    void getDomesticPaymentThrowsApiCallExceptionPartialResponse(OBWriteDomesticResponse5 response) throws Exception {
         String domesticPaymentId = "domestic-payment-id";
         AspspDetails aspspDetails = aAspspDefinition();
 
@@ -479,7 +475,7 @@ class RestPaymentClientTest {
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
-        FundsConfirmationResponse mockFundsConfirmationResponse = aFundsConfirmationResponse();
+        OBWriteFundsConfirmationResponse1 mockFundsConfirmationResponse = aFundsConfirmationResponse();
         String jsonResponse = objectMapper.writeValueAsString(mockFundsConfirmationResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
@@ -489,7 +485,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        FundsConfirmationResponse fundsConfirmationResponse = restPaymentClient.getFundsConfirmation(consentId,
+        OBWriteFundsConfirmationResponse1 fundsConfirmationResponse = restPaymentClient.getFundsConfirmation(consentId,
             authorizationContext,
             aspspDetails);
 
@@ -523,7 +519,8 @@ class RestPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialFundsConfirmationResponses.class)
-    void getFundsConfirmationThrowsApiCallExceptionPartialResponse(FundsConfirmationResponse response) throws Exception {
+    void getFundsConfirmationThrowsApiCallExceptionPartialResponse(OBWriteFundsConfirmationResponse1 response)
+        throws Exception {
         String consentId = "consent-id";
         AuthorizationContext authorizationContext = aAuthorizationContext();
         AspspDetails aspspDetails = aAspspDefinition();
@@ -555,71 +552,82 @@ class RestPaymentClientTest {
             .build();
     }
 
-    private DomesticPaymentConsentRequest aDomesticPaymentConsentRequest() {
-        Authorisation authorisation = Authorisation.builder()
-            .authorisationType(AuthorisationType.SINGLE)
-            .build();
-        InstructedAmount instructedAmount = new InstructedAmount("1000.00", "GBP");
-        CreditorAccount creditorAccount = new CreditorAccount(AccountIdentificationCode.SORT_CODE_ACCOUNT_NUMBER,
-            "112233123456",
-            "TransferWise Ltd");
-        RemittanceInformation remittanceInformation = new RemittanceInformation("reference");
-        Initiation initiation = new Initiation("instruction-identification",
-            "end-to-end-identification",
-            instructedAmount,
-            creditorAccount,
-            remittanceInformation);
-        DomesticPaymentConsentData data = DomesticPaymentConsentData.builder()
+    private OBWriteDomesticConsent4 aDomesticPaymentConsentRequest() {
+        OBWriteDomesticConsent4DataAuthorisation authorisation =
+            new OBWriteDomesticConsent4DataAuthorisation()
+                .authorisationType(OBWriteDomesticConsent4DataAuthorisation.AuthorisationTypeEnum.SINGLE);
+        OBWriteDomestic2DataInitiationInstructedAmount instructedAmount =
+            new OBWriteDomestic2DataInitiationInstructedAmount()
+                .amount("1000.00")
+                .currency("GBP");
+
+        OBWriteDomestic2DataInitiationCreditorAccount creditorAccount =
+            new OBWriteDomestic2DataInitiationCreditorAccount()
+                .schemeName(OBExternalAccountIdentification4Code.SORTCODEACCOUNTNUMBER)
+                .identification("112233123456")
+                .name("TransferWise Ltd");
+        OBWriteDomestic2DataInitiationRemittanceInformation remittanceInformation =
+            new OBWriteDomestic2DataInitiationRemittanceInformation()
+                .reference("reference");
+        OBWriteDomestic2DataInitiation initiation = new OBWriteDomestic2DataInitiation()
+            .instructionIdentification("instruction-identification")
+            .endToEndIdentification("end-to-end-identification")
+            .instructedAmount(instructedAmount)
+            .creditorAccount(creditorAccount)
+            .remittanceInformation(remittanceInformation);
+        OBWriteDomesticConsent4Data data = new OBWriteDomesticConsent4Data()
             .authorisation(authorisation)
-            .initiation(initiation)
-            .build();
-        Risk risk = new Risk("Other");
-        return DomesticPaymentConsentRequest.builder()
+            .initiation(initiation);
+        OBRisk1 risk = new OBRisk1()
+            .paymentContextCode(OBRisk1.PaymentContextCodeEnum.OTHER);
+        return new OBWriteDomesticConsent4()
             .data(data)
-            .risk(risk)
-            .build();
+            .risk(risk);
     }
 
-    private DomesticPaymentRequest aDomesticPaymentRequest() {
-        InstructedAmount instructedAmount = new InstructedAmount("1000.00", "GBP");
-        CreditorAccount creditorAccount = new CreditorAccount(AccountIdentificationCode.SORT_CODE_ACCOUNT_NUMBER,
-            "112233123456",
-            "TransferWise Ltd");
-        RemittanceInformation remittanceInformation = new RemittanceInformation("reference");
-        Initiation initiation = new Initiation("instruction-identification",
-            "end-to-end-identification",
-            instructedAmount,
-            creditorAccount,
-            remittanceInformation);
-        DomesticPaymentData data = DomesticPaymentData.builder()
+    private OBWriteDomestic2 aDomesticPaymentRequest() {
+        OBWriteDomestic2DataInitiationInstructedAmount instructedAmount =
+            new OBWriteDomestic2DataInitiationInstructedAmount()
+                .amount("1000.00")
+                .currency("GBP");
+        OBWriteDomestic2DataInitiationCreditorAccount creditorAccount =
+            new OBWriteDomestic2DataInitiationCreditorAccount()
+                .schemeName(OBExternalAccountIdentification4Code.SORTCODEACCOUNTNUMBER)
+                .identification("112233123456")
+                .name("TransferWise Ltd");
+        OBWriteDomestic2DataInitiationRemittanceInformation remittanceInformation =
+            new OBWriteDomestic2DataInitiationRemittanceInformation()
+                .reference("reference");
+        OBWriteDomestic2DataInitiation initiation = new OBWriteDomestic2DataInitiation()
+            .instructionIdentification("instruction-identification")
+            .endToEndIdentification("end-to-end-identification")
+            .instructedAmount(instructedAmount)
+            .creditorAccount(creditorAccount)
+            .remittanceInformation(remittanceInformation);
+        OBWriteDomestic2Data data = new OBWriteDomestic2Data()
             .consentId("consent-id")
-            .initiation(initiation)
-            .build();
-        Risk risk = new Risk("Other");
-        return DomesticPaymentRequest.builder()
+            .initiation(initiation);
+        OBRisk1 risk = new OBRisk1()
+            .paymentContextCode(OBRisk1.PaymentContextCodeEnum.OTHER);
+        return new OBWriteDomestic2()
             .data(data)
-            .risk(risk)
-            .build();
+            .risk(risk);
     }
 
-    private DomesticPaymentConsentResponse aDomesticPaymentConsentResponse() {
-        DomesticPaymentConsentResponseData data = DomesticPaymentConsentResponseData.builder()
+    private OBWriteDomesticConsentResponse5 aDomesticPaymentConsentResponse() {
+        OBWriteDomesticConsentResponse5Data data = new OBWriteDomesticConsentResponse5Data()
             .consentId("consent-id")
-            .status(PaymentConsentStatus.AUTHORISED)
-            .build();
-        return DomesticPaymentConsentResponse.builder()
-            .data(data)
-            .build();
+            .status(OBWriteDomesticConsentResponse5Data.StatusEnum.AUTHORISED);
+        return new OBWriteDomesticConsentResponse5()
+            .data(data);
     }
 
-    private DomesticPaymentResponse aDomesticPaymentResponse() {
-        DomesticPaymentResponseData data = DomesticPaymentResponseData.builder()
+    private OBWriteDomesticResponse5 aDomesticPaymentResponse() {
+        OBWriteDomesticResponse5Data data = new OBWriteDomesticResponse5Data()
             .domesticPaymentId("domestic-payment-id")
-            .status(PaymentStatus.ACCEPTED_SETTLEMENT_IN_PROCESS)
-            .build();
-        return DomesticPaymentResponse.builder()
-            .data(data)
-            .build();
+            .status(OBWriteDomesticResponse5Data.StatusEnum.ACCEPTEDSETTLEMENTINPROCESS);
+        return new OBWriteDomesticResponse5()
+            .data(data);
     }
 
     private AccessTokenResponse aAccessTokenResponse() {
@@ -628,16 +636,14 @@ class RestPaymentClientTest {
             .build();
     }
 
-    private FundsConfirmationResponse aFundsConfirmationResponse() {
-        FundsAvailableResult fundsAvailableResult = FundsAvailableResult.builder()
-            .fundsAvailable(true)
-            .build();
-        FundsConfirmationResponseData data = FundsConfirmationResponseData.builder()
-            .fundsAvailableResult(fundsAvailableResult)
-            .build();
-        return FundsConfirmationResponse.builder()
-            .data(data)
-            .build();
+    private OBWriteFundsConfirmationResponse1 aFundsConfirmationResponse() {
+        OBWriteFundsConfirmationResponse1DataFundsAvailableResult fundsAvailableResult =
+            new OBWriteFundsConfirmationResponse1DataFundsAvailableResult()
+                .fundsAvailable(true);
+        OBWriteFundsConfirmationResponse1Data data = new OBWriteFundsConfirmationResponse1Data()
+            .fundsAvailableResult(fundsAvailableResult);
+        return new OBWriteFundsConfirmationResponse1()
+            .data(data);
     }
 
     private AuthorizationContext aAuthorizationContext() {
@@ -653,25 +659,24 @@ class RestPaymentClientTest {
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
             return Stream.of(
                 Arguments.of(nullData()),
-                Arguments.of(ofData(null, PaymentConsentStatus.CONSUMED)),
-                Arguments.of(ofData("", PaymentConsentStatus.CONSUMED)),
-                Arguments.of(ofData(" ", PaymentConsentStatus.CONSUMED)),
+                Arguments.of(ofData(null, OBWriteDomesticConsentResponse5Data.StatusEnum.CONSUMED)),
+                Arguments.of(ofData("", OBWriteDomesticConsentResponse5Data.StatusEnum.CONSUMED)),
+                Arguments.of(ofData(" ", OBWriteDomesticConsentResponse5Data.StatusEnum.CONSUMED)),
                 Arguments.of(ofData("123", null))
             );
         }
 
-        private DomesticPaymentConsentResponse nullData() {
-            return new DomesticPaymentConsentResponse();
+        private OBWriteDomesticConsentResponse5 nullData() {
+            return new OBWriteDomesticConsentResponse5();
         }
 
-        private DomesticPaymentConsentResponse ofData(String consentId, PaymentConsentStatus status) {
-            DomesticPaymentConsentResponseData data = DomesticPaymentConsentResponseData.builder()
+        private OBWriteDomesticConsentResponse5 ofData(String consentId,
+                                                       OBWriteDomesticConsentResponse5Data.StatusEnum status) {
+            OBWriteDomesticConsentResponse5Data data = new OBWriteDomesticConsentResponse5Data()
                 .consentId(consentId)
-                .status(status)
-                .build();
-            return DomesticPaymentConsentResponse.builder()
-                .data(data)
-                .build();
+                .status(status);
+            return new OBWriteDomesticConsentResponse5()
+                .data(data);
         }
     }
 
@@ -681,25 +686,24 @@ class RestPaymentClientTest {
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
             return Stream.of(
                 Arguments.of(nullData()),
-                Arguments.of(ofData(null, PaymentStatus.PENDING)),
-                Arguments.of(ofData("", PaymentStatus.PENDING)),
-                Arguments.of(ofData(" ", PaymentStatus.PENDING)),
+                Arguments.of(ofData(null, OBWriteDomesticResponse5Data.StatusEnum.PENDING)),
+                Arguments.of(ofData("", OBWriteDomesticResponse5Data.StatusEnum.PENDING)),
+                Arguments.of(ofData(" ", OBWriteDomesticResponse5Data.StatusEnum.PENDING)),
                 Arguments.of(ofData("123", null))
             );
         }
 
-        private DomesticPaymentResponse nullData() {
-            return new DomesticPaymentResponse();
+        private OBWriteDomesticResponse5 nullData() {
+            return new OBWriteDomesticResponse5();
         }
 
-        private DomesticPaymentResponse ofData(String domesticPaymentId, PaymentStatus status) {
-            DomesticPaymentResponseData data = DomesticPaymentResponseData.builder()
+        private OBWriteDomesticResponse5 ofData(String domesticPaymentId,
+                                                OBWriteDomesticResponse5Data.StatusEnum status) {
+            OBWriteDomesticResponse5Data data = new OBWriteDomesticResponse5Data()
                 .domesticPaymentId(domesticPaymentId)
-                .status(status)
-                .build();
-            return DomesticPaymentResponse.builder()
-                .data(data)
-                .build();
+                .status(status);
+            return new OBWriteDomesticResponse5()
+                .data(data);
         }
     }
 
@@ -712,8 +716,8 @@ class RestPaymentClientTest {
             );
         }
 
-        private FundsConfirmationResponse nullData() {
-            return new FundsConfirmationResponse();
+        private OBWriteFundsConfirmationResponse1 nullData() {
+            return new OBWriteFundsConfirmationResponse1();
         }
     }
 }
