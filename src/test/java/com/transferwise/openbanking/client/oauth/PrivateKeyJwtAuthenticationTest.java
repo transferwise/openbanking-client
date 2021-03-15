@@ -14,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collections;
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class PrivateKeyJwtAuthenticationTest {
@@ -46,7 +46,7 @@ class PrivateKeyJwtAuthenticationTest {
                 try {
                     return jwtClaims.getIssuer().equals(aspspDetails.getClientId()) &&
                         jwtClaims.getSubject().equals(aspspDetails.getClientId()) &&
-                        jwtClaims.getAudience().equals(Collections.singletonList(aspspDetails.getTokenIssuerUrl())) &&
+                        jwtClaims.getAudience().equals(List.of(aspspDetails.getPrivateKeyJwtAuthenticationAudience())) &&
                         jwtClaims.getIssuedAt() != null &&
                         jwtClaims.getExpirationTime().isAfter(jwtClaims.getIssuedAt()) &&
                         jwtClaims.getJwtId() != null;
@@ -67,7 +67,7 @@ class PrivateKeyJwtAuthenticationTest {
     private AspspDetails aAspspDefinition() {
         return TestAspspDetails.builder()
             .clientId("client-id")
-            .tokenIssuerUrl("/token-issuer-url")
+            .privateKeyJwtAuthenticationAudience("/token-issuer-url")
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
             .build();
     }

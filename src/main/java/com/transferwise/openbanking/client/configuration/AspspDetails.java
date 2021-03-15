@@ -87,19 +87,6 @@ public interface AspspDetails {
     }
 
     /**
-     * Get the URL to use as the intended audience value for a JWT generated for requesting an OAuth access token.
-     *
-     * <p>This URL is only applicable for certain client authentication methods, namely
-     * {@link com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod#PRIVATE_KEY_JWT}, therefore not all
-     * implementations implement this method.
-     *
-     * @return the JWT intended audience URL
-     */
-    default String getTokenIssuerUrl() {
-        throw new UnsupportedOperationException("getTokenIssuerUrl not implemented");
-    }
-
-    /**
      * Get the authentication method to use for identifying ourselves as a client to the ASPSP.
      *
      * @return the client authentication method to use
@@ -127,6 +114,16 @@ public interface AspspDetails {
      */
     default String getClientSecret() {
         throw new UnsupportedOperationException("getClientSecret not implemented");
+    }
+
+    /**
+     * Get the value to use as the intended audience claim, in the JWT generated for requesting an OAuth access token,
+     * when using the private key JWT client authentication method.
+     *
+     * @return the JWT intended audience claim value to use, defaults to the token URL
+     */
+    default String getPrivateKeyJwtAuthenticationAudience() {
+        return getTokenUrl();
     }
 
     /**

@@ -20,11 +20,11 @@ public class TestAspspDetails implements AspspDetails {
     private String registrationUrl;
     private String registrationAudience;
     private String registrationIssuer;
-    private String tokenIssuerUrl;
     private String tppRedirectUrl;
     private ClientAuthenticationMethod clientAuthenticationMethod;
     private String clientId;
     private String clientSecret;
+    private String privateKeyJwtAuthenticationAudience;
     private String signingAlgorithm;
     private String signingKeyId;
     private List<GrantType> grantTypes;
