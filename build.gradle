@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'checkstyle'
     id 'pmd'
-    id 'com.github.spotbugs' version '4.6.0'
+    id 'com.github.spotbugs' version '4.7.0'
 }
 
 ext.projectName = "Openbanking client"
@@ -23,15 +23,15 @@ targetCompatibility = JavaVersion.VERSION_11
 ext {
     libs = [
         'spring': '5.3.2',
-        'jackson': '2.12.1',
-        'lombok': '1.18.16',
-        'junit': '5.7.0',
-        'mockito': '3.7.0'
+        'jackson': '2.12.2',
+        'lombok': '1.18.18',
+        'junit': '5.7.1',
+        'mockito': '3.8.0'
     ]
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
@@ -43,7 +43,7 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind:${libs.jackson}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${libs.jackson}")
 
-    api('org.bitbucket.b_c:jose4j:0.7.4')
+    api('org.bitbucket.b_c:jose4j:0.7.6')
 
     compileOnly("org.projectlombok:lombok:${libs.lombok}")
     testCompileOnly("org.projectlombok:lombok:${libs.lombok}")
@@ -118,7 +118,7 @@ tasks.withType(Pmd) {
 }
 
 wrapper {
-    gradleVersion = '6.7.1'
+    gradleVersion = '6.8.3'
 }
 
 test {
