@@ -12,6 +12,7 @@ import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteFundsConf
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
+import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
@@ -34,10 +35,11 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     private final JwtClaimsSigner jwtClaimsSigner;
 
     public RestPaymentClient(RestOperations restOperations,
+                             JsonConverter jsonConverter,
                              OAuthClient oAuthClient,
                              IdempotencyKeyGenerator<OBWriteDomesticConsent4, OBWriteDomestic2> idempotencyKeyGenerator,
                              JwtClaimsSigner jwtClaimsSigner) {
-        super(restOperations, oAuthClient);
+        super(restOperations, jsonConverter, oAuthClient);
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
         this.jwtClaimsSigner = jwtClaimsSigner;
     }
@@ -54,7 +56,9 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                 aspspDetails,
                 softwareStatementDetails));
 
-        HttpEntity<OBWriteDomesticConsent4> request = new HttpEntity<>(domesticPaymentConsentRequest, headers);
+        String body = jsonConverter.writeValueAsString(domesticPaymentConsentRequest);
+
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
 
         log.info("Calling create payment consent API, with interaction ID {}", headers.getInteractionId());
 
@@ -82,14 +86,16 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     public OBWriteDomesticResponse5 submitDomesticPayment(OBWriteDomestic2 domesticPaymentRequest,
                                                           AuthorizationContext authorizationContext,
                                                           AspspDetails aspspDetails,
-                                                         SoftwareStatementDetails softwareStatementDetails) {
+                                                          SoftwareStatementDetails softwareStatementDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
             exchangeAuthorizationCode(authorizationContext, aspspDetails),
             idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest),
             jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest, aspspDetails, softwareStatementDetails));
 
-        HttpEntity<OBWriteDomestic2> request = new HttpEntity<>(domesticPaymentRequest, headers);
+        String body = jsonConverter.writeValueAsString(domesticPaymentRequest);
+
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
 
         log.info("Calling submit payment API, with interaction ID {}", headers.getInteractionId());
 

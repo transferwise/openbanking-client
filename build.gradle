@@ -44,6 +44,7 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-annotations:${libs.jackson}")
     api("com.fasterxml.jackson.core:jackson-databind:${libs.jackson}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${libs.jackson}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${libs.jackson}")
 
     api('org.bitbucket.b_c:jose4j:0.7.6')
 

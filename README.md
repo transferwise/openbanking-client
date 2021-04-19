@@ -32,7 +32,8 @@ RestTemplate restTemplate = new RestTemplate();
 
 // an example implementation might look up the values to supply from a KeyStore
 KeySupplier signingKeySupplier = new ExampleKeySupplier();
-JwtClaimsSigner jwtClaimsSigner = new JwtClaimsSigner(signingKeySupplier, tppConfiguration);
+JsonConverter jsonConverter = new JacksonJsonConverter();
+JwtClaimsSigner jwtClaimsSigner = new JwtClaimsSigner(signingKeySupplier, jsonConverter);
 
 RegistrationClient registrationClient = new RestRegistrationClient(jwtClaimsSigner, restTemplate);
 
@@ -75,11 +76,12 @@ IdempotencyKeyGenerator idempotencyKeyGenerator = new ExampleIdempotencyKeyGener
 
 // an example implementation might look up the values to supply from a KeyStore
 KeySupplier signingKeySupplier = new ExampleKeySupplier();
-JwtClaimsSigner jwtClaimsSigner = new JwtClaimsSigner(signingKeySupplier, tppConfiguration);
+JsonConverter jsonConverter = new JacksonJsonConverter();
+JwtClaimsSigner jwtClaimsSigner = new JwtClaimsSigner(signingKeySupplier, jsonConverter);
 
-PaymentClient paymentClient = new RestPaymentClient(tppConfiguration,
-    restTemplate,
-    tlsClientAuthentication,
+PaymentClient paymentClient = new RestPaymentClient(restTemplate,
+    jsonConverter,
+    restOAuthClient,
     idempotencyKeyGenerator,
     jwtClaimsSigner);
 

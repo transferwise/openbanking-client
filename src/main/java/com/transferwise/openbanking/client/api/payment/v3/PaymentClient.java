@@ -49,7 +49,7 @@ public interface PaymentClient {
     OBWriteDomesticResponse5 submitDomesticPayment(OBWriteDomestic2 domesticPaymentRequest,
                                                    AuthorizationContext authorizationContext,
                                                    AspspDetails aspspDetails,
-                                                  SoftwareStatementDetails softwareStatementDetails);
+                                                   SoftwareStatementDetails softwareStatementDetails);
 
     /**
      * Get the details of a previously created domestic payment consent.
