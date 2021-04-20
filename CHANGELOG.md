@@ -3,6 +3,18 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0] - 2021-04-20
+### Added
+- A new `JsonConverter` interface has been added, which deals with converting to and from JSON, with the 
+  `JacksonJsonConverter` implementing the interface
+### Changed
+- The `JwtSigner` class now requires a `JsonConverter` to passed as a constructor argument. This replaces the 
+  `ObjectMapper` optional argument
+- The V3 `RestPaymentClient` class now requires a `JsonConverter` to be passed as a constructor argument. This is used
+  to create the JSON request bodies explicitly rather than it being done internally by the `RestOperations` instance, 
+  fixing an issue with null object fields being included in the serialised JSON request body
+- Update the versions of various dependencies and plugins in the Gradle build configuration
+
 ## [4.0.0] - 2021-01-22
 ### Changed
 - The payment model classes are now generated dynamically from the Open Banking specification swagger definitions,

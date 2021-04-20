@@ -1,9 +1,10 @@
 package com.transferwise.openbanking.client.jwt;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2DataInitiationInstructedAmount;
+import com.transferwise.openbanking.client.json.JacksonJsonConverter;
+import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.security.KeySupplier;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
 import com.transferwise.openbanking.client.test.TestKeyUtils;
@@ -32,7 +33,7 @@ class JwtClaimsSignerTest {
     private static KeyPair keyPair;
     private static X509Certificate certificate;
 
-    private static ObjectMapper objectMapper;
+    private static JsonConverter jsonConverter;
 
     private KeySupplier keySupplier;
 
@@ -42,14 +43,14 @@ class JwtClaimsSignerTest {
     static void initAll() throws Exception {
         keyPair = TestKeyUtils.aKeyPair();
         certificate = TestKeyUtils.aCertificate(keyPair);
-        objectMapper = new ObjectMapper();
+        jsonConverter = new JacksonJsonConverter();
     }
 
     @BeforeEach
     void init() {
         keySupplier = Mockito.mock(KeySupplier.class);
 
-        jwtClaimsSigner = new JwtClaimsSigner(keySupplier);
+        jwtClaimsSigner = new JwtClaimsSigner(keySupplier, jsonConverter);
     }
 
     @Test
@@ -65,7 +66,7 @@ class JwtClaimsSignerTest {
         JsonWebSignature jsonWebSignature = parseSignature(serialisedSignature);
 
         Assertions.assertEquals(expectedJwtClaims,
-            objectMapper.readValue(jsonWebSignature.getPayload(), Map.class));
+            jsonConverter.readValue(jsonWebSignature.getPayload(), Map.class));
         Assertions.assertEquals(aspspDetails.getSigningKeyId(), jsonWebSignature.getKeyIdHeaderValue());
     }
 
@@ -81,7 +82,7 @@ class JwtClaimsSignerTest {
         JsonWebSignature jsonWebSignature = parseSignature(serialisedSignature);
 
         Assertions.assertEquals(expectedJwtClaims,
-            objectMapper.readValue(jsonWebSignature.getPayload(), Map.class));
+            jsonConverter.readValue(jsonWebSignature.getPayload(), Map.class));
         Assertions.assertEquals(aspspDetails.getSigningKeyId(), jsonWebSignature.getKeyIdHeaderValue());
     }
 
@@ -192,7 +193,7 @@ class JwtClaimsSignerTest {
         throws Exception {
         JsonWebSignature jsonWebSignature = new JsonWebSignature();
         jsonWebSignature.setCompactSerialization(serialisedSignature);
-        jsonWebSignature.setPayload(objectMapper.writeValueAsString(detachedPayload));
+        jsonWebSignature.setPayload(jsonConverter.writeValueAsString(detachedPayload));
         jsonWebSignature.setKey(keyPair.getPublic());
         jsonWebSignature.setAlgorithmConstraints(PS256_ALGORITHM);
         jsonWebSignature.setKnownCriticalHeaders(HeaderParameterNames.BASE64URL_ENCODE_PAYLOAD,
