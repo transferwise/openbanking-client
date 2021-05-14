@@ -10,6 +10,7 @@ public interface JsonConverter {
      *
      * @param value The object to serialize
      * @return The serialized JSON string
+     * @throws JsonWriteException if there was a problem writing the object to JSON
      */
     String writeValueAsString(Object value);
 
@@ -20,6 +21,7 @@ public interface JsonConverter {
      * @param valueType The class type to de-serialize to
      * @param <T> The type to de-serialize to
      * @return The de-serialized JSON object
+     * @throws JsonReadException if there was a problem reading the JSON to an object
      */
     <T> T readValue(String content, Class<T> valueType);
 }
