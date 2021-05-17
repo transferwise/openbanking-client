@@ -62,14 +62,12 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling create payment consent API, with interaction ID {}", headers.getInteractionId());
 
-        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse;
+        ResponseEntity<String> response;
         try {
-            ResponseEntity<OBWriteDomesticConsentResponse5> response = restOperations.exchange(
-                generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE),
+            response = restOperations.exchange(generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE),
                 HttpMethod.POST,
                 request,
-                OBWriteDomesticConsentResponse5.class);
-            domesticPaymentConsentResponse = response.getBody();
+                String.class);
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to create payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
@@ -77,6 +75,8 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             throw new ApiCallException("Call to create payment consent endpoint failed, and no response body returned", e);
         }
 
+        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = jsonConverter.readValue(response.getBody(),
+            OBWriteDomesticConsentResponse5.class);
         validateResponse(domesticPaymentConsentResponse);
 
         return domesticPaymentConsentResponse;
@@ -99,14 +99,13 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling submit payment API, with interaction ID {}", headers.getInteractionId());
 
-        OBWriteDomesticResponse5 domesticPaymentResponse;
+        ResponseEntity<String> response;
         try {
-            ResponseEntity<OBWriteDomesticResponse5> response = restOperations.exchange(
+            response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_RESOURCE),
                 HttpMethod.POST,
                 request,
-                OBWriteDomesticResponse5.class);
-            domesticPaymentResponse = response.getBody();
+                String.class);
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to submit payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
@@ -114,6 +113,8 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             throw new ApiCallException("Call to submit payment endpoint failed, and no response body returned", e);
         }
 
+        OBWriteDomesticResponse5 domesticPaymentResponse = jsonConverter.readValue(response.getBody(),
+            OBWriteDomesticResponse5.class);
         validateResponse(domesticPaymentResponse);
 
         return domesticPaymentResponse;
@@ -129,15 +130,14 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling get payment consent API, with interaction ID {}", headers.getInteractionId());
 
-        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse;
+        ResponseEntity<String> response;
         try {
-            ResponseEntity<OBWriteDomesticConsentResponse5> response = restOperations.exchange(
+            response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE) + "/{consentId}",
                 HttpMethod.GET,
                 request,
-                OBWriteDomesticConsentResponse5.class,
+                String.class,
                 consentId);
-            domesticPaymentConsentResponse = response.getBody();
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to get payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
@@ -145,6 +145,8 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             throw new ApiCallException("Call to get payment consent endpoint failed, and no response body returned", e);
         }
 
+        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = jsonConverter.readValue(response.getBody(),
+            OBWriteDomesticConsentResponse5.class);
         validateResponse(domesticPaymentConsentResponse);
 
         return domesticPaymentConsentResponse;
@@ -160,15 +162,14 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling get payment API, with interaction ID {}", headers.getInteractionId());
 
-        OBWriteDomesticResponse5 domesticPaymentResponse;
+        ResponseEntity<String> response;
         try {
-            ResponseEntity<OBWriteDomesticResponse5> response = restOperations.exchange(
+            response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_RESOURCE) + "/{domesticPaymentId}",
                 HttpMethod.GET,
                 request,
-                OBWriteDomesticResponse5.class,
+                String.class,
                 domesticPaymentId);
-            domesticPaymentResponse = response.getBody();
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to get payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
@@ -176,6 +177,8 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             throw new ApiCallException("Call to get payment endpoint failed, and no response body returned", e);
         }
 
+        OBWriteDomesticResponse5 domesticPaymentResponse = jsonConverter.readValue(response.getBody(),
+            OBWriteDomesticResponse5.class);
         validateResponse(domesticPaymentResponse);
 
         return domesticPaymentResponse;
@@ -193,15 +196,14 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling get confirmation of funds API, with interaction ID {}", headers.getInteractionId());
 
-        OBWriteFundsConfirmationResponse1 fundsConfirmationResponse;
+        ResponseEntity<String> response;
         try {
-            ResponseEntity<OBWriteFundsConfirmationResponse1> response = restOperations.exchange(
+            response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE) + "/{consentId}/funds-confirmation",
                 HttpMethod.GET,
                 request,
-                OBWriteFundsConfirmationResponse1.class,
+                String.class,
                 consentId);
-            fundsConfirmationResponse = response.getBody();
         } catch (RestClientResponseException e) {
             throw new ApiCallException("Call to get confirmation of funds endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
@@ -210,6 +212,8 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                 e);
         }
 
+        OBWriteFundsConfirmationResponse1 fundsConfirmationResponse = jsonConverter.readValue(response.getBody(),
+            OBWriteFundsConfirmationResponse1.class);
         validateResponse(fundsConfirmationResponse);
 
         return fundsConfirmationResponse;
