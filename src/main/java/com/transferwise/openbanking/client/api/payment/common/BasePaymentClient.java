@@ -1,6 +1,7 @@
 package com.transferwise.openbanking.client.api.payment.common;
 
 import com.transferwise.openbanking.client.configuration.AspspDetails;
+import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
@@ -17,6 +18,7 @@ public class BasePaymentClient {
     private static final String PAYMENTS_SCOPE = "payments";
 
     protected final RestOperations restOperations;
+    protected final JsonConverter jsonConverter;
 
     private final OAuthClient oAuthClient;
 

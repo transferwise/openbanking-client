@@ -4,7 +4,7 @@ import com.transferwise.openbanking.client.api.registration.domain.ApplicationTy
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
-import com.transferwise.openbanking.client.configuration.TppConfiguration;
+import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod;
 import com.transferwise.openbanking.client.oauth.domain.GrantType;
 import com.transferwise.openbanking.client.security.KeySupplier;
@@ -34,22 +34,20 @@ class RegistrationRequestServiceTest {
     @Mock
     private KeySupplier keySupplier;
 
-    private TppConfiguration tppConfiguration;
-
     private RegistrationRequestService registrationRequestService;
 
     @BeforeEach
     void init() {
-        tppConfiguration = aTppConfiguration();
-
-        registrationRequestService = new RegistrationRequestService(keySupplier, tppConfiguration);
+        registrationRequestService = new RegistrationRequestService(keySupplier);
     }
 
     @Test
     void generateRegistrationRequest() {
         String softwareStatement = "software-statement";
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
+            .registrationIssuer("organisation-id")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -58,6 +56,7 @@ class RegistrationRequestServiceTest {
 
         ClientRegistrationRequest clientRegistrationRequest = registrationRequestService.generateRegistrationRequest(
             softwareStatement,
+            softwareStatementDetails,
             aspspDetails);
 
         Assertions.assertTrue(clientRegistrationRequest.getIat() > 0);
@@ -69,7 +68,7 @@ class RegistrationRequestServiceTest {
         Assertions.assertEquals("openid payments", clientRegistrationRequest.getScope());
         Assertions.assertEquals(ApplicationType.WEB, clientRegistrationRequest.getApplicationType());
         Assertions.assertEquals(softwareStatement, clientRegistrationRequest.getSoftwareStatement());
-        Assertions.assertEquals(aspspDetails.getRegistrationIssuerUrl(), clientRegistrationRequest.getAud());
+        Assertions.assertEquals(aspspDetails.getRegistrationAudience(), clientRegistrationRequest.getAud());
         Assertions.assertEquals(aspspDetails.getGrantTypes(), clientRegistrationRequest.getGrantTypes());
         Assertions.assertEquals(aspspDetails.getClientAuthenticationMethod().getMethodName(),
             clientRegistrationRequest.getTokenEndpointAuthMethod());
@@ -77,16 +76,19 @@ class RegistrationRequestServiceTest {
             clientRegistrationRequest.getIdTokenSignedResponseAlg());
         Assertions.assertEquals(aspspDetails.getSigningAlgorithm(),
             clientRegistrationRequest.getRequestObjectSigningAlg());
-        Assertions.assertEquals(tppConfiguration.getSoftwareStatementId(), clientRegistrationRequest.getIss());
-        Assertions.assertEquals(tppConfiguration.getSoftwareStatementId(), clientRegistrationRequest.getSoftwareId());
-        Assertions.assertEquals(tppConfiguration.getRedirectUrls(), clientRegistrationRequest.getRedirectUris());
+        Assertions.assertEquals("organisation-id", clientRegistrationRequest.getIss());
+        Assertions.assertEquals(softwareStatementDetails.getSoftwareStatementId(),
+            clientRegistrationRequest.getSoftwareId());
+        Assertions.assertEquals(softwareStatementDetails.getRedirectUrls(),
+            clientRegistrationRequest.getRedirectUris());
     }
 
     @Test
     void generateRegistrationRequestUsesLowerCaseJtiIfAspspRequiresIt() {
         String softwareStatement = "software-statement";
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.PRIVATE_KEY_JWT)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -95,6 +97,7 @@ class RegistrationRequestServiceTest {
 
         ClientRegistrationRequest clientRegistrationRequest = registrationRequestService.generateRegistrationRequest(
             softwareStatement,
+            softwareStatementDetails,
             aspspDetails);
 
         Assertions.assertTrue(clientRegistrationRequest.getJti().matches(JTI_LOWERCASE_REGEX));
@@ -103,17 +106,19 @@ class RegistrationRequestServiceTest {
     @Test
     void generateRegistrationRequestAlwaysIncludesOpenIdPermissionInScopes() {
         String softwareStatement = "software-statement";
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+        softwareStatementDetails.setPermissions(List.of(RegistrationPermission.PAYMENTS));
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.PRIVATE_KEY_JWT)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
             .registrationRequiresLowerCaseJtiClaim(false)
             .build();
-        tppConfiguration.setPermissions(List.of(RegistrationPermission.PAYMENTS));
 
         ClientRegistrationRequest clientRegistrationRequest = registrationRequestService.generateRegistrationRequest(
             softwareStatement,
+            softwareStatementDetails,
             aspspDetails);
 
         Assertions.assertEquals("openid payments", clientRegistrationRequest.getScope());
@@ -122,8 +127,9 @@ class RegistrationRequestServiceTest {
     @Test
     void generateRegistrationRequestSetsClaimsWhenAspspUsesTlsClientAuth() throws Exception {
         String softwareStatement = "software-statement";
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.TLS_CLIENT_AUTH)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -136,6 +142,7 @@ class RegistrationRequestServiceTest {
 
         ClientRegistrationRequest clientRegistrationRequest = registrationRequestService.generateRegistrationRequest(
             softwareStatement,
+            softwareStatementDetails,
             aspspDetails);
 
         Assertions.assertEquals(transportCertificate.getSubjectX500Principal().getName(),
@@ -145,8 +152,9 @@ class RegistrationRequestServiceTest {
     @Test
     void generateRegistrationRequestSetsClaimsWhenAspspUsesPrivateKeyJwtClientAuth() {
         String softwareStatement = "software-statement";
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.PRIVATE_KEY_JWT)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -155,14 +163,15 @@ class RegistrationRequestServiceTest {
 
         ClientRegistrationRequest clientRegistrationRequest = registrationRequestService.generateRegistrationRequest(
             softwareStatement,
+            softwareStatementDetails,
             aspspDetails);
 
         Assertions.assertEquals(aspspDetails.getSigningAlgorithm(),
             clientRegistrationRequest.getTokenEndpointAuthSigningAlg());
     }
 
-    private TppConfiguration aTppConfiguration() {
-        return TppConfiguration.builder()
+    private SoftwareStatementDetails aSoftwareStatementDetails() {
+        return SoftwareStatementDetails.builder()
             .softwareStatementId("software-statement-id")
             .permissions(List.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS))
             .redirectUrls(List.of("https://tpp.co.uk/1", "https://tpp.co.uk/2"))

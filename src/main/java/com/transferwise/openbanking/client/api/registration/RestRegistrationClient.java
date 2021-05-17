@@ -2,7 +2,9 @@ package com.transferwise.openbanking.client.api.registration;
 
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
+import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
+import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
@@ -20,7 +22,10 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
 
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -74,7 +79,8 @@ public class RestRegistrationClient implements RegistrationClient {
 
     @Override
     public ClientRegistrationResponse updateRegistration(ClientRegistrationRequest clientRegistrationRequest,
-                                                         AspspDetails aspspDetails) {
+                                                         AspspDetails aspspDetails,
+                                                         SoftwareStatementDetails softwareStatementDetails) {
 
         HttpHeaders headers = new HttpHeaders();
         if (aspspDetails.registrationUsesJoseContentType()) {
@@ -85,7 +91,7 @@ public class RestRegistrationClient implements RegistrationClient {
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         // as we're using a raw String as the body type, we need to manually set the header
         headers.setAcceptCharset(List.of(StandardCharsets.UTF_8));
-        headers.setBearerAuth(getClientCredentialsToken(aspspDetails));
+        headers.setBearerAuth(getClientCredentialsToken(aspspDetails, softwareStatementDetails));
 
         String signedClaims = jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails);
         HttpEntity<String> request = new HttpEntity<>(signedClaims, headers);
@@ -116,15 +122,29 @@ public class RestRegistrationClient implements RegistrationClient {
         }
     }
 
-    private String getClientCredentialsToken(AspspDetails aspspDetails) {
-        // The spec states a scope value isn't strictly needed, but some ASPSPs do actually require it, additionally
-        // some do not accept the general `openid` scope and require either `accounts` or `payments` scope.
-        // We could take the value from the `TppConfiguration.permissions` property, but if the TPP is trying to update
-        // the scope of their registration, this will contain a permission that we can't use here. So rather than trying
-        // to figure out what the TPP has vs what they are requesting, we use `payments` as given this library only has
-        // payments support it's most likely the TPP currently has this permission on their registration.
-        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
+    private String getClientCredentialsToken(AspspDetails aspspDetails,
+                                             SoftwareStatementDetails softwareStatementDetails) {
+        String scope = generateScopeValue(aspspDetails, softwareStatementDetails);
+        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest(scope);
         AccessTokenResponse accessTokenResponse = oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);
         return accessTokenResponse.getAccessToken();
+    }
+
+    private String generateScopeValue(AspspDetails aspspDetails, SoftwareStatementDetails softwareStatementDetails) {
+        // The spec states a scope value isn't strictly needed, but some ASPSPs do actually require it, additionally
+        // some require the scope to contain `openid` but some require it to not contain `openid`. As we request a
+        // scope of what the permissions the software statement details currently has, we don't really support updating
+        // the permissions of a client registration, but as this can't be modified in the Open Banking directory this
+        // shouldn't be an issue.
+        Set<RegistrationPermission> permissions = new LinkedHashSet<>(softwareStatementDetails.getPermissions());
+        if (aspspDetails.registrationAuthenticationRequiresOpenIdScope()) {
+            permissions.add(RegistrationPermission.OPENID);
+        } else {
+            permissions.remove(RegistrationPermission.OPENID);
+        }
+
+        return permissions.stream()
+            .map(RegistrationPermission::getValue)
+            .collect(Collectors.joining(" "));
     }
 }

@@ -7,7 +7,7 @@ Java client for using the Open Banking API, exposed by an ASPSP, as a TPP. The l
 API:  
 
 - Support for version 3 [dynamic client registration](https://openbankinguk.github.io/dcr-docs-pub/v3.2/dynamic-client-registration.html)
-- Support for version 3 [single immediate domestic payments](https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937984109/Domestic+Payments+v3.1)
+- Support for version 3 [single immediate domestic payments](https://openbankinguk.github.io/read-write-api-site3/v3.1.5/profiles/payment-initiation-api-profile.html)
 - Support for the following OAuth client authentication methods
     - Mutual TLS
     - Private key JWT
@@ -32,7 +32,8 @@ RestTemplate restTemplate = new RestTemplate();
 
 // an example implementation might look up the values to supply from a KeyStore
 KeySupplier signingKeySupplier = new ExampleKeySupplier();
-JwtClaimsSigner jwtClaimsSigner = new JwtClaimsSigner(signingKeySupplier, tppConfiguration);
+JsonConverter jsonConverter = new JacksonJsonConverter();
+JwtClaimsSigner jwtClaimsSigner = new JwtClaimsSigner(signingKeySupplier, jsonConverter);
 
 RegistrationClient registrationClient = new RestRegistrationClient(jwtClaimsSigner, restTemplate);
 
@@ -75,11 +76,12 @@ IdempotencyKeyGenerator idempotencyKeyGenerator = new ExampleIdempotencyKeyGener
 
 // an example implementation might look up the values to supply from a KeyStore
 KeySupplier signingKeySupplier = new ExampleKeySupplier();
-JwtClaimsSigner jwtClaimsSigner = new JwtClaimsSigner(signingKeySupplier, tppConfiguration);
+JsonConverter jsonConverter = new JacksonJsonConverter();
+JwtClaimsSigner jwtClaimsSigner = new JwtClaimsSigner(signingKeySupplier, jsonConverter);
 
-PaymentClient paymentClient = new RestPaymentClient(tppConfiguration,
-    restTemplate,
-    tlsClientAuthentication,
+PaymentClient paymentClient = new RestPaymentClient(restTemplate,
+    jsonConverter,
+    restOAuthClient,
     idempotencyKeyGenerator,
     jwtClaimsSigner);
 
@@ -90,10 +92,9 @@ AspspDetails aspspDetails = new ExampleAspspDetails();
 // Step 2 - initiate the payment
 // 
 
-DomesticPaymentConsentRequest paymentConsentRequest = DomesticPaymentConsentRequest.builder()
-    // set the properties according to the payment attempt      
-    .build();
-DomesticPaymentConsentResponse paymentConsentResponse = paymentClient.createDomesticPaymentConsent(
+// set the properties according to the payment attempt
+OBWriteDomesticConsent4 paymentConsentRequest = new OBWriteDomesticConsent4();
+OBWriteDomesticConsentResponse5 paymentConsentResponse = paymentClient.createDomesticPaymentConsent(
     paymentConsentRequest, 
     aspspDetails);
 
@@ -112,14 +113,13 @@ DomesticPaymentConsentResponse paymentConsentResponse = paymentClient.createDome
 // Step 4a (optional) - check for sufficient funds on the source account 
 //
 
-FundsConfirmationResponse fundsConfirmationResponse = paymentClient.getFundsConfirmation(consentId, 
+OBWriteFundsConfirmationResponse1 fundsConfirmationResponse = paymentClient.getFundsConfirmation(consentId, 
     authorizationCode, 
     aspspDetails);
 
-DomesticPaymentRequest paymentRequest = DomesticPaymentRequest.builder()
-    // set the properties according to the payment attempt
-    .build();
-DomesticPaymentResponse paymentResponse = paymentClient.createDomesticPayment(paymentRequest, 
+// set the properties according to the payment attempt
+OBWriteDomestic2 paymentRequest = new OBWriteDomestic2();
+OBWriteDomesticResponse5 paymentResponse = paymentClient.createDomesticPayment(paymentRequest, 
     authorizationCode, 
     aspspDetails);
 ```

@@ -37,7 +37,7 @@ public class PrivateKeyJwtAuthentication implements ClientAuthentication {
         JwtClaims jwtClaims = new JwtClaims();
         jwtClaims.setIssuer(aspspDetails.getClientId());
         jwtClaims.setSubject(aspspDetails.getClientId());
-        jwtClaims.setAudience(aspspDetails.getTokenIssuerUrl());
+        jwtClaims.setAudience(aspspDetails.getPrivateKeyJwtAuthenticationAudience());
         jwtClaims.setIssuedAtToNow();
         jwtClaims.setExpirationTimeMinutesInTheFuture(CLAIMS_VALID_FOR_MINUTES);
         jwtClaims.setJwtId(UUID.randomUUID().toString());

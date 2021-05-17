@@ -1,10 +1,10 @@
 package com.transferwise.openbanking.client.api.registration;
 
 import com.transferwise.openbanking.client.api.registration.domain.ApplicationType;
-import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
+import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
-import com.transferwise.openbanking.client.configuration.TppConfiguration;
+import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ClientException;
 import com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod;
 import com.transferwise.openbanking.client.security.KeySupplier;
@@ -24,43 +24,45 @@ public class RegistrationRequestService {
     private static final long REGISTRATION_TOKEN_VALIDITY_SECONDS = 300;
 
     private final KeySupplier keySupplier;
-    private final TppConfiguration tppConfiguration;
 
     /**
      * Generate the claims for a client registration request to a given ASPSP, which can then be signed and used as the
      * request body for calls to the ASPSP's client registration API.
      * <p>
-     * The claims are generated based on the details defined in the supplied {@link AspspDetails} and the
-     * current values in the {@link TppConfiguration}.
+     * The claims are generated based on the details defined in the supplied {@link SoftwareStatementDetails} and
+     * {@link AspspDetails}.
      * <p>
      * The generated claims can then be further modified prior to being signed and sent to the ASPSP.
      *
-     * @param softwareStatement The software statement assertion, issued by the Open Banking directory
-     * @param aspspDetails The details of the ASPSP, for which the registration claims will be sent to
+     * @param softwareStatementAssertion The software statement assertion, issued by the Open Banking directory
+     * @param softwareStatementDetails   The details of the software statement that the ASPSP will be registered against
+     * @param aspspDetails               The details of the ASPSP, for which the registration claims will be sent to
      * @return The generated registration claims
      */
-    public ClientRegistrationRequest generateRegistrationRequest(String softwareStatement, AspspDetails aspspDetails) {
+    public ClientRegistrationRequest generateRegistrationRequest(String softwareStatementAssertion,
+                                                                 SoftwareStatementDetails softwareStatementDetails,
+                                                                 AspspDetails aspspDetails) {
         Instant now = Instant.now();
 
         ClientAuthenticationMethod clientAuthenticationMethod = aspspDetails.getClientAuthenticationMethod();
         String signingAlgorithm = aspspDetails.getSigningAlgorithm();
 
         ClientRegistrationRequest.ClientRegistrationRequestBuilder requestBuilder = ClientRegistrationRequest.builder()
-            .iss(tppConfiguration.getSoftwareStatementId())
-            .aud(aspspDetails.getRegistrationIssuerUrl())
+            .iss(aspspDetails.getRegistrationIssuer(softwareStatementDetails))
+            .aud(aspspDetails.getRegistrationAudience())
             .iat(now.getEpochSecond())
             .exp(now.plusSeconds(REGISTRATION_TOKEN_VALIDITY_SECONDS).getEpochSecond())
             .jti(generateJwtIdValue(aspspDetails))
             .applicationType(ApplicationType.WEB)
-            .scope(generateScopeValue())
-            .softwareId(tppConfiguration.getSoftwareStatementId())
-            .softwareStatement(softwareStatement)
+            .scope(generateScopeValue(softwareStatementDetails))
+            .softwareId(softwareStatementDetails.getSoftwareStatementId())
+            .softwareStatement(softwareStatementAssertion)
             .grantTypes(aspspDetails.getGrantTypes())
             .responseTypes(aspspDetails.getResponseTypes())
             .tokenEndpointAuthMethod(clientAuthenticationMethod.getMethodName())
             .idTokenSignedResponseAlg(signingAlgorithm)
             .requestObjectSigningAlg(signingAlgorithm)
-            .redirectUris(tppConfiguration.getRedirectUrls())
+            .redirectUris(softwareStatementDetails.getRedirectUrls())
             .clientId(aspspDetails.getClientId());
 
         if (ClientAuthenticationMethod.TLS_CLIENT_AUTH == clientAuthenticationMethod) {
@@ -83,15 +85,15 @@ public class RegistrationRequestService {
         }
     }
 
-    private String generateScopeValue() {
+    private String generateScopeValue(SoftwareStatementDetails softwareStatementDetails) {
         List<RegistrationPermission> permissions;
         // registration requests always have to include the OPENID permission
-        if (tppConfiguration.getPermissions().contains(RegistrationPermission.OPENID)) {
-            permissions = tppConfiguration.getPermissions();
+        if (softwareStatementDetails.getPermissions().contains(RegistrationPermission.OPENID)) {
+            permissions = softwareStatementDetails.getPermissions();
         } else {
             permissions = new ArrayList<>();
             permissions.add(RegistrationPermission.OPENID);
-            permissions.addAll(tppConfiguration.getPermissions());
+            permissions.addAll(softwareStatementDetails.getPermissions());
         }
 
         return permissions.stream()
