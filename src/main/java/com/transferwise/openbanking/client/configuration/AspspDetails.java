@@ -6,6 +6,8 @@ import com.transferwise.openbanking.client.oauth.domain.GrantType;
 import com.transferwise.openbanking.client.oauth.domain.ResponseType;
 import org.jose4j.jws.AlgorithmIdentifiers;
 
+import javax.security.auth.x500.X500Principal;
+import java.security.cert.X509Certificate;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -111,6 +113,21 @@ public interface AspspDetails {
         // directory this shouldn't be an issue.
         permissions.addAll(softwareStatementDetails.getPermissions());
         return permissions;
+    }
+
+    /**
+     * Get the subject distinguished name of the given transport certificate, to use as the subject distinguished name
+     * claim in a registration request, when using TLS client authentication.
+     *
+     * <p>Some ASPSPs require this value to be in a specific format.
+     *
+     * <p>By default this returns the certificate subject distinguished name, in the RFC 2253 format.
+     *
+     * @param certificate the transport certificate being used for the client registration request
+     * @return the certificate subject name
+     */
+    default String getRegistrationTransportCertificateSubjectName(X509Certificate certificate) {
+        return certificate.getSubjectX500Principal().getName(X500Principal.RFC2253);
     }
 
     /**

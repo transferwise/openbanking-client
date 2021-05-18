@@ -31,6 +31,7 @@ import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -350,7 +351,9 @@ class RestRegistrationClientTest {
     private static Stream<Arguments> argumentsForAuthenticationScopeTest() {
         return Stream.of(
             Arguments.of(Set.of(RegistrationPermission.PAYMENTS), "payments"),
-            Arguments.of(Set.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS), "openid payments"),
+            Arguments.of(
+                new LinkedHashSet<>(List.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS)),
+                "openid payments"),
             Arguments.of(Set.of(), null)
         );
     }
