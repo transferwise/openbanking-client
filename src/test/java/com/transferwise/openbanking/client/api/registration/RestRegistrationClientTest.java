@@ -31,7 +31,10 @@ import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
@@ -229,14 +232,13 @@ class RestRegistrationClientTest {
 
     @ParameterizedTest
     @MethodSource("argumentsForAuthenticationScopeTest")
-    void updateRegistrationSupportsDifferentAuthenticationScopes(boolean registrationAuthenticationRequiresOpenIdScope,
-                                                                 List<RegistrationPermission> tppPermissions,
+    void updateRegistrationSupportsDifferentAuthenticationScopes(Set<RegistrationPermission> registrationAuthenticationScopes,
                                                                  String expectedAuthenticationScope)
         throws Exception {
 
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDefinition(false, registrationAuthenticationRequiresOpenIdScope);
-        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails(tppPermissions);
+        AspspDetails aspspDetails = aAspspDefinition(false, registrationAuthenticationScopes);
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
             .accessToken("access-token")
@@ -245,7 +247,7 @@ class RestRegistrationClientTest {
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
                     "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        expectedAuthenticationScope.equals(request.getRequestBody().get("scope"))),
+                        Objects.equals(expectedAuthenticationScope, request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(mockAccessTokenResponse);
 
@@ -309,6 +311,7 @@ class RestRegistrationClientTest {
     private static AspspDetails aAspspDefinition() {
         return TestAspspDetails.builder()
             .registrationUrl("/registration-url")
+            .registrationAuthenticationScopes(Set.of(RegistrationPermission.PAYMENTS))
             .clientId("client-id")
             .build();
     }
@@ -317,16 +320,17 @@ class RestRegistrationClientTest {
         return TestAspspDetails.builder()
             .registrationUrl("/registration-url")
             .registrationUsesJoseContentType(registrationUsesJoseContentType)
+            .registrationAuthenticationScopes(Set.of(RegistrationPermission.PAYMENTS))
             .clientId("client-id")
             .build();
     }
 
     private static AspspDetails aAspspDefinition(boolean registrationUsesJoseContentType,
-                                                 boolean registrationAuthenticationRequiresOpenIdScope) {
+                                                 Set<RegistrationPermission> registrationAuthenticationScopes) {
         return TestAspspDetails.builder()
             .registrationUrl("/registration-url")
             .registrationUsesJoseContentType(registrationUsesJoseContentType)
-            .registrationAuthenticationRequiresOpenIdScope(registrationAuthenticationRequiresOpenIdScope)
+            .registrationAuthenticationScopes(registrationAuthenticationScopes)
             .clientId("client-id")
             .build();
     }
@@ -334,12 +338,6 @@ class RestRegistrationClientTest {
     private static SoftwareStatementDetails aSoftwareStatementDetails() {
         return SoftwareStatementDetails.builder()
             .permissions(List.of(RegistrationPermission.PAYMENTS))
-            .build();
-    }
-
-    private static SoftwareStatementDetails aSoftwareStatementDetails(List<RegistrationPermission> permissions) {
-        return SoftwareStatementDetails.builder()
-            .permissions(permissions)
             .build();
     }
 
@@ -352,12 +350,11 @@ class RestRegistrationClientTest {
 
     private static Stream<Arguments> argumentsForAuthenticationScopeTest() {
         return Stream.of(
-            Arguments.of(false, List.of(RegistrationPermission.PAYMENTS), "payments"),
-            Arguments.of(false, List.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS), "payments"),
-            Arguments.of(true, List.of(RegistrationPermission.PAYMENTS), "payments openid"),
-            Arguments.of(true,
-                List.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS),
-                "openid payments")
+            Arguments.of(Set.of(RegistrationPermission.PAYMENTS), "payments"),
+            Arguments.of(
+                new LinkedHashSet<>(List.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS)),
+                "openid payments"),
+            Arguments.of(Set.of(), null)
         );
     }
 }

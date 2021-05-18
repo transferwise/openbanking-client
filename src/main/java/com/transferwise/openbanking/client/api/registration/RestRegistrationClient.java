@@ -22,9 +22,7 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
 
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -131,19 +129,8 @@ public class RestRegistrationClient implements RegistrationClient {
     }
 
     private String generateScopeValue(AspspDetails aspspDetails, SoftwareStatementDetails softwareStatementDetails) {
-        // The spec states a scope value isn't strictly needed, but some ASPSPs do actually require it, additionally
-        // some require the scope to contain `openid` but some require it to not contain `openid`. As we request a
-        // scope of what the permissions the software statement details currently has, we don't really support updating
-        // the permissions of a client registration, but as this can't be modified in the Open Banking directory this
-        // shouldn't be an issue.
-        Set<RegistrationPermission> permissions = new LinkedHashSet<>(softwareStatementDetails.getPermissions());
-        if (aspspDetails.registrationAuthenticationRequiresOpenIdScope()) {
-            permissions.add(RegistrationPermission.OPENID);
-        } else {
-            permissions.remove(RegistrationPermission.OPENID);
-        }
-
-        return permissions.stream()
+        return aspspDetails.getRegistrationAuthenticationScopes(softwareStatementDetails)
+            .stream()
             .map(RegistrationPermission::getValue)
             .collect(Collectors.joining(" "));
     }

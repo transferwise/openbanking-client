@@ -2,9 +2,9 @@ plugins {
     id 'java-library'
     id 'checkstyle'
     id 'pmd'
-    id 'com.github.spotbugs' version '4.7.0'
+    id 'com.github.spotbugs' version '4.7.1'
     id 'org.hidetake.swagger.generator' version '2.18.2'
-    id "com.diffplug.spotless" version "5.12.1"
+    id "com.diffplug.spotless" version "5.12.5"
 }
 
 ext.projectName = "Openbanking client"
@@ -46,7 +46,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${libs.jackson}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${libs.jackson}")
 
-    api('org.bitbucket.b_c:jose4j:0.7.6')
+    api('org.bitbucket.b_c:jose4j:0.7.7')
 
     compileOnly("org.projectlombok:lombok:${libs.lombok}")
     testCompileOnly("org.projectlombok:lombok:${libs.lombok}")

@@ -104,7 +104,7 @@ public class RegistrationRequestService {
     private String getTransportCertificateSubjectName(AspspDetails aspspDetails) {
         Certificate transportCertificate = keySupplier.getTransportCertificate(aspspDetails);
         if (transportCertificate instanceof X509Certificate) {
-            return ((X509Certificate) transportCertificate).getSubjectX500Principal().getName();
+            return aspspDetails.getRegistrationTransportCertificateSubjectName((X509Certificate) transportCertificate);
         } else {
             throw new ClientException("Supplied transport certificate is not an X509 certificate, cannot determine " +
                 "transport certificate subject name");

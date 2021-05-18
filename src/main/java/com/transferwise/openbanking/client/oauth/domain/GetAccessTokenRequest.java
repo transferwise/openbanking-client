@@ -40,7 +40,7 @@ public class GetAccessTokenRequest {
     }
 
     public GetAccessTokenRequest setGrantType(String grantType) {
-        requestBody.put(GRANT_TYPE_PARAM, grantType);
+        setBodyParameter(GRANT_TYPE_PARAM, grantType);
         return this;
     }
 
@@ -49,12 +49,12 @@ public class GetAccessTokenRequest {
     }
 
     public GetAccessTokenRequest setScope(String scope) {
-        requestBody.put(SCOPE_PARAM, scope);
+        setBodyParameter(SCOPE_PARAM, scope);
         return this;
     }
 
     public GetAccessTokenRequest setAuthorisationCode(String authorisationCode) {
-        requestBody.put(CODE_PARAM, authorisationCode);
+        setBodyParameter(CODE_PARAM, authorisationCode);
         return this;
     }
 
@@ -63,27 +63,27 @@ public class GetAccessTokenRequest {
     }
 
     public GetAccessTokenRequest setRedirectUri(String redirectUri) {
-        requestBody.put(REDIRECT_URI_PARAM, redirectUri);
+        setBodyParameter(REDIRECT_URI_PARAM, redirectUri);
         return this;
     }
 
     public GetAccessTokenRequest setClientId(String clientId) {
-        requestBody.put(CLIENT_ID_PARAM, clientId);
+        setBodyParameter(CLIENT_ID_PARAM, clientId);
         return this;
     }
 
     public GetAccessTokenRequest setClientSecret(String clientSecret) {
-        requestBody.put(CLIENT_SECRET_PARAM, clientSecret);
+        setBodyParameter(CLIENT_SECRET_PARAM, clientSecret);
         return this;
     }
 
     public GetAccessTokenRequest setClientAssertionType(String clientAssertionType) {
-        requestBody.put(CLIENT_ASSERTION_TYPE_PARAM, clientAssertionType);
+        setBodyParameter(CLIENT_ASSERTION_TYPE_PARAM, clientAssertionType);
         return this;
     }
 
     public GetAccessTokenRequest setClientAssertion(String clientAssertion) {
-        requestBody.put(CLIENT_ASSERTION_PARAM, clientAssertion);
+        setBodyParameter(CLIENT_ASSERTION_PARAM, clientAssertion);
         return this;
     }
 
@@ -98,5 +98,11 @@ public class GetAccessTokenRequest {
 
     public FapiHeaders getRequestHeaders() {
         return requestHeaders;
+    }
+
+    private void setBodyParameter(String key, String value) {
+        if (value != null && !value.isBlank()) {
+            requestBody.put(key, value);
+        }
     }
 }
