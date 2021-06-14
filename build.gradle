@@ -64,7 +64,7 @@ dependencies {
 
     testImplementation("org.springframework:spring-test:${libs.spring}")
 
-    testImplementation("org.bouncycastle:bcpkix-jdk15on:1.68")
+    testImplementation("org.bouncycastle:bcpkix-jdk15on:1.69")
 
     testImplementation("ch.qos.logback:logback-classic:1.2.3")
 
