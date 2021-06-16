@@ -3,7 +3,7 @@ package com.transferwise.openbanking.client.api.registration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
-import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
@@ -232,7 +232,7 @@ class RestRegistrationClientTest {
 
     @ParameterizedTest
     @MethodSource("argumentsForAuthenticationScopeTest")
-    void updateRegistrationSupportsDifferentAuthenticationScopes(Set<RegistrationPermission> registrationAuthenticationScopes,
+    void updateRegistrationSupportsDifferentAuthenticationScopes(Set<Scope> registrationAuthenticationScopes,
                                                                  String expectedAuthenticationScope)
         throws Exception {
 
@@ -311,7 +311,7 @@ class RestRegistrationClientTest {
     private static AspspDetails aAspspDefinition() {
         return TestAspspDetails.builder()
             .registrationUrl("/registration-url")
-            .registrationAuthenticationScopes(Set.of(RegistrationPermission.PAYMENTS))
+            .registrationAuthenticationScopes(Set.of(Scope.PAYMENTS))
             .clientId("client-id")
             .build();
     }
@@ -320,13 +320,13 @@ class RestRegistrationClientTest {
         return TestAspspDetails.builder()
             .registrationUrl("/registration-url")
             .registrationUsesJoseContentType(registrationUsesJoseContentType)
-            .registrationAuthenticationScopes(Set.of(RegistrationPermission.PAYMENTS))
+            .registrationAuthenticationScopes(Set.of(Scope.PAYMENTS))
             .clientId("client-id")
             .build();
     }
 
     private static AspspDetails aAspspDefinition(boolean registrationUsesJoseContentType,
-                                                 Set<RegistrationPermission> registrationAuthenticationScopes) {
+                                                 Set<Scope> registrationAuthenticationScopes) {
         return TestAspspDetails.builder()
             .registrationUrl("/registration-url")
             .registrationUsesJoseContentType(registrationUsesJoseContentType)
@@ -337,7 +337,7 @@ class RestRegistrationClientTest {
 
     private static SoftwareStatementDetails aSoftwareStatementDetails() {
         return SoftwareStatementDetails.builder()
-            .permissions(List.of(RegistrationPermission.PAYMENTS))
+            .permissions(List.of(Scope.PAYMENTS))
             .build();
     }
 
@@ -350,9 +350,9 @@ class RestRegistrationClientTest {
 
     private static Stream<Arguments> argumentsForAuthenticationScopeTest() {
         return Stream.of(
-            Arguments.of(Set.of(RegistrationPermission.PAYMENTS), "payments"),
+            Arguments.of(Set.of(Scope.PAYMENTS), "payments"),
             Arguments.of(
-                new LinkedHashSet<>(List.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS)),
+                new LinkedHashSet<>(List.of(Scope.OPENID, Scope.PAYMENTS)),
                 "openid payments"),
             Arguments.of(Set.of(), null)
         );

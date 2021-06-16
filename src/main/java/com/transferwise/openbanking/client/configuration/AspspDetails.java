@@ -1,6 +1,6 @@
 package com.transferwise.openbanking.client.configuration;
 
-import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod;
 import com.transferwise.openbanking.client.oauth.domain.GrantType;
 import com.transferwise.openbanking.client.oauth.domain.ResponseType;
@@ -95,19 +95,19 @@ public interface AspspDetails {
      * Get the set of scopes to request for when obtaining an access token, to use for an authenticated get / update /
      * delete client registration API call.
      *
-     * <p>Some ASPSPs require the set of requested scopes to not contain the {@link RegistrationPermission#OPENID}
-     * scope, some require it to contain the {@link RegistrationPermission#OPENID} scope, and some require no scopes to
+     * <p>Some ASPSPs require the set of requested scopes to not contain the {@link Scope#OPENID}
+     * scope, some require it to contain the {@link Scope#OPENID} scope, and some require no scopes to
      * be requested at all.
      *
-     * <p>By default this returns {@link RegistrationPermission#OPENID} plus the permissions in
+     * <p>By default this returns {@link Scope#OPENID} plus the permissions in
      * {@link SoftwareStatementDetails#permissions}.
      *
      * @param softwareStatementDetails the details of the software statement being used for the registration
      * @return The set of scopes to request an access token with
      */
-    default Set<RegistrationPermission> getRegistrationAuthenticationScopes(SoftwareStatementDetails softwareStatementDetails) {
-        Set<RegistrationPermission> permissions = new LinkedHashSet<>();
-        permissions.add(RegistrationPermission.OPENID);
+    default Set<Scope> getRegistrationAuthenticationScopes(SoftwareStatementDetails softwareStatementDetails) {
+        Set<Scope> permissions = new LinkedHashSet<>();
+        permissions.add(Scope.OPENID);
         // As we request a scope of what the permissions the software statement details currently has, we don't really
         // support updating the permissions of a client registration, but as this can't be modified in the Open Banking
         // directory this shouldn't be an issue.
