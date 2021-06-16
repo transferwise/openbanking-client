@@ -11,9 +11,6 @@ import java.util.Map;
 @ToString
 public class GetAccessTokenRequest {
 
-    public static final String CLIENT_CREDENTIALS_GRANT_TYPE = "client_credentials";
-    public static final String AUTHORIZATION_CODE_GRANT_TYPE = "authorization_code";
-
     private static final String GRANT_TYPE_PARAM = "grant_type";
     private static final String SCOPE_PARAM = "scope";
     private static final String CODE_PARAM = "code";
@@ -28,13 +25,13 @@ public class GetAccessTokenRequest {
 
     public static GetAccessTokenRequest clientCredentialsRequest(String scope) {
         return new GetAccessTokenRequest()
-            .setGrantType(CLIENT_CREDENTIALS_GRANT_TYPE)
+            .setGrantType(GrantType.CLIENT_CREDENTIALS.getValue())
             .setScope(scope);
     }
 
     public static GetAccessTokenRequest authorizationCodeRequest(String authorisationCode, String redirectUri) {
         return new GetAccessTokenRequest()
-            .setGrantType(AUTHORIZATION_CODE_GRANT_TYPE)
+            .setGrantType(GrantType.AUTHORIZATION_CODE.getValue())
             .setAuthorisationCode(authorisationCode)
             .setRedirectUri(redirectUri);
     }
