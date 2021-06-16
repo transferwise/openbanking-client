@@ -1,6 +1,6 @@
 package com.transferwise.openbanking.client.configuration;
 
-import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,5 +33,5 @@ public class SoftwareStatementDetails {
      * The permissions that the TPP has, according to the National Competent Authority (the FCA), and wants to use when
      * registering with an ASPSP.
      */
-    private List<RegistrationPermission> permissions;
+    private List<Scope> permissions;
 }

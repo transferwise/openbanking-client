@@ -2,7 +2,7 @@ package com.transferwise.openbanking.client.api.registration;
 
 import com.transferwise.openbanking.client.api.registration.domain.ApplicationType;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
-import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ClientException;
@@ -86,18 +86,18 @@ public class RegistrationRequestService {
     }
 
     private String generateScopeValue(SoftwareStatementDetails softwareStatementDetails) {
-        List<RegistrationPermission> permissions;
+        List<Scope> permissions;
         // registration requests always have to include the OPENID permission
-        if (softwareStatementDetails.getPermissions().contains(RegistrationPermission.OPENID)) {
+        if (softwareStatementDetails.getPermissions().contains(Scope.OPENID)) {
             permissions = softwareStatementDetails.getPermissions();
         } else {
             permissions = new ArrayList<>();
-            permissions.add(RegistrationPermission.OPENID);
+            permissions.add(Scope.OPENID);
             permissions.addAll(softwareStatementDetails.getPermissions());
         }
 
         return permissions.stream()
-            .map(RegistrationPermission::getValue)
+            .map(Scope::getValue)
             .collect(Collectors.joining(" "));
     }
 

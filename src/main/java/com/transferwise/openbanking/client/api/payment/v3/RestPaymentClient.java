@@ -1,7 +1,6 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
 import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
-import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.payment.common.BasePaymentClient;
 import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2;
@@ -14,7 +13,6 @@ import com.transferwise.openbanking.client.configuration.SoftwareStatementDetail
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
-import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -36,21 +34,21 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
     public RestPaymentClient(RestOperations restOperations,
                              JsonConverter jsonConverter,
-                             OAuthClient oAuthClient,
                              IdempotencyKeyGenerator<OBWriteDomesticConsent4, OBWriteDomestic2> idempotencyKeyGenerator,
                              JwtClaimsSigner jwtClaimsSigner) {
-        super(restOperations, jsonConverter, oAuthClient);
+        super(restOperations, jsonConverter);
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
         this.jwtClaimsSigner = jwtClaimsSigner;
     }
 
     @Override
     public OBWriteDomesticConsentResponse5 createDomesticPaymentConsent(OBWriteDomesticConsent4 domesticPaymentConsentRequest,
+                                                                        String clientCredentialsToken,
                                                                         AspspDetails aspspDetails,
-        SoftwareStatementDetails softwareStatementDetails) {
+                                                                        SoftwareStatementDetails softwareStatementDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
-            getClientCredentialsToken(aspspDetails),
+            clientCredentialsToken,
             idempotencyKeyGenerator.generateKeyForSetup(domesticPaymentConsentRequest),
             jwtClaimsSigner.createDetachedSignature(domesticPaymentConsentRequest,
                 aspspDetails,
@@ -84,12 +82,12 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
     @Override
     public OBWriteDomesticResponse5 submitDomesticPayment(OBWriteDomestic2 domesticPaymentRequest,
-                                                          AuthorizationContext authorizationContext,
+                                                          String authorizationCodeToken,
                                                           AspspDetails aspspDetails,
                                                           SoftwareStatementDetails softwareStatementDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
-            exchangeAuthorizationCode(authorizationContext, aspspDetails),
+            authorizationCodeToken,
             idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest),
             jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest, aspspDetails, softwareStatementDetails));
 
@@ -121,10 +119,12 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     }
 
     @Override
-    public OBWriteDomesticConsentResponse5 getDomesticPaymentConsent(String consentId, AspspDetails aspspDetails) {
+    public OBWriteDomesticConsentResponse5 getDomesticPaymentConsent(String consentId,
+                                                                     String clientCredentialsToken,
+                                                                     AspspDetails aspspDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
-            getClientCredentialsToken(aspspDetails));
+            clientCredentialsToken);
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
@@ -153,10 +153,12 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     }
 
     @Override
-    public OBWriteDomesticResponse5 getDomesticPayment(String domesticPaymentId, AspspDetails aspspDetails) {
+    public OBWriteDomesticResponse5 getDomesticPayment(String domesticPaymentId,
+                                                       String clientCredentialsToken,
+                                                       AspspDetails aspspDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
-            getClientCredentialsToken(aspspDetails));
+            clientCredentialsToken);
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
@@ -186,11 +188,11 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
     @Override
     public OBWriteFundsConfirmationResponse1 getFundsConfirmation(String consentId,
-                                                                  AuthorizationContext authorizationContext,
+                                                                  String authorizationCodeToken,
                                                                   AspspDetails aspspDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
-            exchangeAuthorizationCode(authorizationContext, aspspDetails));
+            authorizationCodeToken);
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 

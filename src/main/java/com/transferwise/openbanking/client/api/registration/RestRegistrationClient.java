@@ -2,7 +2,7 @@ package com.transferwise.openbanking.client.api.registration;
 
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
-import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
@@ -131,7 +131,7 @@ public class RestRegistrationClient implements RegistrationClient {
     private String generateScopeValue(AspspDetails aspspDetails, SoftwareStatementDetails softwareStatementDetails) {
         return aspspDetails.getRegistrationAuthenticationScopes(softwareStatementDetails)
             .stream()
-            .map(RegistrationPermission::getValue)
+            .map(Scope::getValue)
             .collect(Collectors.joining(" "));
     }
 }
