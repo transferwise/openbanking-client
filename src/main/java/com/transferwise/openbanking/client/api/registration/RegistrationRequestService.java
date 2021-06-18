@@ -2,6 +2,7 @@ package com.transferwise.openbanking.client.api.registration;
 
 import com.transferwise.openbanking.client.api.registration.domain.ApplicationType;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
+import com.transferwise.openbanking.client.oauth.ScopeFormatter;
 import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
@@ -16,7 +17,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class RegistrationRequestService {
@@ -96,9 +96,7 @@ public class RegistrationRequestService {
             permissions.addAll(softwareStatementDetails.getPermissions());
         }
 
-        return permissions.stream()
-            .map(Scope::getValue)
-            .collect(Collectors.joining(" "));
+        return ScopeFormatter.formatScopes(permissions);
     }
 
     private String getTransportCertificateSubjectName(AspspDetails aspspDetails) {
