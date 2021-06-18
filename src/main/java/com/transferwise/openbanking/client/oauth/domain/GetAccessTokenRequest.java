@@ -1,9 +1,11 @@
 package com.transferwise.openbanking.client.oauth.domain;
 
+import com.transferwise.openbanking.client.oauth.ScopeFormatter;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.springframework.http.HttpHeaders;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,6 +24,14 @@ public class GetAccessTokenRequest {
 
     private final Map<String, String> requestBody = new HashMap<>();
     private final FapiHeaders requestHeaders = FapiHeaders.defaultHeaders();
+
+    public static GetAccessTokenRequest clientCredentialsRequest(Collection<Scope> scopes) {
+        return clientCredentialsRequest(ScopeFormatter.formatScopes(scopes));
+    }
+
+    public static GetAccessTokenRequest clientCredentialsRequest(Scope scope) {
+        return clientCredentialsRequest(scope.getValue());
+    }
 
     public static GetAccessTokenRequest clientCredentialsRequest(String scope) {
         return new GetAccessTokenRequest()
