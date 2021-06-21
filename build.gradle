@@ -4,7 +4,7 @@ plugins {
     id 'pmd'
     id 'com.github.spotbugs' version '4.7.1'
     id 'org.hidetake.swagger.generator' version '2.18.2'
-    id "com.diffplug.spotless" version "5.12.5"
+    id "com.diffplug.spotless" version "5.14.0"
 }
 
 ext.projectName = "Openbanking client"
