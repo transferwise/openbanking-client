@@ -2,7 +2,7 @@ package com.transferwise.openbanking.client.api.registration;
 
 import com.transferwise.openbanking.client.api.registration.domain.ApplicationType;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
-import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod;
@@ -107,7 +107,7 @@ class RegistrationRequestServiceTest {
     void generateRegistrationRequestAlwaysIncludesOpenIdPermissionInScopes() {
         String softwareStatement = "software-statement";
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
-        softwareStatementDetails.setPermissions(List.of(RegistrationPermission.PAYMENTS));
+        softwareStatementDetails.setPermissions(List.of(Scope.PAYMENTS));
         AspspDetails aspspDetails = TestAspspDetails.builder()
             .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
@@ -173,7 +173,7 @@ class RegistrationRequestServiceTest {
     private SoftwareStatementDetails aSoftwareStatementDetails() {
         return SoftwareStatementDetails.builder()
             .softwareStatementId("software-statement-id")
-            .permissions(List.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS))
+            .permissions(List.of(Scope.OPENID, Scope.PAYMENTS))
             .redirectUrls(List.of("https://tpp.co.uk/1", "https://tpp.co.uk/2"))
             .build();
     }

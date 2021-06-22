@@ -1,10 +1,10 @@
-package com.transferwise.openbanking.client.api.registration.domain;
+package com.transferwise.openbanking.client.oauth.domain;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public enum RegistrationPermission {
+public enum Scope {
     ACCOUNTS("accounts"),
     PAYMENTS("payments"),
     OPENID("openid");
