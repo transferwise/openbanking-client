@@ -46,7 +46,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${libs.jackson}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${libs.jackson}")
 
-    api('org.bitbucket.b_c:jose4j:0.7.7')
+    api('org.bitbucket.b_c:jose4j:0.7.8')
 
     compileOnly("org.projectlombok:lombok:${libs.lombok}")
     testCompileOnly("org.projectlombok:lombok:${libs.lombok}")
@@ -64,11 +64,11 @@ dependencies {
 
     testImplementation("org.springframework:spring-test:${libs.spring}")
 
-    testImplementation("org.bouncycastle:bcpkix-jdk15on:1.68")
+    testImplementation("org.bouncycastle:bcpkix-jdk15on:1.69")
 
     testImplementation("ch.qos.logback:logback-classic:1.2.3")
 
-    swaggerCodegen("io.swagger.codegen.v3:swagger-codegen-cli:3.0.25")
+    swaggerCodegen("io.swagger.codegen.v3:swagger-codegen-cli:3.0.26")
 }
 
 swaggerSources {
