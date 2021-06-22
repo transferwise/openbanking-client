@@ -1,6 +1,6 @@
 package com.transferwise.openbanking.client.test;
 
-import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod;
@@ -22,7 +22,7 @@ public class TestAspspDetails implements AspspDetails {
     private String registrationUrl;
     private String registrationAudience;
     private String registrationIssuer;
-    private Set<RegistrationPermission> registrationAuthenticationScopes;
+    private Set<Scope> registrationAuthenticationScopes;
     private ClientAuthenticationMethod clientAuthenticationMethod;
     private String clientId;
     private String clientSecret;
@@ -47,7 +47,7 @@ public class TestAspspDetails implements AspspDetails {
     }
 
     @Override
-    public Set<RegistrationPermission> getRegistrationAuthenticationScopes(SoftwareStatementDetails softwareStatementDetails) {
+    public Set<Scope> getRegistrationAuthenticationScopes(SoftwareStatementDetails softwareStatementDetails) {
         return registrationAuthenticationScopes;
     }
 
