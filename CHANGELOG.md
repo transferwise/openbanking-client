@@ -3,6 +3,61 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.0] - 2021-05-18
+### Added
+- The `AspspDetails` interface has a new method to return the transport certificate subject name, for use in client 
+  registration requests, to allow easier customisation of this value per ASPSP. By default, 
+  `getRegistrationTransportCertificateSubjectName` returns the certificate subject name in RFC 2253 format
+- The `AspspDetails` interface has a new method to return the scopes to request for an access token to use for an
+  authenticated call to the ASPSP's update registration API. By default, `getRegistrationAuthenticationScopes` returns 
+  the `openid` scope along with whatever scopes are configured for the software statement
+### Changed
+- The `registrationAuthenticationRequiresOpenIdScope` method on the `AspspDetails` interface has been removed, the new 
+  `getRegistrationAuthenticationScopes` method should be used instead to customise this behaviour
+- Change the type of the `OBSupplementaryData1` model from a string to an object, to prevent JSON de-serialization
+  errors when parsing a JSON string with an empty object value (`{}`) for the supplementary data field.
+- Update the versions of various dependencies and plugins in the Gradle build configuration
+
+## [5.1.0] - 2021-05-17
+### Changed
+- When a JSON processing error is encountered when de-serializing JSON in the `JacksonJsonConverter` class, wrap the 
+  Jackson exception in a new `JsonReadException` class, and include the problematic JSON in the exception
+- When a JSON processing error is encountered when serializing JSON an object in the `JacksonJsonConverter` class, wrap 
+  the Jackson exception in a new `JsonWriteException` class, and include the problematic object in the exception  
+- In the `RestPaymentClient` class, do the API call response de-serialization ourselves rather via the `JsonConverter` 
+  functionality, rather than having the Spring `RestTemplate` functionality do it. Coupled with the above change, this 
+  gives easy access to the full problematic JSON when  the response contains invalid JSON  
+
+## [5.0.0] - 2021-04-20
+### Added
+- A new `JsonConverter` interface has been added, which deals with converting to and from JSON, with the 
+  `JacksonJsonConverter` implementing the interface
+### Changed
+- The `JwtSigner` class now requires a `JsonConverter` to passed as a constructor argument. This replaces the 
+  `ObjectMapper` optional argument
+- The V3 `RestPaymentClient` class now requires a `JsonConverter` to be passed as a constructor argument. This is used
+  to create the JSON request bodies explicitly rather than it being done internally by the `RestOperations` instance, 
+  fixing an issue with null object fields being included in the serialised JSON request body
+- Update the versions of various dependencies and plugins in the Gradle build configuration
+
+## [4.0.0] - 2021-01-22
+### Changed
+- The payment model classes are now generated dynamically from the Open Banking specification swagger definitions,
+  currently aligned to the 3.1.6 specification, dropping the custom model classes in favour of these generated ones
+- Renamed the `getFinancialId` method on the `AspspDetails` interface to `getOrganisationId`, to better describe what
+  it returns and how it is used
+- Renamed the `getRegistrationIssuerUrl` method on the `AspspDetails` interface to `getRegistrationAudience`,
+  to better describe what it returns and how it is used, and provide a more useful default implementation of returning 
+  the ASPSP organisation ID
+- Renamed the `getTokenIssuerUrl` method on the `AspspDetails` interface to `getPrivateKeyJwtAuthenticationAudience`,
+  to better describe what it returns and how it is used, and provide a more useful default implementation of returning
+  the token URL
+- Update the versions of various dependencies and plugins in the Gradle build configuration
+- Use the Maven Central repository in favour of the JCenter repository in the Gradle build configuration
+### Added
+- The `AspspDetails` interface has a new method to supply the `iss` claim in a registration request, to allow easy
+  customisation of the value for ASPSPs that require a non standard value
+
 ## [3.0.0] - 2021-02-15
 ### Changed
 - Refactor the classes which use the `TppConfiguration` class as a class variable, to instead take an instance of the

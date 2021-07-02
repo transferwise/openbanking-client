@@ -2,7 +2,9 @@ plugins {
     id 'java-library'
     id 'checkstyle'
     id 'pmd'
-    id 'com.github.spotbugs' version '4.6.0'
+    id 'com.github.spotbugs' version '4.7.1'
+    id 'org.hidetake.swagger.generator' version '2.18.2'
+    id "com.diffplug.spotless" version "5.14.0"
 }
 
 ext.projectName = "Openbanking client"
@@ -22,16 +24,16 @@ targetCompatibility = JavaVersion.VERSION_11
 
 ext {
     libs = [
-        'spring': '5.3.2',
-        'jackson': '2.12.1',
-        'lombok': '1.18.16',
-        'junit': '5.7.0',
-        'mockito': '3.7.0'
+        'spring': '5.3.6',
+        'jackson': '2.12.3',
+        'lombok': '1.18.20',
+        'junit': '5.7.1',
+        'mockito': '3.9.0'
     ]
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
@@ -42,8 +44,9 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-annotations:${libs.jackson}")
     api("com.fasterxml.jackson.core:jackson-databind:${libs.jackson}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${libs.jackson}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${libs.jackson}")
 
-    api('org.bitbucket.b_c:jose4j:0.7.4')
+    api('org.bitbucket.b_c:jose4j:0.7.8')
 
     compileOnly("org.projectlombok:lombok:${libs.lombok}")
     testCompileOnly("org.projectlombok:lombok:${libs.lombok}")
@@ -61,10 +64,39 @@ dependencies {
 
     testImplementation("org.springframework:spring-test:${libs.spring}")
 
-    testImplementation("org.bouncycastle:bcpkix-jdk15on:1.68")
+    testImplementation("org.bouncycastle:bcpkix-jdk15on:1.69")
 
     testImplementation("ch.qos.logback:logback-classic:1.2.3")
+
+    swaggerCodegen("io.swagger.codegen.v3:swagger-codegen-cli:3.0.26")
 }
+
+swaggerSources {
+    paymentInitiation {
+        inputFile = file('specs/payment-initiation-v3-swagger.yaml')
+        code {
+            language = 'java'
+            components = ['models']
+            configFile = file('specs/payment-initiation-v3-generator-config.json')
+        }
+    }
+}
+
+compileJava.dependsOn(generateSwaggerCode)
+
+sourceSets.main.java.srcDir "${swaggerSources.paymentInitiation.code.outputDir}/src/main/java"
+
+spotless {
+    java {
+        target layout.files("${swaggerSources.paymentInitiation.code.outputDir}/src/main/java")
+        replaceRegex 'Remove swagger @ApiModel annotations', '@ApiModel.*$', ''
+        replaceRegex 'Remove swagger @ApiModelProperty annotations', '@ApiModelProperty.*$', ''
+        replaceRegex 'Remove swagger @Schema annotations', '@Schema.*$', ''
+        removeUnusedImports()
+    }
+}
+
+compileJava.dependsOn(spotlessApply)
 
 jar {
     doFirst {
@@ -84,6 +116,8 @@ tasks.withType(Checkstyle) {
         xml.enabled = false
         html.enabled = true
     }
+    // exclude the automatically generated models, we have limited control over how they're generated
+    exclude '**/com/transferwise/openbanking/client/api/payment/v3/model/**'
 }
 
 spotbugs {
@@ -115,10 +149,12 @@ tasks.withType(Pmd) {
         xml.enabled = false
         html.enabled = true
     }
+    // exclude the automatically generated models, we have limited control over how they're generated
+    exclude '**/com/transferwise/openbanking/client/api/payment/v3/model/**'
 }
 
 wrapper {
-    gradleVersion = '6.7.1'
+    gradleVersion = '6.8.3'
 }
 
 test {

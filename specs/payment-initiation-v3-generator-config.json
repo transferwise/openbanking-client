@@ -1,0 +1,7 @@
+{
+  "library": "resttemplate",
+  "dateLibrary": "java8",
+  "serializableModel": "true",
+  "hideGenerationTimestamp": "true",
+  "modelPackage": "com.transferwise.openbanking.client.api.payment.v3.model"
+}

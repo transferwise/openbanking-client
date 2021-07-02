@@ -1,11 +1,10 @@
 package com.transferwise.openbanking.client.jwt;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ClientException;
+import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.security.KeySupplier;
 import lombok.RequiredArgsConstructor;
 import org.jose4j.jws.AlgorithmIdentifiers;
@@ -29,18 +28,7 @@ public class JwtClaimsSigner {
     private static final String X509_CERTIFICATE_TYPE = "X.509";
 
     private final KeySupplier keySupplier;
-    private final ObjectMapper objectMapper;
-
-    public JwtClaimsSigner(KeySupplier keySupplier) {
-        this.keySupplier = keySupplier;
-        this.objectMapper = defaultObjectMapper();
-    }
-
-    private static ObjectMapper defaultObjectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new Jdk8Module());
-        return objectMapper;
-    }
+    private final JsonConverter jsonConverter;
 
     /**
      * Sign the given claims to produce a JWS string.
@@ -64,11 +52,7 @@ public class JwtClaimsSigner {
      * @return The signed claims as a compact and URL friendly string
      */
     public String createSignature(Object jwtClaims, AspspDetails aspspDetails) {
-        try {
-            return signJsonPayload(objectMapper.writeValueAsString(jwtClaims), aspspDetails);
-        } catch (JsonProcessingException e) {
-            throw new ClientException("Unable to serialise JWT claims", e);
-        }
+        return signJsonPayload(jsonConverter.writeValueAsString(jwtClaims), aspspDetails);
     }
 
     /**
@@ -85,15 +69,8 @@ public class JwtClaimsSigner {
     public String createDetachedSignature(Object jwtClaims,
                                           AspspDetails aspspDetails,
                                           SoftwareStatementDetails softwareStatementDetails) {
-        String payload;
-        try {
-            payload = objectMapper.writeValueAsString(jwtClaims);
-        } catch (JsonProcessingException e) {
-            throw new ClientException("Unable to serialise JWT claims", e);
-        }
-
         JsonWebSignature jsonWebSignature = new JsonWebSignature();
-        jsonWebSignature.setPayload(payload);
+        jsonWebSignature.setPayload(jsonConverter.writeValueAsString(jwtClaims));
         jsonWebSignature.setKey(keySupplier.getSigningKey(aspspDetails));
         jsonWebSignature.setAlgorithmHeaderValue(AlgorithmIdentifiers.RSA_PSS_USING_SHA256);
         jsonWebSignature.setKeyIdHeaderValue(aspspDetails.getSigningKeyId());

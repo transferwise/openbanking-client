@@ -1,18 +1,17 @@
 package com.transferwise.openbanking.client.oauth.domain;
 
+import com.transferwise.openbanking.client.oauth.ScopeFormatter;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.springframework.http.HttpHeaders;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 @EqualsAndHashCode
 @ToString
 public class GetAccessTokenRequest {
-
-    public static final String CLIENT_CREDENTIALS_GRANT_TYPE = "client_credentials";
-    public static final String AUTHORIZATION_CODE_GRANT_TYPE = "authorization_code";
 
     private static final String GRANT_TYPE_PARAM = "grant_type";
     private static final String SCOPE_PARAM = "scope";
@@ -26,21 +25,29 @@ public class GetAccessTokenRequest {
     private final Map<String, String> requestBody = new HashMap<>();
     private final FapiHeaders requestHeaders = FapiHeaders.defaultHeaders();
 
+    public static GetAccessTokenRequest clientCredentialsRequest(Collection<Scope> scopes) {
+        return clientCredentialsRequest(ScopeFormatter.formatScopes(scopes));
+    }
+
+    public static GetAccessTokenRequest clientCredentialsRequest(Scope scope) {
+        return clientCredentialsRequest(scope.getValue());
+    }
+
     public static GetAccessTokenRequest clientCredentialsRequest(String scope) {
         return new GetAccessTokenRequest()
-            .setGrantType(CLIENT_CREDENTIALS_GRANT_TYPE)
+            .setGrantType(GrantType.CLIENT_CREDENTIALS.getValue())
             .setScope(scope);
     }
 
     public static GetAccessTokenRequest authorizationCodeRequest(String authorisationCode, String redirectUri) {
         return new GetAccessTokenRequest()
-            .setGrantType(AUTHORIZATION_CODE_GRANT_TYPE)
+            .setGrantType(GrantType.AUTHORIZATION_CODE.getValue())
             .setAuthorisationCode(authorisationCode)
             .setRedirectUri(redirectUri);
     }
 
     public GetAccessTokenRequest setGrantType(String grantType) {
-        requestBody.put(GRANT_TYPE_PARAM, grantType);
+        setBodyParameter(GRANT_TYPE_PARAM, grantType);
         return this;
     }
 
@@ -49,12 +56,12 @@ public class GetAccessTokenRequest {
     }
 
     public GetAccessTokenRequest setScope(String scope) {
-        requestBody.put(SCOPE_PARAM, scope);
+        setBodyParameter(SCOPE_PARAM, scope);
         return this;
     }
 
     public GetAccessTokenRequest setAuthorisationCode(String authorisationCode) {
-        requestBody.put(CODE_PARAM, authorisationCode);
+        setBodyParameter(CODE_PARAM, authorisationCode);
         return this;
     }
 
@@ -63,27 +70,27 @@ public class GetAccessTokenRequest {
     }
 
     public GetAccessTokenRequest setRedirectUri(String redirectUri) {
-        requestBody.put(REDIRECT_URI_PARAM, redirectUri);
+        setBodyParameter(REDIRECT_URI_PARAM, redirectUri);
         return this;
     }
 
     public GetAccessTokenRequest setClientId(String clientId) {
-        requestBody.put(CLIENT_ID_PARAM, clientId);
+        setBodyParameter(CLIENT_ID_PARAM, clientId);
         return this;
     }
 
     public GetAccessTokenRequest setClientSecret(String clientSecret) {
-        requestBody.put(CLIENT_SECRET_PARAM, clientSecret);
+        setBodyParameter(CLIENT_SECRET_PARAM, clientSecret);
         return this;
     }
 
     public GetAccessTokenRequest setClientAssertionType(String clientAssertionType) {
-        requestBody.put(CLIENT_ASSERTION_TYPE_PARAM, clientAssertionType);
+        setBodyParameter(CLIENT_ASSERTION_TYPE_PARAM, clientAssertionType);
         return this;
     }
 
     public GetAccessTokenRequest setClientAssertion(String clientAssertion) {
-        requestBody.put(CLIENT_ASSERTION_PARAM, clientAssertion);
+        setBodyParameter(CLIENT_ASSERTION_PARAM, clientAssertion);
         return this;
     }
 
@@ -98,5 +105,11 @@ public class GetAccessTokenRequest {
 
     public FapiHeaders getRequestHeaders() {
         return requestHeaders;
+    }
+
+    private void setBodyParameter(String key, String value) {
+        if (value != null && !value.isBlank()) {
+            requestBody.put(key, value);
+        }
     }
 }

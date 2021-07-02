@@ -1,19 +1,19 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
+import com.transferwise.openbanking.client.api.common.ApiResponse;
 import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
-import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
-import com.transferwise.openbanking.client.api.payment.common.BasePaymentClient;
+import com.transferwise.openbanking.client.api.common.BaseClient;
 import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentRequest;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentConsentResponse;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentRequest;
-import com.transferwise.openbanking.client.api.payment.v3.domain.DomesticPaymentResponse;
-import com.transferwise.openbanking.client.api.payment.v3.domain.FundsConfirmationResponse;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBErrorResponse1;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsent4;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsentResponse5;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticResponse5;
+import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteFundsConfirmationResponse1;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
-import com.transferwise.openbanking.client.error.ApiCallException;
+import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
-import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -23,191 +23,215 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
 
 @Slf4j
-public class RestPaymentClient extends BasePaymentClient implements PaymentClient {
+public class RestPaymentClient extends BaseClient implements PaymentClient {
 
     private static final String ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/pisp/%s";
 
     private static final String PAYMENT_CONSENT_RESOURCE = "domestic-payment-consents";
     private static final String PAYMENT_RESOURCE = "domestic-payments";
 
-    private final IdempotencyKeyGenerator<DomesticPaymentConsentRequest, DomesticPaymentRequest> idempotencyKeyGenerator;
+    private final IdempotencyKeyGenerator<OBWriteDomesticConsent4, OBWriteDomestic2> idempotencyKeyGenerator;
     private final JwtClaimsSigner jwtClaimsSigner;
 
     public RestPaymentClient(RestOperations restOperations,
-                             OAuthClient oAuthClient,
-                             IdempotencyKeyGenerator<DomesticPaymentConsentRequest, DomesticPaymentRequest> idempotencyKeyGenerator,
+                             JsonConverter jsonConverter,
+                             IdempotencyKeyGenerator<OBWriteDomesticConsent4, OBWriteDomestic2> idempotencyKeyGenerator,
                              JwtClaimsSigner jwtClaimsSigner) {
-        super(restOperations, oAuthClient);
+        super(restOperations, jsonConverter);
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
         this.jwtClaimsSigner = jwtClaimsSigner;
     }
 
     @Override
-    public DomesticPaymentConsentResponse createDomesticPaymentConsent(
-        DomesticPaymentConsentRequest domesticPaymentConsentRequest,
+    public ApiResponse<OBWriteDomesticConsentResponse5, OBErrorResponse1> createDomesticPaymentConsent(
+        OBWriteDomesticConsent4 domesticPaymentConsentRequest,
+        String clientCredentialsToken,
         AspspDetails aspspDetails,
-        SoftwareStatementDetails softwareStatementDetails) {
+        SoftwareStatementDetails softwareStatementDetails
+    ) {
 
-        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getFinancialId(),
-            getClientCredentialsToken(aspspDetails),
+        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
+            clientCredentialsToken,
             idempotencyKeyGenerator.generateKeyForSetup(domesticPaymentConsentRequest),
             jwtClaimsSigner.createDetachedSignature(domesticPaymentConsentRequest,
                 aspspDetails,
                 softwareStatementDetails));
 
-        HttpEntity<DomesticPaymentConsentRequest> request = new HttpEntity<>(domesticPaymentConsentRequest, headers);
+        String body = jsonConverter.writeValueAsString(domesticPaymentConsentRequest);
+
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
 
         log.info("Calling create payment consent API, with interaction ID {}", headers.getInteractionId());
 
-        DomesticPaymentConsentResponse domesticPaymentConsentResponse;
+        ResponseEntity<String> response;
         try {
-            ResponseEntity<DomesticPaymentConsentResponse> response = restOperations.exchange(
-                generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE),
+            response = restOperations.exchange(generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE),
                 HttpMethod.POST,
                 request,
-                DomesticPaymentConsentResponse.class);
-            domesticPaymentConsentResponse = response.getBody();
+                String.class);
         } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to create payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
+            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
         } catch (RestClientException e) {
-            throw new ApiCallException("Call to create payment consent endpoint failed, and no response body returned", e);
+            return mapClientException(e);
         }
 
-        validateResponse(domesticPaymentConsentResponse);
+        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = jsonConverter.readValue(response.getBody(),
+            OBWriteDomesticConsentResponse5.class);
+        if (isResponseInvalid(domesticPaymentConsentResponse)) {
+            return mapInvalidResponse(response);
+        }
 
-        return domesticPaymentConsentResponse;
+        return ApiResponse.success(response.getStatusCodeValue(), response.getBody(), domesticPaymentConsentResponse);
     }
 
     @Override
-    public DomesticPaymentResponse submitDomesticPayment(DomesticPaymentRequest domesticPaymentRequest,
-                                                         AuthorizationContext authorizationContext,
-                                                         AspspDetails aspspDetails,
-                                                         SoftwareStatementDetails softwareStatementDetails) {
+    public ApiResponse<OBWriteDomesticResponse5, OBErrorResponse1> submitDomesticPayment(
+        OBWriteDomestic2 domesticPaymentRequest,
+        String authorizationCodeToken,
+        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails
+    ) {
 
-        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getFinancialId(),
-            exchangeAuthorizationCode(authorizationContext, aspspDetails),
+        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
+            authorizationCodeToken,
             idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest),
             jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest, aspspDetails, softwareStatementDetails));
 
-        HttpEntity<DomesticPaymentRequest> request = new HttpEntity<>(domesticPaymentRequest, headers);
+        String body = jsonConverter.writeValueAsString(domesticPaymentRequest);
+
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
 
         log.info("Calling submit payment API, with interaction ID {}", headers.getInteractionId());
 
-        DomesticPaymentResponse domesticPaymentResponse;
+        ResponseEntity<String> response;
         try {
-            ResponseEntity<DomesticPaymentResponse> response = restOperations.exchange(
+            response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_RESOURCE),
                 HttpMethod.POST,
                 request,
-                DomesticPaymentResponse.class);
-            domesticPaymentResponse = response.getBody();
+                String.class);
         } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to submit payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
+            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
         } catch (RestClientException e) {
-            throw new ApiCallException("Call to submit payment endpoint failed, and no response body returned", e);
+            return mapClientException(e);
         }
 
-        validateResponse(domesticPaymentResponse);
+        OBWriteDomesticResponse5 domesticPaymentResponse = jsonConverter.readValue(response.getBody(),
+            OBWriteDomesticResponse5.class);
+        if (isResponseInvalid(domesticPaymentResponse)) {
+            return mapInvalidResponse(response);
+        }
 
-        return domesticPaymentResponse;
+        return ApiResponse.success(response.getStatusCodeValue(), response.getBody(), domesticPaymentResponse);
     }
 
     @Override
-    public DomesticPaymentConsentResponse getDomesticPaymentConsent(String consentId, AspspDetails aspspDetails) {
+    public ApiResponse<OBWriteDomesticConsentResponse5, OBErrorResponse1> getDomesticPaymentConsent(
+        String consentId,
+        String clientCredentialsToken,
+        AspspDetails aspspDetails
+    ) {
 
-        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getFinancialId(),
-            getClientCredentialsToken(aspspDetails));
+        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
+            clientCredentialsToken);
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
         log.info("Calling get payment consent API, with interaction ID {}", headers.getInteractionId());
 
-        DomesticPaymentConsentResponse domesticPaymentConsentResponse;
+        ResponseEntity<String> response;
         try {
-            ResponseEntity<DomesticPaymentConsentResponse> response = restOperations.exchange(
+            response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE) + "/{consentId}",
                 HttpMethod.GET,
                 request,
-                DomesticPaymentConsentResponse.class,
+                String.class,
                 consentId);
-            domesticPaymentConsentResponse = response.getBody();
         } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to get payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
+            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
         } catch (RestClientException e) {
-            throw new ApiCallException("Call to get payment consent endpoint failed, and no response body returned", e);
+            return mapClientException(e);
         }
 
-        validateResponse(domesticPaymentConsentResponse);
+        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = jsonConverter.readValue(response.getBody(),
+            OBWriteDomesticConsentResponse5.class);
+        if (isResponseInvalid(domesticPaymentConsentResponse)) {
+            return mapInvalidResponse(response);
+        }
 
-        return domesticPaymentConsentResponse;
+        return ApiResponse.success(response.getStatusCodeValue(), response.getBody(), domesticPaymentConsentResponse);
     }
 
     @Override
-    public DomesticPaymentResponse getDomesticPayment(String domesticPaymentId, AspspDetails aspspDetails) {
+    public ApiResponse<OBWriteDomesticResponse5, OBErrorResponse1> getDomesticPayment(String domesticPaymentId,
+                                                                                      String clientCredentialsToken,
+                                                                                      AspspDetails aspspDetails) {
 
-        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getFinancialId(),
-            getClientCredentialsToken(aspspDetails));
+        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
+            clientCredentialsToken);
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
         log.info("Calling get payment API, with interaction ID {}", headers.getInteractionId());
 
-        DomesticPaymentResponse domesticPaymentResponse;
+        ResponseEntity<String> response;
         try {
-            ResponseEntity<DomesticPaymentResponse> response = restOperations.exchange(
+            response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_RESOURCE) + "/{domesticPaymentId}",
                 HttpMethod.GET,
                 request,
-                DomesticPaymentResponse.class,
+                String.class,
                 domesticPaymentId);
-            domesticPaymentResponse = response.getBody();
         } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to get payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
+            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
         } catch (RestClientException e) {
-            throw new ApiCallException("Call to get payment endpoint failed, and no response body returned", e);
+            return mapClientException(e);
         }
 
-        validateResponse(domesticPaymentResponse);
+        OBWriteDomesticResponse5 domesticPaymentResponse = jsonConverter.readValue(response.getBody(),
+            OBWriteDomesticResponse5.class);
+        if (isResponseInvalid(domesticPaymentResponse)) {
+            return mapInvalidResponse(response);
+        }
 
-        return domesticPaymentResponse;
+        return ApiResponse.success(response.getStatusCodeValue(), response.getBody(), domesticPaymentResponse);
     }
 
     @Override
-    public FundsConfirmationResponse getFundsConfirmation(String consentId,
-                                                          AuthorizationContext authorizationContext,
-                                                          AspspDetails aspspDetails) {
+    public ApiResponse<OBWriteFundsConfirmationResponse1, OBErrorResponse1> getFundsConfirmation(
+        String consentId,
+        String authorizationCodeToken,
+        AspspDetails aspspDetails
+    ) {
 
-        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getFinancialId(),
-            exchangeAuthorizationCode(authorizationContext, aspspDetails));
+        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
+            authorizationCodeToken);
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
         log.info("Calling get confirmation of funds API, with interaction ID {}", headers.getInteractionId());
 
-        FundsConfirmationResponse fundsConfirmationResponse;
+        ResponseEntity<String> response;
         try {
-            ResponseEntity<FundsConfirmationResponse> response = restOperations.exchange(
+            response = restOperations.exchange(
                 generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE) + "/{consentId}/funds-confirmation",
                 HttpMethod.GET,
                 request,
-                FundsConfirmationResponse.class,
+                String.class,
                 consentId);
-            fundsConfirmationResponse = response.getBody();
         } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to get confirmation of funds endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
+            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
         } catch (RestClientException e) {
-            throw new ApiCallException("Call to get confirmation of funds endpoint failed, and no response body returned",
-                e);
+            return mapClientException(e);
         }
 
-        validateResponse(fundsConfirmationResponse);
+        OBWriteFundsConfirmationResponse1 fundsConfirmationResponse = jsonConverter.readValue(response.getBody(),
+            OBWriteFundsConfirmationResponse1.class);
+        if (isResponseInvalid(fundsConfirmationResponse)) {
+            return mapInvalidResponse(response);
+        }
 
-        return fundsConfirmationResponse;
+        return ApiResponse.success(response.getStatusCodeValue(), response.getBody(), fundsConfirmationResponse);
     }
 
     private String generateApiUrl(AspspDetails aspspDetails, String resource) {
@@ -217,29 +241,23 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             resource);
     }
 
-    private void validateResponse(DomesticPaymentConsentResponse response) {
-        if (response == null ||
+    private boolean isResponseInvalid(OBWriteDomesticConsentResponse5 response) {
+        return response == null ||
             response.getData() == null ||
             response.getData().getStatus() == null ||
             response.getData().getConsentId() == null ||
-            response.getData().getConsentId().isBlank()) {
-            throw new ApiCallException("Empty or partial domestic payment consent response returned " + response);
-        }
+            response.getData().getConsentId().isBlank();
     }
 
-    private void validateResponse(DomesticPaymentResponse response) {
-        if (response == null ||
+    private boolean isResponseInvalid(OBWriteDomesticResponse5 response) {
+        return response == null ||
             response.getData() == null ||
             response.getData().getStatus() == null ||
             response.getData().getDomesticPaymentId() == null ||
-            response.getData().getDomesticPaymentId().isBlank()) {
-            throw new ApiCallException("Empty or partial domestic payment response returned " + response);
-        }
+            response.getData().getDomesticPaymentId().isBlank();
     }
 
-    private void validateResponse(FundsConfirmationResponse response) {
-        if (response == null || response.getData() == null) {
-            throw new ApiCallException("Empty or partial funds confirmation response returned " + response);
-        }
+    private boolean isResponseInvalid(OBWriteFundsConfirmationResponse1 response) {
+        return response == null || response.getData() == null;
     }
 }

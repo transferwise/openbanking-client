@@ -1,7 +1,9 @@
 package com.transferwise.openbanking.client.oauth;
 
+import com.transferwise.openbanking.client.api.common.ApiResponse;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
+import com.transferwise.openbanking.client.oauth.domain.ErrorResponse;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 
 /**
@@ -14,10 +16,11 @@ public interface OAuthClient {
      *
      * @param getAccessTokenRequest The details of the token to get
      * @param aspspDetails          The details of the ASPSP to send the request to
-     * @return The result, from the ASPSP, of the access token request
-     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
-     *                                                                   to the ASPSP or the HTTP call to the ASPSP
-     *                                                                   failed
+     * @return The response, from the ASPSP, to the access token request
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request to
+     *                                                                   to the ASPSP, or there was a problem parsing
+     *                                                                   the response when the API call succeeded
      */
-    AccessTokenResponse getAccessToken(GetAccessTokenRequest getAccessTokenRequest, AspspDetails aspspDetails);
+    ApiResponse<AccessTokenResponse, ErrorResponse> getAccessToken(GetAccessTokenRequest getAccessTokenRequest,
+                                                                   AspspDetails aspspDetails);
 }

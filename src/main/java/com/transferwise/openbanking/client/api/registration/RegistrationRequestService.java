@@ -2,7 +2,8 @@ package com.transferwise.openbanking.client.api.registration;
 
 import com.transferwise.openbanking.client.api.registration.domain.ApplicationType;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
-import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
+import com.transferwise.openbanking.client.oauth.ScopeFormatter;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ClientException;
@@ -16,7 +17,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class RegistrationRequestService {
@@ -48,8 +48,8 @@ public class RegistrationRequestService {
         String signingAlgorithm = aspspDetails.getSigningAlgorithm();
 
         ClientRegistrationRequest.ClientRegistrationRequestBuilder requestBuilder = ClientRegistrationRequest.builder()
-            .iss(softwareStatementDetails.getSoftwareStatementId())
-            .aud(aspspDetails.getRegistrationIssuerUrl())
+            .iss(aspspDetails.getRegistrationIssuer(softwareStatementDetails))
+            .aud(aspspDetails.getRegistrationAudience())
             .iat(now.getEpochSecond())
             .exp(now.plusSeconds(REGISTRATION_TOKEN_VALIDITY_SECONDS).getEpochSecond())
             .jti(generateJwtIdValue(aspspDetails))
@@ -86,25 +86,23 @@ public class RegistrationRequestService {
     }
 
     private String generateScopeValue(SoftwareStatementDetails softwareStatementDetails) {
-        List<RegistrationPermission> permissions;
+        List<Scope> permissions;
         // registration requests always have to include the OPENID permission
-        if (softwareStatementDetails.getPermissions().contains(RegistrationPermission.OPENID)) {
+        if (softwareStatementDetails.getPermissions().contains(Scope.OPENID)) {
             permissions = softwareStatementDetails.getPermissions();
         } else {
             permissions = new ArrayList<>();
-            permissions.add(RegistrationPermission.OPENID);
+            permissions.add(Scope.OPENID);
             permissions.addAll(softwareStatementDetails.getPermissions());
         }
 
-        return permissions.stream()
-            .map(RegistrationPermission::getValue)
-            .collect(Collectors.joining(" "));
+        return ScopeFormatter.formatScopes(permissions);
     }
 
     private String getTransportCertificateSubjectName(AspspDetails aspspDetails) {
         Certificate transportCertificate = keySupplier.getTransportCertificate(aspspDetails);
         if (transportCertificate instanceof X509Certificate) {
-            return ((X509Certificate) transportCertificate).getSubjectX500Principal().getName();
+            return aspspDetails.getRegistrationTransportCertificateSubjectName((X509Certificate) transportCertificate);
         } else {
             throw new ClientException("Supplied transport certificate is not an X509 certificate, cannot determine " +
                 "transport certificate subject name");

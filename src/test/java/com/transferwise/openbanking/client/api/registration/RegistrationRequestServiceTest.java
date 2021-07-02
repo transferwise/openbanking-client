@@ -2,7 +2,7 @@ package com.transferwise.openbanking.client.api.registration;
 
 import com.transferwise.openbanking.client.api.registration.domain.ApplicationType;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
-import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod;
@@ -46,7 +46,8 @@ class RegistrationRequestServiceTest {
         String softwareStatement = "software-statement";
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
+            .registrationIssuer("organisation-id")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -67,7 +68,7 @@ class RegistrationRequestServiceTest {
         Assertions.assertEquals("openid payments", clientRegistrationRequest.getScope());
         Assertions.assertEquals(ApplicationType.WEB, clientRegistrationRequest.getApplicationType());
         Assertions.assertEquals(softwareStatement, clientRegistrationRequest.getSoftwareStatement());
-        Assertions.assertEquals(aspspDetails.getRegistrationIssuerUrl(), clientRegistrationRequest.getAud());
+        Assertions.assertEquals(aspspDetails.getRegistrationAudience(), clientRegistrationRequest.getAud());
         Assertions.assertEquals(aspspDetails.getGrantTypes(), clientRegistrationRequest.getGrantTypes());
         Assertions.assertEquals(aspspDetails.getClientAuthenticationMethod().getMethodName(),
             clientRegistrationRequest.getTokenEndpointAuthMethod());
@@ -75,7 +76,7 @@ class RegistrationRequestServiceTest {
             clientRegistrationRequest.getIdTokenSignedResponseAlg());
         Assertions.assertEquals(aspspDetails.getSigningAlgorithm(),
             clientRegistrationRequest.getRequestObjectSigningAlg());
-        Assertions.assertEquals(softwareStatementDetails.getSoftwareStatementId(), clientRegistrationRequest.getIss());
+        Assertions.assertEquals("organisation-id", clientRegistrationRequest.getIss());
         Assertions.assertEquals(softwareStatementDetails.getSoftwareStatementId(),
             clientRegistrationRequest.getSoftwareId());
         Assertions.assertEquals(softwareStatementDetails.getRedirectUrls(),
@@ -87,7 +88,7 @@ class RegistrationRequestServiceTest {
         String softwareStatement = "software-statement";
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.PRIVATE_KEY_JWT)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -106,9 +107,9 @@ class RegistrationRequestServiceTest {
     void generateRegistrationRequestAlwaysIncludesOpenIdPermissionInScopes() {
         String softwareStatement = "software-statement";
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
-        softwareStatementDetails.setPermissions(List.of(RegistrationPermission.PAYMENTS));
+        softwareStatementDetails.setPermissions(List.of(Scope.PAYMENTS));
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.PRIVATE_KEY_JWT)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -128,7 +129,7 @@ class RegistrationRequestServiceTest {
         String softwareStatement = "software-statement";
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.TLS_CLIENT_AUTH)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -153,7 +154,7 @@ class RegistrationRequestServiceTest {
         String softwareStatement = "software-statement";
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AspspDetails aspspDetails = TestAspspDetails.builder()
-            .registrationIssuerUrl("registration-issuer-url")
+            .registrationAudience("registration-issuer-url")
             .grantTypes(List.of(GrantType.CLIENT_CREDENTIALS, GrantType.AUTHORIZATION_CODE))
             .clientAuthenticationMethod(ClientAuthenticationMethod.PRIVATE_KEY_JWT)
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
@@ -172,7 +173,7 @@ class RegistrationRequestServiceTest {
     private SoftwareStatementDetails aSoftwareStatementDetails() {
         return SoftwareStatementDetails.builder()
             .softwareStatementId("software-statement-id")
-            .permissions(List.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS))
+            .permissions(List.of(Scope.OPENID, Scope.PAYMENTS))
             .redirectUrls(List.of("https://tpp.co.uk/1", "https://tpp.co.uk/2"))
             .build();
     }

@@ -1,11 +1,16 @@
 package com.transferwise.openbanking.client.configuration;
 
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod;
 import com.transferwise.openbanking.client.oauth.domain.GrantType;
 import com.transferwise.openbanking.client.oauth.domain.ResponseType;
 import org.jose4j.jws.AlgorithmIdentifiers;
 
+import javax.security.auth.x500.X500Principal;
+import java.security.cert.X509Certificate;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Defines the integration details with a specific ASPSP.
@@ -23,17 +28,17 @@ public interface AspspDetails {
     String getInternalId();
 
     /**
-     * Get the identifier, assigned by a central service, of the ASPSP.
+     * Get the identifier, assigned by the Open Banking directory, for the ASPSP organisation.
      *
-     * <p>This value cannot be considered as a unique ASPSP identifier as the same value may be used across several banks
-     * within the same group.
+     * <p>This value cannot be considered as a unique ASPSP identifier as the same value may be used across several
+     * ASPSP brands within the same organisation.
      *
      * <p>This value also cannot be considered as a human friendly identifier, as values are randomly assigned and have
      * no correlation to the ASPSP name.
      *
-     * @return the financial identifier for the ASPSP
+     * @return the organisation identifier for the ASPSP
      */
-    String getFinancialId();
+    String getOrganisationId();
 
     /**
      * Get the base URL for the ASPSPs Open Banking API, to use as the prefix for an API call to the ASPSP.
@@ -63,27 +68,66 @@ public interface AspspDetails {
     }
 
     /**
-     * Get the URL to use as the intended audience value for a JWT generated for a client registration.
+     * Get the value to use as the intended audience claim within a client registration request. For most ASPSPs this
+     * will be ASPSP organisation ID (within the Open Banking directory), however some ASPSPs may require a different
+     * value.
      *
      * <p>Not all ASPSPs support a registration API, therefore not all implementations implement this method.
      *
-     * @return the JWT intended audience URL
+     * @return the intended audience claim value to use
      */
-    default String getRegistrationIssuerUrl() {
-        throw new UnsupportedOperationException("getRegistrationIssuerUrl not implemented");
+    default String getRegistrationAudience() {
+        return getOrganisationId();
     }
 
     /**
-     * Get the URL to use as the intended audience value for a JWT generated for requesting an OAuth access token.
+     * Get the value to use as the issuer claim within a client registration request. For most ASPSPs this will be the
+     * ID of the software statement used for the registration, however some ASPSPs may require a different value.
      *
-     * <p>This URL is only applicable for certain client authentication methods, namely
-     * {@link com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod#PRIVATE_KEY_JWT}, therefore not all
-     * implementations implement this method.
-     *
-     * @return the JWT intended audience URL
+     * @param softwareStatementDetails the details of the software statement being used for the registration
+     * @return the issuer claim value to use, defaults to the software statement ID
      */
-    default String getTokenIssuerUrl() {
-        throw new UnsupportedOperationException("getTokenIssuerUrl not implemented");
+    default String getRegistrationIssuer(SoftwareStatementDetails softwareStatementDetails) {
+        return softwareStatementDetails.getSoftwareStatementId();
+    }
+
+    /**
+     * Get the set of scopes to request for when obtaining an access token, to use for an authenticated get / update /
+     * delete client registration API call.
+     *
+     * <p>Some ASPSPs require the set of requested scopes to not contain the {@link Scope#OPENID}
+     * scope, some require it to contain the {@link Scope#OPENID} scope, and some require no scopes to
+     * be requested at all.
+     *
+     * <p>By default this returns {@link Scope#OPENID} plus the permissions in
+     * {@link SoftwareStatementDetails#permissions}.
+     *
+     * @param softwareStatementDetails the details of the software statement being used for the registration
+     * @return The set of scopes to request an access token with
+     */
+    default Set<Scope> getRegistrationAuthenticationScopes(SoftwareStatementDetails softwareStatementDetails) {
+        Set<Scope> permissions = new LinkedHashSet<>();
+        permissions.add(Scope.OPENID);
+        // As we request a scope of what the permissions the software statement details currently has, we don't really
+        // support updating the permissions of a client registration, but as this can't be modified in the Open Banking
+        // directory this shouldn't be an issue.
+        permissions.addAll(softwareStatementDetails.getPermissions());
+        return permissions;
+    }
+
+    /**
+     * Get the subject distinguished name of the given transport certificate, to use as the subject distinguished name
+     * claim in a registration request, when using TLS client authentication.
+     *
+     * <p>Some ASPSPs require this value to be in a specific format.
+     *
+     * <p>By default this returns the certificate subject distinguished name, in the RFC 2253 format.
+     *
+     * @param certificate the transport certificate being used for the client registration request
+     * @return the certificate subject name
+     */
+    default String getRegistrationTransportCertificateSubjectName(X509Certificate certificate) {
+        return certificate.getSubjectX500Principal().getName(X500Principal.RFC2253);
     }
 
     /**
@@ -114,6 +158,16 @@ public interface AspspDetails {
      */
     default String getClientSecret() {
         throw new UnsupportedOperationException("getClientSecret not implemented");
+    }
+
+    /**
+     * Get the value to use as the intended audience claim, in the JWT generated for requesting an OAuth access token,
+     * when using the private key JWT client authentication method.
+     *
+     * @return the JWT intended audience claim value to use, defaults to the token URL
+     */
+    default String getPrivateKeyJwtAuthenticationAudience() {
+        return getTokenUrl();
     }
 
     /**
@@ -206,15 +260,5 @@ public interface AspspDetails {
      */
     default boolean registrationRequiresLowerCaseJtiClaim() {
         return false;
-    }
-
-    /**
-     * Whether or not the ASPSP requires the access token, used as the authorisation for get / update / delete client
-     * registration API calls, to have the openid scope.
-     *
-     * @return {@code true} if the authorisation must have the openid scope, {@code false} if it must not.
-     */
-    default boolean registrationAuthenticationRequiresOpenIdScope() {
-        return true;
     }
 }
