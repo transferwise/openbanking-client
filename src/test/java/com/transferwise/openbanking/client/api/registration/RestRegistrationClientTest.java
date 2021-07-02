@@ -1,15 +1,15 @@
 package com.transferwise.openbanking.client.api.registration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.transferwise.openbanking.client.api.common.ApiResponse;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
-import com.transferwise.openbanking.client.api.registration.domain.RegistrationPermission;
+import com.transferwise.openbanking.client.api.registration.domain.ErrorResponse;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
-import com.transferwise.openbanking.client.error.ApiCallException;
+import com.transferwise.openbanking.client.json.JacksonJsonConverter;
+import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
-import com.transferwise.openbanking.client.oauth.OAuthClient;
-import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,23 +28,22 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({"PMD.UnusedPrivateMethod", "PMD.AvoidDuplicateLiterals"}) // PMD considers argumentsForRegisterClientTest unused
 class RestRegistrationClientTest {
 
-    private static ObjectMapper objectMapper;
+    private static JsonConverter jsonConverter;
 
     @Mock
     private JwtClaimsSigner jwtClaimsSigner;
-
-    @Mock
-    private OAuthClient oAuthClient;
 
     private MockRestServiceServer mockAspspServer;
 
@@ -52,7 +51,7 @@ class RestRegistrationClientTest {
 
     @BeforeAll
     static void initAll() {
-        objectMapper = new ObjectMapper();
+        jsonConverter = new JacksonJsonConverter();
     }
 
     @BeforeEach
@@ -60,12 +59,13 @@ class RestRegistrationClientTest {
         RestTemplate restTemplate = new RestTemplate();
         mockAspspServer = MockRestServiceServer.createServer(restTemplate);
 
-        restRegistrationClient = new RestRegistrationClient(jwtClaimsSigner, oAuthClient, restTemplate);
+        restRegistrationClient = new RestRegistrationClient(restTemplate, jsonConverter, jwtClaimsSigner);
     }
 
     @ParameterizedTest
     @MethodSource("argumentsForContentTypeTest")
-    void registerClient(boolean registrationUsesJoseContentType, String expectedContentType) throws Exception {
+    void registerClientReturnsSuccessResponseOnApiCallSuccess(boolean registrationUsesJoseContentType,
+                                                              String expectedContentType) {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
         AspspDetails aspspDetails = aAspspDefinition(registrationUsesJoseContentType);
 
@@ -77,7 +77,7 @@ class RestRegistrationClientTest {
             .clientId("client-id")
             .clientIdIssuedAt("100")
             .build();
-        String jsonResponse = objectMapper.writeValueAsString(mockResponse);
+        String jsonResponse = jsonConverter.writeValueAsString(mockResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl()))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, expectedContentType))
@@ -87,11 +87,15 @@ class RestRegistrationClientTest {
             .andExpect(MockRestRequestMatchers.content().string(signedClaims))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ClientRegistrationResponse registrationResponse = restRegistrationClient.registerClient(
+        ApiResponse<ClientRegistrationResponse, ErrorResponse> apiResponse = restRegistrationClient.registerClient(
             clientRegistrationRequest,
             aspspDetails);
 
-        Assertions.assertEquals(mockResponse, registrationResponse);
+        Assertions.assertFalse(apiResponse.isCallFailed());
+        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
+        Assertions.assertEquals(mockResponse, apiResponse.getSuccessResponseBody());
+        Assertions.assertNull(apiResponse.getFailureResponseBody());
+        Assertions.assertNull(apiResponse.getFailureException());
 
         mockAspspServer.verify();
     }
@@ -113,19 +117,21 @@ class RestRegistrationClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ClientRegistrationResponse registrationResponse = restRegistrationClient.registerClient(
+        ApiResponse<ClientRegistrationResponse, ErrorResponse> apiResponse = restRegistrationClient.registerClient(
             clientRegistrationRequest,
             aspspDetails);
 
-        Assertions.assertEquals("2021-02-10T12:00:51.191+0000", registrationResponse.getClientIdIssuedAt());
+        Assertions.assertFalse(apiResponse.isCallFailed());
+        Assertions.assertEquals("2021-02-10T12:00:51.191+0000",
+            apiResponse.getSuccessResponseBody().getClientIdIssuedAt());
         Assertions.assertEquals("2022-02-10T12:00:51.191+0000",
-            registrationResponse.getClientSecretExpiresAt());
+            apiResponse.getSuccessResponseBody().getClientSecretExpiresAt());
 
         mockAspspServer.verify();
     }
 
     @Test
-    void registerClientThrowsApiCallExceptionOnApiCallFailure() {
+    void registerClientReturnsFailureResponseOnApiCallFailure() {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
         AspspDetails aspspDetails = aAspspDefinition();
 
@@ -135,30 +141,30 @@ class RestRegistrationClientTest {
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl()))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withServerError());
+            .andRespond(MockRestResponseCreators.withServerError().body("internal server error"));
 
-        Assertions.assertThrows(ApiCallException.class,
-            () -> restRegistrationClient.registerClient(clientRegistrationRequest, aspspDetails));
+        ApiResponse<ClientRegistrationResponse, ErrorResponse> apiResponse = restRegistrationClient.registerClient(
+            clientRegistrationRequest,
+            aspspDetails);
+
+        Assertions.assertTrue(apiResponse.isCallFailed());
+        Assertions.assertEquals(500, apiResponse.getStatusCode());
+        Assertions.assertEquals("internal server error", apiResponse.getResponseBody());
+        Assertions.assertNull(apiResponse.getSuccessResponseBody());
+        Assertions.assertNull(apiResponse.getFailureResponseBody());
+        Assertions.assertTrue(apiResponse.getFailureException() instanceof HttpServerErrorException.InternalServerError);
+        Assertions.assertFalse(apiResponse.isClientErrorResponse());
+        Assertions.assertTrue(apiResponse.isServerErrorResponse());
 
         mockAspspServer.verify();
     }
 
     @Test
-    void updateRegistration() throws Exception {
+    void updateRegistrationReturnsSuccessResponseOnApiCallSuccess() {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
+        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
-
-        AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
-            .accessToken("access-token")
-            .build();
-        Mockito
-            .when(oAuthClient.getAccessToken(
-                Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
-                Mockito.eq(aspspDetails)))
-            .thenReturn(mockAccessTokenResponse);
 
         String signedClaims = "signed-claims";
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
@@ -167,23 +173,28 @@ class RestRegistrationClientTest {
         ClientRegistrationResponse mockResponse = ClientRegistrationResponse.builder()
             .clientId("client-id")
             .build();
-        String jsonResponse = objectMapper.writeValueAsString(mockResponse);
+        String jsonResponse = jsonConverter.writeValueAsString(mockResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, "application/jwt"))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT_CHARSET,
                 StandardCharsets.UTF_8.name().toLowerCase()))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer access-token"))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + clientCredentialsToken))
             .andExpect(MockRestRequestMatchers.content().string(signedClaims))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ClientRegistrationResponse registrationResponse = restRegistrationClient.updateRegistration(
+        ApiResponse<ClientRegistrationResponse, ErrorResponse> apiResponse = restRegistrationClient.updateRegistration(
             clientRegistrationRequest,
+            clientCredentialsToken,
             aspspDetails,
             softwareStatementDetails);
 
-        Assertions.assertEquals(mockResponse, registrationResponse);
+        Assertions.assertFalse(apiResponse.isCallFailed());
+        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
+        Assertions.assertEquals(mockResponse, apiResponse.getSuccessResponseBody());
+        Assertions.assertNull(apiResponse.getFailureResponseBody());
+        Assertions.assertNull(apiResponse.getFailureException());
 
         mockAspspServer.verify();
     }
@@ -191,18 +202,12 @@ class RestRegistrationClientTest {
     @ParameterizedTest
     @MethodSource("argumentsForContentTypeTest")
     void updateRegistrationSupportsDifferentContentTypes(boolean registrationUsesJoseContentType,
-                                                         String expectedContentType)
-        throws Exception {
+                                                         String expectedContentType) {
 
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
+        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition(registrationUsesJoseContentType);
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
-
-        AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
-            .accessToken("access-token")
-            .build();
-        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
-            .thenReturn(mockAccessTokenResponse);
 
         String signedClaims = "signed-claims";
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
@@ -211,91 +216,58 @@ class RestRegistrationClientTest {
         ClientRegistrationResponse mockResponse = ClientRegistrationResponse.builder()
             .clientId("client-id")
             .build();
-        String jsonResponse = objectMapper.writeValueAsString(mockResponse);
+        String jsonResponse = jsonConverter.writeValueAsString(mockResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, expectedContentType))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ClientRegistrationResponse registrationResponse = restRegistrationClient.updateRegistration(
+        ApiResponse<ClientRegistrationResponse, ErrorResponse> apiResponse = restRegistrationClient.updateRegistration(
             clientRegistrationRequest,
+            clientCredentialsToken,
             aspspDetails,
             softwareStatementDetails);
 
-        Assertions.assertEquals(mockResponse, registrationResponse);
-
-        mockAspspServer.verify();
-    }
-
-    @ParameterizedTest
-    @MethodSource("argumentsForAuthenticationScopeTest")
-    void updateRegistrationSupportsDifferentAuthenticationScopes(boolean registrationAuthenticationRequiresOpenIdScope,
-                                                                 List<RegistrationPermission> tppPermissions,
-                                                                 String expectedAuthenticationScope)
-        throws Exception {
-
-        ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDefinition(false, registrationAuthenticationRequiresOpenIdScope);
-        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails(tppPermissions);
-
-        AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
-            .accessToken("access-token")
-            .build();
-        Mockito
-            .when(oAuthClient.getAccessToken(
-                Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        expectedAuthenticationScope.equals(request.getRequestBody().get("scope"))),
-                Mockito.eq(aspspDetails)))
-            .thenReturn(mockAccessTokenResponse);
-
-        String signedClaims = "signed-claims";
-        Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
-            .thenReturn(signedClaims);
-
-        ClientRegistrationResponse mockResponse = ClientRegistrationResponse.builder()
-            .clientId("client-id")
-            .build();
-        String jsonResponse = objectMapper.writeValueAsString(mockResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
-
-        ClientRegistrationResponse registrationResponse = restRegistrationClient.updateRegistration(
-            clientRegistrationRequest,
-            aspspDetails,
-            softwareStatementDetails);
-
-        Assertions.assertEquals(mockResponse, registrationResponse);
+        Assertions.assertFalse(apiResponse.isCallFailed());
+        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
+        Assertions.assertEquals(mockResponse, apiResponse.getSuccessResponseBody());
+        Assertions.assertNull(apiResponse.getFailureResponseBody());
+        Assertions.assertNull(apiResponse.getFailureException());
 
         mockAspspServer.verify();
     }
 
     @Test
-    void updateRegistrationThrowsApiCallExceptionOnApiCallFailure() {
+    void updateRegistrationReturnsFailureResponseOnApiCallFailure() {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
+        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
-
-        AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
-            .accessToken("access-token")
-            .build();
-        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
-            .thenReturn(mockAccessTokenResponse);
 
         String signedClaims = "signed-claims";
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
             .thenReturn(signedClaims);
 
+        ErrorResponse mockErrorResponse = aErrorResponse();
+        String jsonResponse = jsonConverter.writeValueAsString(mockErrorResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
-            .andRespond(MockRestResponseCreators.withServerError());
+            .andRespond(MockRestResponseCreators.withServerError().body(jsonResponse));
 
-        Assertions.assertThrows(ApiCallException.class,
-            () -> restRegistrationClient.updateRegistration(
-                clientRegistrationRequest,
-                aspspDetails,
-                softwareStatementDetails));
+        ApiResponse<ClientRegistrationResponse, ErrorResponse> apiResponse = restRegistrationClient.updateRegistration(
+            clientRegistrationRequest,
+            clientCredentialsToken,
+            aspspDetails,
+            softwareStatementDetails);
+
+        Assertions.assertTrue(apiResponse.isCallFailed());
+        Assertions.assertEquals(500, apiResponse.getStatusCode());
+        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
+        Assertions.assertNull(apiResponse.getSuccessResponseBody());
+        Assertions.assertEquals(mockErrorResponse, apiResponse.getFailureResponseBody());
+        Assertions.assertTrue(apiResponse.getFailureException() instanceof HttpServerErrorException.InternalServerError);
+        Assertions.assertFalse(apiResponse.isClientErrorResponse());
+        Assertions.assertTrue(apiResponse.isServerErrorResponse());
 
         mockAspspServer.verify();
     }
@@ -309,6 +281,7 @@ class RestRegistrationClientTest {
     private static AspspDetails aAspspDefinition() {
         return TestAspspDetails.builder()
             .registrationUrl("/registration-url")
+            .registrationAuthenticationScopes(Set.of(Scope.PAYMENTS))
             .clientId("client-id")
             .build();
     }
@@ -317,29 +290,20 @@ class RestRegistrationClientTest {
         return TestAspspDetails.builder()
             .registrationUrl("/registration-url")
             .registrationUsesJoseContentType(registrationUsesJoseContentType)
-            .clientId("client-id")
-            .build();
-    }
-
-    private static AspspDetails aAspspDefinition(boolean registrationUsesJoseContentType,
-                                                 boolean registrationAuthenticationRequiresOpenIdScope) {
-        return TestAspspDetails.builder()
-            .registrationUrl("/registration-url")
-            .registrationUsesJoseContentType(registrationUsesJoseContentType)
-            .registrationAuthenticationRequiresOpenIdScope(registrationAuthenticationRequiresOpenIdScope)
+            .registrationAuthenticationScopes(Set.of(Scope.PAYMENTS))
             .clientId("client-id")
             .build();
     }
 
     private static SoftwareStatementDetails aSoftwareStatementDetails() {
         return SoftwareStatementDetails.builder()
-            .permissions(List.of(RegistrationPermission.PAYMENTS))
+            .permissions(List.of(Scope.PAYMENTS))
             .build();
     }
 
-    private static SoftwareStatementDetails aSoftwareStatementDetails(List<RegistrationPermission> permissions) {
-        return SoftwareStatementDetails.builder()
-            .permissions(permissions)
+    private static ErrorResponse aErrorResponse() {
+        return ErrorResponse.builder()
+            .error("invalid request")
             .build();
     }
 
@@ -347,17 +311,6 @@ class RestRegistrationClientTest {
         return Stream.of(
             Arguments.of(false, "application/jwt"),
             Arguments.of(true, "application/jose")
-        );
-    }
-
-    private static Stream<Arguments> argumentsForAuthenticationScopeTest() {
-        return Stream.of(
-            Arguments.of(false, List.of(RegistrationPermission.PAYMENTS), "payments"),
-            Arguments.of(false, List.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS), "payments"),
-            Arguments.of(true, List.of(RegistrationPermission.PAYMENTS), "payments openid"),
-            Arguments.of(true,
-                List.of(RegistrationPermission.OPENID, RegistrationPermission.PAYMENTS),
-                "openid payments")
         );
     }
 }

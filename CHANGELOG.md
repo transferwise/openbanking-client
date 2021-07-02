@@ -3,6 +3,31 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.0] - 2021-05-18
+### Added
+- The `AspspDetails` interface has a new method to return the transport certificate subject name, for use in client 
+  registration requests, to allow easier customisation of this value per ASPSP. By default, 
+  `getRegistrationTransportCertificateSubjectName` returns the certificate subject name in RFC 2253 format
+- The `AspspDetails` interface has a new method to return the scopes to request for an access token to use for an
+  authenticated call to the ASPSP's update registration API. By default, `getRegistrationAuthenticationScopes` returns 
+  the `openid` scope along with whatever scopes are configured for the software statement
+### Changed
+- The `registrationAuthenticationRequiresOpenIdScope` method on the `AspspDetails` interface has been removed, the new 
+  `getRegistrationAuthenticationScopes` method should be used instead to customise this behaviour
+- Change the type of the `OBSupplementaryData1` model from a string to an object, to prevent JSON de-serialization
+  errors when parsing a JSON string with an empty object value (`{}`) for the supplementary data field.
+- Update the versions of various dependencies and plugins in the Gradle build configuration
+
+## [5.1.0] - 2021-05-17
+### Changed
+- When a JSON processing error is encountered when de-serializing JSON in the `JacksonJsonConverter` class, wrap the 
+  Jackson exception in a new `JsonReadException` class, and include the problematic JSON in the exception
+- When a JSON processing error is encountered when serializing JSON an object in the `JacksonJsonConverter` class, wrap 
+  the Jackson exception in a new `JsonWriteException` class, and include the problematic object in the exception  
+- In the `RestPaymentClient` class, do the API call response de-serialization ourselves rather via the `JsonConverter` 
+  functionality, rather than having the Spring `RestTemplate` functionality do it. Coupled with the above change, this 
+  gives easy access to the full problematic JSON when  the response contains invalid JSON  
+
 ## [5.0.0] - 2021-04-20
 ### Added
 - A new `JsonConverter` interface has been added, which deals with converting to and from JSON, with the 

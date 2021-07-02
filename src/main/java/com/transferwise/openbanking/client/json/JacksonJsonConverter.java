@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.transferwise.openbanking.client.error.ClientException;
 
 /**
  * Implementation of the {@link JsonConverter} interface, using the Jackson library for JSON operations.
@@ -34,7 +33,7 @@ public class JacksonJsonConverter implements JsonConverter {
         try {
             return objectMapper.writeValueAsString(value);
         } catch (JsonProcessingException e) {
-            throw new ClientException("Unable to serialize object to JSON string", e);
+            throw new JsonWriteException("Unable to write object to JSON string", e, value);
         }
     }
 
@@ -43,7 +42,9 @@ public class JacksonJsonConverter implements JsonConverter {
         try {
             return objectMapper.readValue(content, valueType);
         } catch (JsonProcessingException e) {
-            throw new ClientException("Unable to read JSON string to object", e);
+            throw new JsonReadException("Unable to read JSON string to " + valueType.getSimpleName() + " object",
+                e,
+                content);
         }
     }
 }

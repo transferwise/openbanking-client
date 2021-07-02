@@ -36,4 +36,14 @@ class JacksonJsonConverterTest {
         Assertions.assertEquals("Wise", object.getName());
         Assertions.assertNull(object.getSchemeName());
     }
+
+    @Test
+    void readValueThrowsJsonReadExceptionOnJacksonException() {
+        String json = "ABC";
+
+        JsonReadException thrown = Assertions.assertThrows(JsonReadException.class,
+            () -> jsonConverter.readValue(json, OBWriteDomestic2DataInitiationDebtorAccount.class));
+
+        Assertions.assertEquals("ABC", thrown.getJson());
+    }
 }

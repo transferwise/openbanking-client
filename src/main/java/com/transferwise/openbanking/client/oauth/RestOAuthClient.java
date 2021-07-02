@@ -1,11 +1,13 @@
 package com.transferwise.openbanking.client.oauth;
 
+import com.transferwise.openbanking.client.api.common.ApiResponse;
+import com.transferwise.openbanking.client.api.common.BaseClient;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
-import com.transferwise.openbanking.client.error.ApiCallException;
+import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
+import com.transferwise.openbanking.client.oauth.domain.ErrorResponse;
 import com.transferwise.openbanking.client.oauth.domain.FapiHeaders;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -23,15 +25,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@RequiredArgsConstructor
 @Slf4j
-public class RestOAuthClient implements OAuthClient {
+public class RestOAuthClient extends BaseClient implements OAuthClient {
 
     private final ClientAuthentication clientAuthentication;
-    private final RestOperations restTemplate;
+
+    protected RestOAuthClient(RestOperations restOperations,
+                              JsonConverter jsonConverter,
+                              ClientAuthentication clientAuthentication) {
+        super(restOperations, jsonConverter);
+        this.clientAuthentication = clientAuthentication;
+    }
 
     @Override
-    public AccessTokenResponse getAccessToken(GetAccessTokenRequest getAccessTokenRequest, AspspDetails aspspDetails) {
+    public ApiResponse<AccessTokenResponse, ErrorResponse> getAccessToken(GetAccessTokenRequest getAccessTokenRequest,
+                                                                          AspspDetails aspspDetails) {
 
         clientAuthentication.addClientAuthentication(getAccessTokenRequest, aspspDetails);
 
@@ -51,23 +59,22 @@ public class RestOAuthClient implements OAuthClient {
             requestBody.get("grant_type"),
             requestHeaders.getInteractionId());
 
-        AccessTokenResponse accessTokenResponse;
+        ResponseEntity<String> response;
         try {
-            ResponseEntity<AccessTokenResponse> response = restTemplate.exchange(aspspDetails.getTokenUrl(),
-                HttpMethod.POST,
-                request,
-                AccessTokenResponse.class);
-            accessTokenResponse = response.getBody();
+            response = restOperations.exchange(aspspDetails.getTokenUrl(), HttpMethod.POST, request, String.class);
         } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to token endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
+            return mapClientExceptionWithResponse(e, ErrorResponse.class);
         } catch (RestClientException e) {
-            throw new ApiCallException("Call to token endpoint failed, and no response body returned", e);
+            return mapClientException(e);
         }
 
-        validateResponse(accessTokenResponse);
+        AccessTokenResponse accessTokenResponse = jsonConverter.readValue(response.getBody(),
+            AccessTokenResponse.class);
+        if (isResponseInvalid(accessTokenResponse)) {
+            return mapInvalidResponse(response);
+        }
 
-        return accessTokenResponse;
+        return ApiResponse.success(response.getStatusCodeValue(), response.getBody(), accessTokenResponse);
     }
 
     private String encodeForm(Map<String, String> form) {
@@ -80,9 +87,7 @@ public class RestOAuthClient implements OAuthClient {
         return URLEncodedUtils.format(nameValuePairs, StandardCharsets.UTF_8.name());
     }
 
-    private void validateResponse(AccessTokenResponse response) {
-        if (response == null || response.getAccessToken() == null || response.getAccessToken().isBlank()) {
-            throw new ApiCallException("Empty or partial access token response returned " + response);
-        }
+    private boolean isResponseInvalid(AccessTokenResponse response) {
+        return response == null || response.getAccessToken() == null || response.getAccessToken().isBlank();
     }
 }
