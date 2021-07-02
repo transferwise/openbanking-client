@@ -1,5 +1,6 @@
-ext.sonatypeUser = System.env.SONATYPE_USER as String
-ext.sonatypePassword = System.env.SONATYPE_PASSWORD as String
+ext.mavenUrl = System.env.MAVEN_USER as String
+ext.mavenUser = System.env.MAVEN_USER as String
+ext.mavenPassword = System.env.MAVEN_PASSWORD as String
 
 ext.projectScmUrl = "https://github.com/transferwise/${projectGitHubRepoName}"
 ext.projectScmConnection = "scm:git:git://github.com/transferwise/${projectGitHubRepoName}.git"
@@ -51,18 +52,22 @@ publishing {
 	}
 
 	signing {
-    	def signingKey = System.env.OSS_SIGNING_KEY as String
+		def signingKey = System.env.OSS_SIGNING_KEY as String
 		def signingPassword = System.env.OSS_SIGNING_PASSWORD as String
-		useInMemoryPgpKeys(signingKey, signingPassword)
+
+		if (signingKey && signingPassword) {
+			useInMemoryPgpKeys(signingKey, signingPassword)
+		}
+
 		sign publishing.publications.mavenJava
 	}
 
 	repositories {
 		maven {
-			url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+			url mavenUrl
 			credentials {
-				username = sonatypeUser
-				password = sonatypePassword
+				username = mavenUser
+				password = mavenPassword
 			}
 		}
 	}
