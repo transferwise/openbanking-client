@@ -68,7 +68,7 @@ dependencies {
 
     testImplementation("ch.qos.logback:logback-classic:1.2.3")
 
-    swaggerCodegen("io.swagger.codegen.v3:swagger-codegen-cli:3.0.26")
+    swaggerCodegen("io.swagger.codegen.v3:swagger-codegen-cli:3.0.27")
 }
 
 swaggerSources {
