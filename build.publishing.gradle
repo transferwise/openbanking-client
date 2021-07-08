@@ -57,9 +57,8 @@ publishing {
 
 		if (signingKey && signingPassword) {
 			useInMemoryPgpKeys(signingKey, signingPassword)
+            sign publishing.publications.mavenJava
 		}
-
-		sign publishing.publications.mavenJava
 	}
 
 	repositories {
