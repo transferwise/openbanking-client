@@ -120,6 +120,37 @@ public class RestRegistrationClient implements RegistrationClient {
         }
     }
 
+    @Override
+    public void deleteRegistration(AspspDetails aspspDetails, SoftwareStatementDetails softwareStatementDetails) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(getClientCredentialsToken(aspspDetails, softwareStatementDetails));
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+
+        log.debug("Sending delete registration request to '{}/{}' with headers '{}'",
+            aspspDetails.getRegistrationUrl(),
+            aspspDetails.getClientId(),
+            request.getHeaders());
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                aspspDetails.getRegistrationUrl() + "/{clientId}",
+                HttpMethod.DELETE,
+                request,
+                String.class,
+                aspspDetails.getClientId());
+
+            log.debug("Received delete registration response with headers '{}' and body '{}'",
+                response.getHeaders(),
+                response.getBody());
+        } catch (RestClientResponseException e) {
+            throw new ApiCallException("Call to delete registration endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e);
+        } catch (RestClientException e) {
+            throw new ApiCallException("Call to delete registration endpoint failed, and no response body returned", e);
+        }
+    }
+
     private String getClientCredentialsToken(AspspDetails aspspDetails,
                                              SoftwareStatementDetails softwareStatementDetails) {
         String scope = generateScopeValue(aspspDetails, softwareStatementDetails);

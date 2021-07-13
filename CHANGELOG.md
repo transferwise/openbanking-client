@@ -3,6 +3,15 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.0] - 2021-07-13
+### Added 
+- The `RegistrationClient` interface has a new method to call the delete client registration endpoint
+- The `GetAccessTokenRequest` class has new constructors to make it easier to supply the scope of the request
+### Changed
+- The `RegistrationPermission` class has been renamed to `Scope` and moved to the `oauth.domain` package, to better
+  correspond to what the class represents
+- Update the versions of various dependencies and plugins in the Gradle build configuration  
+
 ## [6.0.0] - 2021-05-18
 ### Added
 - The `AspspDetails` interface has a new method to return the transport certificate subject name, for use in client 
