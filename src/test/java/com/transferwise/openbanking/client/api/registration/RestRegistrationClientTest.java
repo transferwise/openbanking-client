@@ -302,6 +302,56 @@ class RestRegistrationClientTest {
         mockAspspServer.verify();
     }
 
+    @ParameterizedTest
+    @MethodSource("argumentsForAuthenticationScopeTest")
+    void deleteRegistrationSupportsDifferentAuthenticationScopes(Set<Scope> registrationAuthenticationScopes,
+                                                                 String expectedAuthenticationScope) {
+
+        AspspDetails aspspDetails = aAspspDefinition(false, registrationAuthenticationScopes);
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+
+        AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
+            .accessToken("access-token")
+            .build();
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        Objects.equals(expectedAuthenticationScope, request.getRequestBody().get("scope"))),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(mockAccessTokenResponse);
+
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer access-token"))
+            .andRespond(MockRestResponseCreators.withSuccess());
+
+        restRegistrationClient.deleteRegistration(aspspDetails, softwareStatementDetails);
+
+        mockAspspServer.verify();
+    }
+
+    @Test
+    void deleteRegistrationThrowsApiCallExceptionOnApiCallFailure() {
+        AspspDetails aspspDetails = aAspspDefinition();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+
+        AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
+            .accessToken("access-token")
+            .build();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(mockAccessTokenResponse);
+
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
+            .andRespond(MockRestResponseCreators.withServerError());
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restRegistrationClient.deleteRegistration(aspspDetails, softwareStatementDetails));
+
+        mockAspspServer.verify();
+    }
+
     private static ClientRegistrationRequest aRegistrationClaims() {
         return ClientRegistrationRequest.builder()
             .jti("jwt-id")

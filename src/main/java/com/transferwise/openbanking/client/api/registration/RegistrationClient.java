@@ -38,4 +38,15 @@ public interface RegistrationClient {
     ClientRegistrationResponse updateRegistration(ClientRegistrationRequest clientRegistrationRequest,
                                                   AspspDetails aspspDetails,
                                                   SoftwareStatementDetails softwareStatementDetails);
+
+    /**
+     * Delete an existing TPP client registration with an ASPSP.
+     *
+     * @param aspspDetails              The details of the ASPSP to send the request to
+     * @param softwareStatementDetails  The details of the software statement that the ASPSP registration currently uses
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
+     *                                                                   to the ASPSP or the HTTP call to the ASPSP
+     *                                                                   failed
+     */
+    void deleteRegistration(AspspDetails aspspDetails, SoftwareStatementDetails softwareStatementDetails);
 }
