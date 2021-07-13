@@ -4,4 +4,8 @@
         <Class name="~.*\.*Spec.*" />
         <Bug pattern="SE_NO_SERIALVERSIONID" />
     </Match>
+    <!-- Exclude warnings about mutable objects and the use of public fields -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
 </FindBugsFilter>
