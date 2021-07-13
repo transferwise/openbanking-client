@@ -2,7 +2,7 @@ package com.transferwise.openbanking.client.api.payment.v3;
 
 import com.transferwise.openbanking.client.api.common.ApiResponse;
 import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
-import com.transferwise.openbanking.client.api.common.BaseClient;
+import com.transferwise.openbanking.client.api.payment.common.BasePaymentClient;
 import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.payment.v3.model.OBErrorResponse1;
 import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2;
@@ -12,7 +12,9 @@ import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticR
 import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteFundsConfirmationResponse1;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
+import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.json.JsonConverter;
+import com.transferwise.openbanking.client.json.JsonReadException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -23,7 +25,7 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
 
 @Slf4j
-public class RestPaymentClient extends BaseClient implements PaymentClient {
+public class RestPaymentClient extends BasePaymentClient implements PaymentClient {
 
     private static final String ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/pisp/%s";
 
@@ -70,7 +72,7 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
                 request,
                 String.class);
         } catch (RestClientResponseException e) {
-            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
+            return mapClientExceptionWithResponse(e);
         } catch (RestClientException e) {
             return mapClientException(e);
         }
@@ -111,7 +113,7 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
                 request,
                 String.class);
         } catch (RestClientResponseException e) {
-            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
+            return mapClientExceptionWithResponse(e);
         } catch (RestClientException e) {
             return mapClientException(e);
         }
@@ -148,7 +150,7 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
                 String.class,
                 consentId);
         } catch (RestClientResponseException e) {
-            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
+            return mapClientExceptionWithResponse(e);
         } catch (RestClientException e) {
             return mapClientException(e);
         }
@@ -183,7 +185,7 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
                 String.class,
                 domesticPaymentId);
         } catch (RestClientResponseException e) {
-            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
+            return mapClientExceptionWithResponse(e);
         } catch (RestClientException e) {
             return mapClientException(e);
         }
@@ -220,7 +222,7 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
                 String.class,
                 consentId);
         } catch (RestClientResponseException e) {
-            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
+            return mapClientExceptionWithResponse(e);
         } catch (RestClientException e) {
             return mapClientException(e);
         }
@@ -259,5 +261,27 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
 
     private boolean isResponseInvalid(OBWriteFundsConfirmationResponse1 response) {
         return response == null || response.getData() == null;
+    }
+
+    private <T> ApiResponse<T, OBErrorResponse1> mapClientExceptionWithResponse(RestClientResponseException e) {
+        String responseBody = e.getResponseBodyAsString();
+        OBErrorResponse1 parsedFailureResponse = null;
+        try {
+            parsedFailureResponse = jsonConverter.readValue(responseBody, OBErrorResponse1.class);
+        } catch (JsonReadException jsonReadException) {
+            log.info("Unable to parse failure response body JSON '{}'", jsonReadException.getJson(), jsonReadException);
+        }
+
+        return ApiResponse.failure(e.getRawStatusCode(), responseBody, e, parsedFailureResponse);
+    }
+
+    private <T> ApiResponse<T, OBErrorResponse1> mapClientException(RestClientException e) {
+        return ApiResponse.failure(e);
+    }
+
+    private <T> ApiResponse<T, OBErrorResponse1> mapInvalidResponse(ResponseEntity<String> response) {
+        return ApiResponse.failure(response.getStatusCodeValue(),
+            response.getBody(),
+            new ApiCallException("Empty or partial response returned"));
     }
 }
