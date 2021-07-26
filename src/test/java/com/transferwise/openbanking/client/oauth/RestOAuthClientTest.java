@@ -1,12 +1,9 @@
 package com.transferwise.openbanking.client.oauth;
 
-import com.transferwise.openbanking.client.api.common.ApiResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
-import com.transferwise.openbanking.client.json.JacksonJsonConverter;
-import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
-import com.transferwise.openbanking.client.oauth.domain.ErrorResponse;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
 import org.hamcrest.CoreMatchers;
@@ -31,7 +28,6 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.stream.Stream;
@@ -39,7 +35,7 @@ import java.util.stream.Stream;
 @ExtendWith(MockitoExtension.class)
 class RestOAuthClientTest {
 
-    private static JsonConverter jsonConverter;
+    private static ObjectMapper objectMapper;
 
     @Mock
     private ClientAuthentication clientAuthentication;
@@ -50,7 +46,7 @@ class RestOAuthClientTest {
 
     @BeforeAll
     static void setupAll() {
-        jsonConverter = new JacksonJsonConverter();
+        objectMapper = new ObjectMapper();
     }
 
     @BeforeEach
@@ -58,11 +54,11 @@ class RestOAuthClientTest {
         RestTemplate restTemplate = new RestTemplate();
         mockAspspServer = MockRestServiceServer.createServer(restTemplate);
 
-        restOAuthClient = new RestOAuthClient(restTemplate, jsonConverter, clientAuthentication);
+        restOAuthClient = new RestOAuthClient(clientAuthentication, restTemplate);
     }
 
     @Test
-    void getAccessTokenReturnsSuccessResponseOnApiCallSuccess() {
+    void getAccessToken() throws Exception {
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
         AspspDetails aspspDetails = aAspspDefinition();
 
@@ -70,7 +66,7 @@ class RestOAuthClientTest {
         getAccessTokenRequest.getRequestBody().forEach(expectedBody::add);
 
         AccessTokenResponse mockAccessTokenResponse = aAccessTokenResponse();
-        String jsonResponse = jsonConverter.writeValueAsString(mockAccessTokenResponse);
+        String jsonResponse = objectMapper.writeValueAsString(mockAccessTokenResponse);
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getTokenUrl()))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
@@ -80,15 +76,10 @@ class RestOAuthClientTest {
             .andExpect(MockRestRequestMatchers.content().formData(expectedBody))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<AccessTokenResponse, ErrorResponse> apiResponse = restOAuthClient.getAccessToken(
-            getAccessTokenRequest,
+        AccessTokenResponse accessTokenResponse = restOAuthClient.getAccessToken(getAccessTokenRequest,
             aspspDetails);
 
-        Assertions.assertFalse(apiResponse.isCallFailed());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertEquals(mockAccessTokenResponse, apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertNull(apiResponse.getFailureException());
+        Assertions.assertEquals(mockAccessTokenResponse, accessTokenResponse);
 
         Mockito.verify(clientAuthentication).addClientAuthentication(getAccessTokenRequest, aspspDetails);
 
@@ -96,56 +87,36 @@ class RestOAuthClientTest {
     }
 
     @Test
-    void getAccessTokenReturnsFailureResponseOnApiCallFailure() {
+    void getAccessTokenThrowsApiCallExceptionOnApiCallFailure() {
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
         AspspDetails aspspDetails = aAspspDefinition();
 
-        ErrorResponse mockErrorResponse = aErrorResponse();
-        String jsonResponse = jsonConverter.writeValueAsString(mockErrorResponse);
-
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getTokenUrl()))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withServerError().body(jsonResponse));
+            .andRespond(MockRestResponseCreators.withServerError());
 
-        ApiResponse<AccessTokenResponse, ErrorResponse> apiResponse = restOAuthClient.getAccessToken(
-            getAccessTokenRequest,
-            aspspDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(500, apiResponse.getStatusCode());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertEquals(mockErrorResponse, apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof HttpServerErrorException.InternalServerError);
-        Assertions.assertFalse(apiResponse.isClientErrorResponse());
-        Assertions.assertTrue(apiResponse.isServerErrorResponse());
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
 
         mockAspspServer.verify();
     }
 
     @ParameterizedTest
     @ArgumentsSource(PartialAccessTokenResponses.class)
-    void getAccessTokenReturnsFailureResponseOnPartialResponse(AccessTokenResponse response) {
+    void getAccessTokenThrowsApiCallExceptionOnApiCallFailureOnPartialResponse(AccessTokenResponse response)
+        throws Exception {
 
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
         AspspDetails aspspDetails = aAspspDefinition();
 
-        String jsonResponse = jsonConverter.writeValueAsString(response);
+        String jsonResponse = objectMapper.writeValueAsString(response);
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getTokenUrl()))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<AccessTokenResponse, ErrorResponse> apiResponse = restOAuthClient.getAccessToken(
-            getAccessTokenRequest,
-            aspspDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(200, apiResponse.getStatusCode());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof ApiCallException);
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
 
         mockAspspServer.verify();
     }
@@ -160,12 +131,6 @@ class RestOAuthClientTest {
     private AccessTokenResponse aAccessTokenResponse() {
         return AccessTokenResponse.builder()
             .accessToken("access-token")
-            .build();
-    }
-
-    private ErrorResponse aErrorResponse() {
-        return ErrorResponse.builder()
-            .error("Service not found")
             .build();
     }
 

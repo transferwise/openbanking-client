@@ -1,8 +1,7 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
-import com.transferwise.openbanking.client.api.common.ApiResponse;
+import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBErrorResponse1;
 import com.transferwise.openbanking.client.api.payment.v3.model.OBExternalAccountIdentification4Code;
 import com.transferwise.openbanking.client.api.payment.v3.model.OBRisk1;
 import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2;
@@ -27,6 +26,8 @@ import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.json.JacksonJsonConverter;
 import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
+import com.transferwise.openbanking.client.oauth.OAuthClient;
+import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
@@ -48,8 +49,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.stream.Stream;
@@ -63,6 +62,9 @@ class RestPaymentClientTest {
     private static final String DETACHED_JWS_SIGNATURE = "detached-jws-signature";
 
     private static JsonConverter jsonConverter;
+
+    @Mock
+    private OAuthClient oAuthClient;
 
     @Mock
     private IdempotencyKeyGenerator<OBWriteDomesticConsent4, OBWriteDomestic2> idempotencyKeyGenerator;
@@ -86,16 +88,25 @@ class RestPaymentClientTest {
 
         restPaymentClient = new RestPaymentClient(restTemplate,
             jsonConverter,
+            oAuthClient,
             idempotencyKeyGenerator,
             jwtClaimsSigner);
     }
 
     @Test
-    void createDomesticPaymentConsentReturnsSuccessResponseOnApiCallSuccess() {
+    void createDomesticPaymentConsent() throws Exception {
         OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
-        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        "payments".equals(request.getRequestBody().get("scope"))),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(accessTokenResponse);
 
         Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(domesticPaymentConsentRequest))
             .thenReturn(IDEMPOTENCY_KEY);
@@ -111,7 +122,7 @@ class RestPaymentClientTest {
         String jsonResponse = jsonConverter.writeValueAsString(mockPaymentConsentResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + clientCredentialsToken))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header("x-idempotency-key", IDEMPOTENCY_KEY))
@@ -121,63 +132,54 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.content().json(jsonConverter.writeValueAsString(domesticPaymentConsentRequest)))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<OBWriteDomesticConsentResponse5, OBErrorResponse1> apiResponse =
-            restPaymentClient.createDomesticPaymentConsent(
-                domesticPaymentConsentRequest,
-                clientCredentialsToken,
-                aspspDetails,
-                softwareStatementDetails);
+        OBWriteDomesticConsentResponse5 paymentConsentResponse = restPaymentClient.createDomesticPaymentConsent(
+            domesticPaymentConsentRequest,
+            aspspDetails,
+            softwareStatementDetails);
 
-        Assertions.assertFalse(apiResponse.isCallFailed());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertEquals(mockPaymentConsentResponse, apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertNull(apiResponse.getFailureException());
+        Assertions.assertEquals(mockPaymentConsentResponse, paymentConsentResponse);
 
         mockAspspServer.verify();
     }
 
     @Test
-    void createDomesticPaymentConsentReturnsFailureResponseOnApiCallFailure() {
+    void createDomesticPaymentConsentThrowsApiCallExceptionOnApiCallFailure() {
         OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
-        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
 
         Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(Mockito.any(OBWriteDomesticConsent4.class)))
             .thenReturn(IDEMPOTENCY_KEY);
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withServerError().body("internal server error"));
+            .andRespond(MockRestResponseCreators.withServerError());
 
-        ApiResponse<OBWriteDomesticConsentResponse5, OBErrorResponse1> apiResponse =
-            restPaymentClient.createDomesticPaymentConsent(
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.createDomesticPaymentConsent(
                 domesticPaymentConsentRequest,
-                clientCredentialsToken,
                 aspspDetails,
-                softwareStatementDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(500, apiResponse.getStatusCode());
-        Assertions.assertEquals("internal server error", apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof HttpServerErrorException.InternalServerError);
-        Assertions.assertFalse(apiResponse.isClientErrorResponse());
-        Assertions.assertTrue(apiResponse.isServerErrorResponse());
+                softwareStatementDetails));
 
         mockAspspServer.verify();
     }
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentConsentResponses.class)
-    void createDomesticPaymentConsentReturnsFailureResponseOnPartialResponse(OBWriteDomesticConsentResponse5 response) {
+    void createDomesticPaymentConsentThrowsApiCallExceptionOnPartialResponse(OBWriteDomesticConsentResponse5 response)
+        throws Exception{
 
         OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
-        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
 
         Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(Mockito.any(OBWriteDomesticConsent4.class)))
             .thenReturn(IDEMPOTENCY_KEY);
@@ -187,29 +189,31 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<OBWriteDomesticConsentResponse5, OBErrorResponse1> apiResponse =
-            restPaymentClient.createDomesticPaymentConsent(
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.createDomesticPaymentConsent(
                 domesticPaymentConsentRequest,
-                clientCredentialsToken,
                 aspspDetails,
-                softwareStatementDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(200, apiResponse.getStatusCode());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof ApiCallException);
+                softwareStatementDetails));
 
         mockAspspServer.verify();
     }
 
     @Test
-    void submitDomesticPaymentReturnsSuccessResponseOnApiCallSuccess() {
+    void submitDomesticPayment() throws Exception {
         OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
-        String authorizationCodeToken = "authorization-code-token";
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+        AuthorizationContext authorizationContext = aAuthorizationContext();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    "authorization_code".equals(request.getRequestBody().get("grant_type")) &&
+                        authorizationContext.getAuthorizationCode().equals(request.getRequestBody().get("code")) &&
+                        authorizationContext.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(accessTokenResponse);
 
         Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest))
             .thenReturn(IDEMPOTENCY_KEY);
@@ -225,7 +229,7 @@ class RestPaymentClientTest {
         String jsonResponse = jsonConverter.writeValueAsString(mockDomesticPaymentResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payments"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + authorizationCodeToken))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header("x-idempotency-key", IDEMPOTENCY_KEY))
@@ -235,63 +239,57 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.content().json(jsonConverter.writeValueAsString(domesticPaymentRequest)))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<OBWriteDomesticResponse5, OBErrorResponse1> apiResponse = restPaymentClient.submitDomesticPayment(
-            domesticPaymentRequest,
-            authorizationCodeToken,
+        OBWriteDomesticResponse5 domesticPaymentResponse = restPaymentClient.submitDomesticPayment(domesticPaymentRequest,
+            authorizationContext,
             aspspDetails,
             softwareStatementDetails);
 
-        Assertions.assertFalse(apiResponse.isCallFailed());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertEquals(mockDomesticPaymentResponse, apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertNull(apiResponse.getFailureException());
+        Assertions.assertEquals(mockDomesticPaymentResponse, domesticPaymentResponse);
 
         mockAspspServer.verify();
     }
 
     @Test
-    void submitDomesticPaymentReturnsFailureResponseOnApiCallFailure() {
+    void submitDomesticPaymentThrowsApiCallExceptionOnApiCallFailure() {
         OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
-        String authorizationCodeToken = "authorization-code-token";
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+        AuthorizationContext authorizationContext = aAuthorizationContext();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
 
         Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(OBWriteDomestic2.class)))
             .thenReturn(IDEMPOTENCY_KEY);
 
-        OBErrorResponse1 mockErrorResponse = aErrorResponse();
-        String jsonResponse = jsonConverter.writeValueAsString(mockErrorResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payments"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withBadRequest().body(jsonResponse));
+            .andRespond(MockRestResponseCreators.withBadRequest());
 
-        ApiResponse<OBWriteDomesticResponse5, OBErrorResponse1> apiResponse = restPaymentClient.submitDomesticPayment(
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.submitDomesticPayment(
                 domesticPaymentRequest,
-                authorizationCodeToken,
+                authorizationContext,
                 aspspDetails,
-                softwareStatementDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(400, apiResponse.getStatusCode());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertEquals(mockErrorResponse, apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof HttpClientErrorException.BadRequest);
-        Assertions.assertTrue(apiResponse.isClientErrorResponse());
-        Assertions.assertFalse(apiResponse.isServerErrorResponse());
+                softwareStatementDetails));
 
         mockAspspServer.verify();
     }
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentResponses.class)
-    void submitDomesticPaymentReturnsFailureResponseOnPartialResponse(OBWriteDomesticResponse5 response) {
+    void submitDomesticPaymentThrowsApiCallExceptionOnPartialResponse(OBWriteDomesticResponse5 response)
+        throws Exception {
 
         OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
-        String authorizationCodeToken = "authorization-code-token";
         AspspDetails aspspDetails = aAspspDefinition();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+        AuthorizationContext authorizationContext = aAuthorizationContext();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
 
         Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(OBWriteDomestic2.class)))
             .thenReturn(IDEMPOTENCY_KEY);
@@ -301,49 +299,45 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<OBWriteDomesticResponse5, OBErrorResponse1> apiResponse = restPaymentClient.submitDomesticPayment(
-            domesticPaymentRequest,
-            authorizationCodeToken,
-            aspspDetails,
-            softwareStatementDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(200, apiResponse.getStatusCode());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof ApiCallException);
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.submitDomesticPayment(
+                domesticPaymentRequest,
+                authorizationContext,
+                aspspDetails,
+                softwareStatementDetails));
 
         mockAspspServer.verify();
     }
 
     @Test
-    void getDomesticPaymentConsentReturnsSuccessResponseOnApiCallSuccess() {
+    void getDomesticPaymentConsent() throws Exception {
         String consentId = "consent-id";
-        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        "payments".equals(request.getRequestBody().get("scope"))),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(accessTokenResponse);
 
         OBWriteDomesticConsentResponse5 mockDomesticPaymentConsentResponse = aDomesticPaymentConsentResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockDomesticPaymentConsentResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + clientCredentialsToken))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<OBWriteDomesticConsentResponse5, OBErrorResponse1> apiResponse =
-            restPaymentClient.getDomesticPaymentConsent(
-                consentId,
-                clientCredentialsToken,
-                aspspDetails);
+        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = restPaymentClient.getDomesticPaymentConsent(
+            consentId,
+            aspspDetails);
 
-        Assertions.assertFalse(apiResponse.isCallFailed());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertEquals(mockDomesticPaymentConsentResponse, apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertNull(apiResponse.getFailureException());
+        Assertions.assertEquals(mockDomesticPaymentConsentResponse, domesticPaymentConsentResponse);
 
         Mockito.verify(jwtClaimsSigner, Mockito.never())
             .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
@@ -352,85 +346,74 @@ class RestPaymentClientTest {
     }
 
     @Test
-    void getDomesticPaymentConsentReturnsFailureResponseOnApiCallFailure() {
+    void getDomesticPaymentConsentThrowsApiCallExceptionOnApiCallFailure() {
         String consentId = "consent-id";
-        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andRespond(MockRestResponseCreators.withServerError().body("<html>internal server error</html>"));
+            .andRespond(MockRestResponseCreators.withServerError());
 
-        ApiResponse<OBWriteDomesticConsentResponse5, OBErrorResponse1> apiResponse =
-            restPaymentClient.getDomesticPaymentConsent(
-                consentId,
-                clientCredentialsToken,
-                aspspDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(500, apiResponse.getStatusCode());
-        Assertions.assertEquals("<html>internal server error</html>", apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof HttpServerErrorException.InternalServerError);
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getDomesticPaymentConsent(consentId, aspspDetails));
 
         mockAspspServer.verify();
     }
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentConsentResponses.class)
-    void getDomesticPaymentConsentReturnsFailureResponsePartialResponse(OBWriteDomesticConsentResponse5 response) {
+    void getDomesticPaymentConsentThrowsApiCallExceptionPartialResponse(OBWriteDomesticConsentResponse5 response)
+        throws Exception {
         String consentId = "consent-id";
-        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<OBWriteDomesticConsentResponse5, OBErrorResponse1> apiResponse =
-            restPaymentClient.getDomesticPaymentConsent(
-                consentId,
-                clientCredentialsToken,
-                aspspDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(200, apiResponse.getStatusCode());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof ApiCallException);
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getDomesticPaymentConsent(consentId, aspspDetails));
 
         mockAspspServer.verify();
     }
 
     @Test
-    void getDomesticPaymentReturnsSuccessResponseOnApiCallSuccess() {
+    void getDomesticPayment() throws Exception {
         String domesticPaymentId = "domestic-payment-id";
-        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        "payments".equals(request.getRequestBody().get("scope"))),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(accessTokenResponse);
 
         OBWriteDomesticResponse5 mockDomesticPaymentResponse = aDomesticPaymentResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockDomesticPaymentResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payments/" + domesticPaymentId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + clientCredentialsToken))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<OBWriteDomesticResponse5, OBErrorResponse1> apiResponse = restPaymentClient.getDomesticPayment(
-            domesticPaymentId,
-            clientCredentialsToken,
+        OBWriteDomesticResponse5 domesticPaymentResponse = restPaymentClient.getDomesticPayment(domesticPaymentId,
             aspspDetails);
 
-        Assertions.assertFalse(apiResponse.isCallFailed());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertEquals(mockDomesticPaymentResponse, apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertNull(apiResponse.getFailureException());
+        Assertions.assertEquals(mockDomesticPaymentResponse, domesticPaymentResponse);
 
         Mockito.verify(jwtClaimsSigner, Mockito.never())
             .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
@@ -439,83 +422,76 @@ class RestPaymentClientTest {
     }
 
     @Test
-    void getDomesticPaymentReturnsFailureResponseOnApiCallFailure() {
+    void getDomesticPaymentThrowsApiCallExceptionOnApiCallFailure() {
         String domesticPaymentId = "domestic-payment-id";
-        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payments/" + domesticPaymentId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withServerError());
 
-        ApiResponse<OBWriteDomesticResponse5, OBErrorResponse1> apiResponse = restPaymentClient.getDomesticPayment(
-            domesticPaymentId,
-            clientCredentialsToken,
-            aspspDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(500, apiResponse.getStatusCode());
-        Assertions.assertEquals("", apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof HttpServerErrorException.InternalServerError);
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getDomesticPayment(domesticPaymentId, aspspDetails));
 
         mockAspspServer.verify();
     }
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentResponses.class)
-    void getDomesticPaymentReturnsFailureResponsePartialResponse(OBWriteDomesticResponse5 response) {
+    void getDomesticPaymentThrowsApiCallExceptionPartialResponse(OBWriteDomesticResponse5 response) throws Exception {
         String domesticPaymentId = "domestic-payment-id";
-        String clientCredentialsToken = "client-credentials-token";
         AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payments/" + domesticPaymentId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<OBWriteDomesticResponse5, OBErrorResponse1> apiResponse = restPaymentClient.getDomesticPayment(
-            domesticPaymentId,
-            clientCredentialsToken,
-            aspspDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(200, apiResponse.getStatusCode());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof ApiCallException);
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getDomesticPayment(domesticPaymentId, aspspDetails));
 
         mockAspspServer.verify();
     }
 
     @Test
-    void getFundsConfirmationReturnsSuccessResponseOnApiCallSuccess() {
+    void getFundsConfirmation() throws Exception {
         String consentId = "consent-id";
-        String authorizationCodeToken = "authorization-code-token";
+        AuthorizationContext authorizationContext = aAuthorizationContext();
         AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    "authorization_code".equals(request.getRequestBody().get("grant_type")) &&
+                        authorizationContext.getAuthorizationCode().equals(request.getRequestBody().get("code")) &&
+                        authorizationContext.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(accessTokenResponse);
 
         OBWriteFundsConfirmationResponse1 mockFundsConfirmationResponse = aFundsConfirmationResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockFundsConfirmationResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + authorizationCodeToken))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<OBWriteFundsConfirmationResponse1, OBErrorResponse1> apiResponse =
-            restPaymentClient.getFundsConfirmation(consentId,
-                authorizationCodeToken,
-                aspspDetails);
+        OBWriteFundsConfirmationResponse1 fundsConfirmationResponse = restPaymentClient.getFundsConfirmation(consentId,
+            authorizationContext,
+            aspspDetails);
 
-        Assertions.assertFalse(apiResponse.isCallFailed());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertEquals(mockFundsConfirmationResponse, apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertNull(apiResponse.getFailureException());
+        Assertions.assertEquals(mockFundsConfirmationResponse, fundsConfirmationResponse);
 
         Mockito.verify(jwtClaimsSigner, Mockito.never())
             .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
@@ -524,55 +500,44 @@ class RestPaymentClientTest {
     }
 
     @Test
-    void getFundsConfirmationReturnsFailureResponseOnApiCallFailure() {
+    void getFundsConfirmationThrowsApiCallExceptionOnApiCallFailure() {
         String consentId = "consent-id";
-        String authorizationCodeToken = "authorization-code-token";
+        AuthorizationContext authorizationContext = aAuthorizationContext();
         AspspDetails aspspDetails = aAspspDefinition();
 
-        OBErrorResponse1 mockErrorResponse = aErrorResponse();
-        String jsonResponse = jsonConverter.writeValueAsString(mockErrorResponse);
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andRespond(MockRestResponseCreators.withServerError().body(jsonResponse));
+            .andRespond(MockRestResponseCreators.withServerError());
 
-        ApiResponse<OBWriteFundsConfirmationResponse1, OBErrorResponse1> apiResponse =
-            restPaymentClient.getFundsConfirmation(consentId,
-                authorizationCodeToken,
-                aspspDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(500, apiResponse.getStatusCode());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertEquals(mockErrorResponse, apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof HttpServerErrorException.InternalServerError);
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getFundsConfirmation(consentId, authorizationContext, aspspDetails));
 
         mockAspspServer.verify();
     }
 
     @ParameterizedTest
     @ArgumentsSource(PartialFundsConfirmationResponses.class)
-    void getFundsConfirmationReturnsFailureResponsePartialResponse(OBWriteFundsConfirmationResponse1 response) {
+    void getFundsConfirmationThrowsApiCallExceptionPartialResponse(OBWriteFundsConfirmationResponse1 response)
+        throws Exception {
         String consentId = "consent-id";
-        String authorizationCodeToken = "authorization-code-token";
+        AuthorizationContext authorizationContext = aAuthorizationContext();
         AspspDetails aspspDetails = aAspspDefinition();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ApiResponse<OBWriteFundsConfirmationResponse1, OBErrorResponse1> apiResponse =
-            restPaymentClient.getFundsConfirmation(consentId,
-                authorizationCodeToken,
-                aspspDetails);
-
-        Assertions.assertTrue(apiResponse.isCallFailed());
-        Assertions.assertEquals(200, apiResponse.getStatusCode());
-        Assertions.assertEquals(jsonResponse, apiResponse.getResponseBody());
-        Assertions.assertNull(apiResponse.getSuccessResponseBody());
-        Assertions.assertNull(apiResponse.getFailureResponseBody());
-        Assertions.assertTrue(apiResponse.getFailureException() instanceof ApiCallException);
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.getFundsConfirmation(consentId, authorizationContext, aspspDetails));
 
         mockAspspServer.verify();
     }
@@ -667,6 +632,12 @@ class RestPaymentClientTest {
             .data(data);
     }
 
+    private AccessTokenResponse aAccessTokenResponse() {
+        return AccessTokenResponse.builder()
+            .accessToken("access-token")
+            .build();
+    }
+
     private OBWriteFundsConfirmationResponse1 aFundsConfirmationResponse() {
         OBWriteFundsConfirmationResponse1DataFundsAvailableResult fundsAvailableResult =
             new OBWriteFundsConfirmationResponse1DataFundsAvailableResult()
@@ -677,10 +648,11 @@ class RestPaymentClientTest {
             .data(data);
     }
 
-    private OBErrorResponse1 aErrorResponse() {
-        return new OBErrorResponse1()
-            .code("403")
-            .message("Forbidden: this payment exceeds the daily payment limit");
+    private AuthorizationContext aAuthorizationContext() {
+        return AuthorizationContext.builder()
+            .authorizationCode("authorisation-code")
+            .redirectUrl("https://tpp.co.uk")
+            .build();
     }
 
     private static class PartialDomesticPaymentConsentResponses implements ArgumentsProvider {

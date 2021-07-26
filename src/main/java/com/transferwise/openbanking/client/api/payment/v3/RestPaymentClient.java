@@ -1,10 +1,9 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
-import com.transferwise.openbanking.client.api.common.ApiResponse;
 import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
-import com.transferwise.openbanking.client.api.common.BaseClient;
+import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
+import com.transferwise.openbanking.client.api.payment.common.BasePaymentClient;
 import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBErrorResponse1;
 import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2;
 import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsent4;
 import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsentResponse5;
@@ -12,8 +11,10 @@ import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticR
 import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteFundsConfirmationResponse1;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
+import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
+import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -23,7 +24,7 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
 
 @Slf4j
-public class RestPaymentClient extends BaseClient implements PaymentClient {
+public class RestPaymentClient extends BasePaymentClient implements PaymentClient {
 
     private static final String ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/pisp/%s";
 
@@ -35,23 +36,21 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
 
     public RestPaymentClient(RestOperations restOperations,
                              JsonConverter jsonConverter,
+                             OAuthClient oAuthClient,
                              IdempotencyKeyGenerator<OBWriteDomesticConsent4, OBWriteDomestic2> idempotencyKeyGenerator,
                              JwtClaimsSigner jwtClaimsSigner) {
-        super(restOperations, jsonConverter);
+        super(restOperations, jsonConverter, oAuthClient);
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
         this.jwtClaimsSigner = jwtClaimsSigner;
     }
 
     @Override
-    public ApiResponse<OBWriteDomesticConsentResponse5, OBErrorResponse1> createDomesticPaymentConsent(
-        OBWriteDomesticConsent4 domesticPaymentConsentRequest,
-        String clientCredentialsToken,
-        AspspDetails aspspDetails,
-        SoftwareStatementDetails softwareStatementDetails
-    ) {
+    public OBWriteDomesticConsentResponse5 createDomesticPaymentConsent(OBWriteDomesticConsent4 domesticPaymentConsentRequest,
+                                                                        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
-            clientCredentialsToken,
+            getClientCredentialsToken(aspspDetails),
             idempotencyKeyGenerator.generateKeyForSetup(domesticPaymentConsentRequest),
             jwtClaimsSigner.createDetachedSignature(domesticPaymentConsentRequest,
                 aspspDetails,
@@ -70,30 +69,27 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
                 request,
                 String.class);
         } catch (RestClientResponseException e) {
-            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
+            throw new ApiCallException("Call to create payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e);
         } catch (RestClientException e) {
-            return mapClientException(e);
+            throw new ApiCallException("Call to create payment consent endpoint failed, and no response body returned", e);
         }
 
         OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = jsonConverter.readValue(response.getBody(),
             OBWriteDomesticConsentResponse5.class);
-        if (isResponseInvalid(domesticPaymentConsentResponse)) {
-            return mapInvalidResponse(response);
-        }
+        validateResponse(domesticPaymentConsentResponse);
 
-        return ApiResponse.success(response.getStatusCodeValue(), response.getBody(), domesticPaymentConsentResponse);
+        return domesticPaymentConsentResponse;
     }
 
     @Override
-    public ApiResponse<OBWriteDomesticResponse5, OBErrorResponse1> submitDomesticPayment(
-        OBWriteDomestic2 domesticPaymentRequest,
-        String authorizationCodeToken,
-        AspspDetails aspspDetails,
-        SoftwareStatementDetails softwareStatementDetails
-    ) {
+    public OBWriteDomesticResponse5 submitDomesticPayment(OBWriteDomestic2 domesticPaymentRequest,
+                                                          AuthorizationContext authorizationContext,
+                                                          AspspDetails aspspDetails,
+                                                          SoftwareStatementDetails softwareStatementDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
-            authorizationCodeToken,
+            exchangeAuthorizationCode(authorizationContext, aspspDetails),
             idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest),
             jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest, aspspDetails, softwareStatementDetails));
 
@@ -111,29 +107,24 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
                 request,
                 String.class);
         } catch (RestClientResponseException e) {
-            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
+            throw new ApiCallException("Call to submit payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e);
         } catch (RestClientException e) {
-            return mapClientException(e);
+            throw new ApiCallException("Call to submit payment endpoint failed, and no response body returned", e);
         }
 
         OBWriteDomesticResponse5 domesticPaymentResponse = jsonConverter.readValue(response.getBody(),
             OBWriteDomesticResponse5.class);
-        if (isResponseInvalid(domesticPaymentResponse)) {
-            return mapInvalidResponse(response);
-        }
+        validateResponse(domesticPaymentResponse);
 
-        return ApiResponse.success(response.getStatusCodeValue(), response.getBody(), domesticPaymentResponse);
+        return domesticPaymentResponse;
     }
 
     @Override
-    public ApiResponse<OBWriteDomesticConsentResponse5, OBErrorResponse1> getDomesticPaymentConsent(
-        String consentId,
-        String clientCredentialsToken,
-        AspspDetails aspspDetails
-    ) {
+    public OBWriteDomesticConsentResponse5 getDomesticPaymentConsent(String consentId, AspspDetails aspspDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
-            clientCredentialsToken);
+            getClientCredentialsToken(aspspDetails));
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
@@ -148,27 +139,24 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
                 String.class,
                 consentId);
         } catch (RestClientResponseException e) {
-            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
+            throw new ApiCallException("Call to get payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e);
         } catch (RestClientException e) {
-            return mapClientException(e);
+            throw new ApiCallException("Call to get payment consent endpoint failed, and no response body returned", e);
         }
 
         OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = jsonConverter.readValue(response.getBody(),
             OBWriteDomesticConsentResponse5.class);
-        if (isResponseInvalid(domesticPaymentConsentResponse)) {
-            return mapInvalidResponse(response);
-        }
+        validateResponse(domesticPaymentConsentResponse);
 
-        return ApiResponse.success(response.getStatusCodeValue(), response.getBody(), domesticPaymentConsentResponse);
+        return domesticPaymentConsentResponse;
     }
 
     @Override
-    public ApiResponse<OBWriteDomesticResponse5, OBErrorResponse1> getDomesticPayment(String domesticPaymentId,
-                                                                                      String clientCredentialsToken,
-                                                                                      AspspDetails aspspDetails) {
+    public OBWriteDomesticResponse5 getDomesticPayment(String domesticPaymentId, AspspDetails aspspDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
-            clientCredentialsToken);
+            getClientCredentialsToken(aspspDetails));
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
@@ -183,29 +171,26 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
                 String.class,
                 domesticPaymentId);
         } catch (RestClientResponseException e) {
-            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
+            throw new ApiCallException("Call to get payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e);
         } catch (RestClientException e) {
-            return mapClientException(e);
+            throw new ApiCallException("Call to get payment endpoint failed, and no response body returned", e);
         }
 
         OBWriteDomesticResponse5 domesticPaymentResponse = jsonConverter.readValue(response.getBody(),
             OBWriteDomesticResponse5.class);
-        if (isResponseInvalid(domesticPaymentResponse)) {
-            return mapInvalidResponse(response);
-        }
+        validateResponse(domesticPaymentResponse);
 
-        return ApiResponse.success(response.getStatusCodeValue(), response.getBody(), domesticPaymentResponse);
+        return domesticPaymentResponse;
     }
 
     @Override
-    public ApiResponse<OBWriteFundsConfirmationResponse1, OBErrorResponse1> getFundsConfirmation(
-        String consentId,
-        String authorizationCodeToken,
-        AspspDetails aspspDetails
-    ) {
+    public OBWriteFundsConfirmationResponse1 getFundsConfirmation(String consentId,
+                                                                  AuthorizationContext authorizationContext,
+                                                                  AspspDetails aspspDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
-            authorizationCodeToken);
+            exchangeAuthorizationCode(authorizationContext, aspspDetails));
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
@@ -220,18 +205,18 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
                 String.class,
                 consentId);
         } catch (RestClientResponseException e) {
-            return mapClientExceptionWithResponse(e, OBErrorResponse1.class);
+            throw new ApiCallException("Call to get confirmation of funds endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e);
         } catch (RestClientException e) {
-            return mapClientException(e);
+            throw new ApiCallException("Call to get confirmation of funds endpoint failed, and no response body returned",
+                e);
         }
 
         OBWriteFundsConfirmationResponse1 fundsConfirmationResponse = jsonConverter.readValue(response.getBody(),
             OBWriteFundsConfirmationResponse1.class);
-        if (isResponseInvalid(fundsConfirmationResponse)) {
-            return mapInvalidResponse(response);
-        }
+        validateResponse(fundsConfirmationResponse);
 
-        return ApiResponse.success(response.getStatusCodeValue(), response.getBody(), fundsConfirmationResponse);
+        return fundsConfirmationResponse;
     }
 
     private String generateApiUrl(AspspDetails aspspDetails, String resource) {
@@ -241,23 +226,29 @@ public class RestPaymentClient extends BaseClient implements PaymentClient {
             resource);
     }
 
-    private boolean isResponseInvalid(OBWriteDomesticConsentResponse5 response) {
-        return response == null ||
+    private void validateResponse(OBWriteDomesticConsentResponse5 response) {
+        if (response == null ||
             response.getData() == null ||
             response.getData().getStatus() == null ||
             response.getData().getConsentId() == null ||
-            response.getData().getConsentId().isBlank();
+            response.getData().getConsentId().isBlank()) {
+            throw new ApiCallException("Empty or partial domestic payment consent response returned " + response);
+        }
     }
 
-    private boolean isResponseInvalid(OBWriteDomesticResponse5 response) {
-        return response == null ||
+    private void validateResponse(OBWriteDomesticResponse5 response) {
+        if (response == null ||
             response.getData() == null ||
             response.getData().getStatus() == null ||
             response.getData().getDomesticPaymentId() == null ||
-            response.getData().getDomesticPaymentId().isBlank();
+            response.getData().getDomesticPaymentId().isBlank()) {
+            throw new ApiCallException("Empty or partial domestic payment response returned " + response);
+        }
     }
 
-    private boolean isResponseInvalid(OBWriteFundsConfirmationResponse1 response) {
-        return response == null || response.getData() == null;
+    private void validateResponse(OBWriteFundsConfirmationResponse1 response) {
+        if (response == null || response.getData() == null) {
+            throw new ApiCallException("Empty or partial funds confirmation response returned " + response);
+        }
     }
 }
