@@ -3,6 +3,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.1] - 2021-08-02
+### Changed
+- Update the versions of various dependencies in the Gradle build configurations
+- Improvements to the Gradle publishing process
+
 ## [7.0.0] - 2021-07-13
 ### Added 
 - The `RegistrationClient` interface has a new method to call the delete client registration endpoint
