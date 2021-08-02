@@ -66,7 +66,7 @@ dependencies {
 
     testImplementation("org.bouncycastle:bcpkix-jdk15on:1.69")
 
-    testImplementation("ch.qos.logback:logback-classic:1.2.3")
+    testImplementation("ch.qos.logback:logback-classic:1.2.5")
 
     swaggerCodegen("io.swagger.codegen.v3:swagger-codegen-cli:3.0.27")
 }
