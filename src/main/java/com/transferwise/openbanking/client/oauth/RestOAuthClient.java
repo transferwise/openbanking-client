@@ -59,9 +59,11 @@ public class RestOAuthClient implements OAuthClient {
                 AccessTokenResponse.class);
             accessTokenResponse = response.getBody();
         } catch (RestClientResponseException e) {
+            log.error("Call to token endpoint failed, x-fapi-interaction-id [{}]", requestHeaders.getInteractionId(),  e);
             throw new ApiCallException("Call to token endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
         } catch (RestClientException e) {
+            log.error("Call to token endpoint failed, x-fapi-interaction-id [{}]", requestHeaders.getInteractionId(),  e);
             throw new ApiCallException("Call to token endpoint failed, and no response body returned", e);
         }
 
