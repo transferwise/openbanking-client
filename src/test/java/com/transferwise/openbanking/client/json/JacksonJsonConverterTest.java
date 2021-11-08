@@ -1,7 +1,7 @@
 package com.transferwise.openbanking.client.json;
 
-import com.transferwise.openbanking.client.api.payment.v3.model.OBExternalAccountIdentification4Code;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2DataInitiationDebtorAccount;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBExternalAccountIdentification4Code;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomestic2DataInitiationDebtorAccount;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

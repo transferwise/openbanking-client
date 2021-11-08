@@ -3,6 +3,14 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.0] - 2021-11-08
+### Added
+- Added VRP Api specs of version 3.1.9
+- Added OpenApiGen v3.3.4 dependency
+### Changed
+- Payment initiation models are generated in `com.transferwise.openbanking.client.api.payment.v3.model.payment` package
+- Upgrade `swagger-codegen-cli` to v3.0.29
+
 ## [7.0.1] - 2021-08-02
 ### Changed
 - Update the versions of various dependencies in the Gradle build configurations

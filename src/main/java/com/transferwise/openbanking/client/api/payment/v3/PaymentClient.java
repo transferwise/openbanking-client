@@ -1,11 +1,11 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
 import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsent4;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsentResponse5;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticResponse5;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteFundsConfirmationResponse1;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomestic2;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomesticConsent4;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomesticConsentResponse5;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomesticResponse5;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteFundsConfirmationResponse1;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 
