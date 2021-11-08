@@ -6,8 +6,9 @@
 Java client for using the Open Banking API, exposed by an ASPSP, as a TPP. The library supports a subset of the full 
 API:  
 
-- Support for version 3 [dynamic client registration](https://openbankinguk.github.io/dcr-docs-pub/v3.2/dynamic-client-registration.html)
-- Support for version 3 [single immediate domestic payments](https://openbankinguk.github.io/read-write-api-site3/v3.1.5/profiles/payment-initiation-api-profile.html)
+- Support for version 3.2 [dynamic client registration](https://openbankinguk.github.io/dcr-docs-pub/v3.2/dynamic-client-registration.html)
+- Support for version 3.1.6 [single immediate domestic payments](https://openbankinguk.github.io/read-write-api-site3/v3.1.6/profiles/payment-initiation-api-profile.html)
+- Support for version 3.1.9 [variable recurring payments API](https://openbankinguk.github.io/read-write-api-site3/v3.1.9/profiles/vrp-profile.html)
 - Support for the following OAuth client authentication methods
     - Mutual TLS
     - Private key JWT

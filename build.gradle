@@ -36,7 +36,14 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    openApiGen
+    swaggerCodegenV3
+}
+
 dependencies {
+    openApiGen("org.openapitools:openapi-generator-cli:3.3.4")
+    swaggerCodegenV3("io.swagger.codegen.v3:swagger-codegen-cli:3.0.29")
     api("org.springframework:spring-web:${libs.spring}")
 
     implementation('org.apache.httpcomponents:httpclient:4.5.13')
@@ -67,8 +74,6 @@ dependencies {
     testImplementation("org.bouncycastle:bcpkix-jdk15on:1.69")
 
     testImplementation("ch.qos.logback:logback-classic:1.2.5")
-
-    swaggerCodegen("io.swagger.codegen.v3:swagger-codegen-cli:3.0.27")
 }
 
 swaggerSources {
@@ -78,6 +83,16 @@ swaggerSources {
             language = 'java'
             components = ['models']
             configFile = file('specs/payment-initiation-v3-generator-config.json')
+            configuration = configurations.swaggerCodegenV3
+        }
+    }
+    vrp {
+        inputFile = file('specs/vrp-openapi.yaml')
+        code {
+            language = 'java'
+            components = ['models']
+            configFile = file('specs/vrp-openapi-config.json')
+            configuration = configurations.openApiGen
         }
     }
 }
@@ -85,10 +100,11 @@ swaggerSources {
 compileJava.dependsOn(generateSwaggerCode)
 
 sourceSets.main.java.srcDir "${swaggerSources.paymentInitiation.code.outputDir}/src/main/java"
+sourceSets.main.java.srcDir "${swaggerSources.vrp.code.outputDir}/src/main/java"
 
 spotless {
     java {
-        target layout.files("${swaggerSources.paymentInitiation.code.outputDir}/src/main/java")
+        target layout.files("${swaggerSources.paymentInitiation.code.outputDir}/src/main/java","${swaggerSources.vrp.code.outputDir}/src/main/java")
         replaceRegex 'Remove swagger @ApiModel annotations', '@ApiModel.*$', ''
         replaceRegex 'Remove swagger @ApiModelProperty annotations', '@ApiModelProperty.*$', ''
         replaceRegex 'Remove swagger @Schema annotations', '@Schema.*$', ''
