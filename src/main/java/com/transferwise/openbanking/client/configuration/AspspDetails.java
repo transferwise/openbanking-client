@@ -261,4 +261,15 @@ public interface AspspDetails {
     default boolean registrationRequiresLowerCaseJtiClaim() {
         return false;
     }
+
+
+    /**
+     * Get the URL to use as the trust anchor for the public key store,
+     * when using the private key JWT client authentication method.
+     *
+     * @return the Trust Anchor URL, defaults to the OBIE URL
+     */
+    default String getTrustAnchor() {
+        return "openbanking.org.uk";
+    }
 }

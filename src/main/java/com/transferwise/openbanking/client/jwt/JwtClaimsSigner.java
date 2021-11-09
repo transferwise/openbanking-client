@@ -23,7 +23,6 @@ import java.security.cert.X509Certificate;
 @RequiredArgsConstructor
 public class JwtClaimsSigner {
 
-    private static final String TRUST_ANCHOR_VALUE = "openbanking.org.uk";
 
     private static final String X509_CERTIFICATE_TYPE = "X.509";
 
@@ -77,7 +76,7 @@ public class JwtClaimsSigner {
         jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_IAT, NumericDate.now().getValue());
         jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_ISS,
             generateIssClaim(aspspDetails, softwareStatementDetails));
-        jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_TAN, TRUST_ANCHOR_VALUE);
+        jsonWebSignature.setHeader(OpenBankingJwsHeaders.OPEN_BANKING_TAN, aspspDetails.getTrustAnchor());
 
         if (aspspDetails.detachedSignaturesRequireB64Header()) {
             jsonWebSignature.setHeader(HeaderParameterNames.BASE64URL_ENCODE_PAYLOAD, false);

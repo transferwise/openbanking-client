@@ -7,6 +7,7 @@ import com.transferwise.openbanking.client.json.JacksonJsonConverter;
 import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.security.KeySupplier;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
+import com.transferwise.openbanking.client.test.TestAspspDetailsWithDifferentTrustAnchor;
 import com.transferwise.openbanking.client.test.TestKeyUtils;
 import org.jose4j.jwa.AlgorithmConstraints;
 import org.jose4j.jws.AlgorithmIdentifiers;
@@ -146,6 +147,46 @@ class JwtClaimsSignerTest {
         Assertions.assertEquals(certificate.getSubjectX500Principal().getName(),
             jsonWebSignature.getHeader(OpenBankingJwsHeaders.OPEN_BANKING_ISS));
         Assertions.assertEquals("openbanking.org.uk",
+            jsonWebSignature.getHeader(OpenBankingJwsHeaders.OPEN_BANKING_TAN));
+
+        long generatedAtTimeDifference = NumericDate.now().getValue() -
+            ((long) jsonWebSignature.getObjectHeader(OpenBankingJwsHeaders.OPEN_BANKING_IAT));
+        Assertions.assertTrue(generatedAtTimeDifference <= 5);
+
+        Assertions.assertEquals(
+            Arrays.asList(HeaderParameterNames.BASE64URL_ENCODE_PAYLOAD,
+                OpenBankingJwsHeaders.OPEN_BANKING_IAT,
+                OpenBankingJwsHeaders.OPEN_BANKING_ISS,
+                OpenBankingJwsHeaders.OPEN_BANKING_TAN),
+            jsonWebSignature.getObjectHeader(HeaderParameterNames.CRITICAL));
+    }
+
+    @Test
+    void createDetachedSignatureProducesValidSignatureWithDifferentTrustAnchor() throws Exception {
+        OBWriteDomestic2DataInitiationInstructedAmount jwtClaims = anInstructedAmount();
+        AspspDetails aspspDetails = TestAspspDetailsWithDifferentTrustAnchor.builder()
+            .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
+            .signingKeyId("signing-key-id")
+            .detachedSignatureUsesDirectoryIssFormat(true)
+            .trustAnchor("aspsp.com")
+            .build();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+
+        Mockito.when(keySupplier.getSigningKey(aspspDetails)).thenReturn(keyPair.getPrivate());
+
+        String serialisedSignature = jwtClaimsSigner.createDetachedSignature(jwtClaims,
+            aspspDetails,
+            softwareStatementDetails);
+        JsonWebSignature jsonWebSignature = parseDetachedSignature(serialisedSignature, jwtClaims);
+
+        Assertions.assertTrue(jsonWebSignature.verifySignature());
+        Assertions.assertEquals(aspspDetails.getSigningKeyId(), jsonWebSignature.getKeyIdHeaderValue());
+        Assertions.assertEquals(Boolean.FALSE,
+            jsonWebSignature.getObjectHeader(HeaderParameterNames.BASE64URL_ENCODE_PAYLOAD));
+        Assertions.assertEquals(
+            softwareStatementDetails.getOrganisationId() + "/" + softwareStatementDetails.getSoftwareStatementId(),
+            jsonWebSignature.getHeader(OpenBankingJwsHeaders.OPEN_BANKING_ISS));
+        Assertions.assertEquals("aspsp.com",
             jsonWebSignature.getHeader(OpenBankingJwsHeaders.OPEN_BANKING_TAN));
 
         long generatedAtTimeDifference = NumericDate.now().getValue() -
