@@ -1,7 +1,7 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
-import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
-import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
+import com.transferwise.openbanking.client.api.common.AuthorizationContext;
+import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBExternalAccountIdentification4Code;
 import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBRisk1;
 import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomestic2;
