@@ -261,4 +261,18 @@ public interface AspspDetails {
     default boolean registrationRequiresLowerCaseJtiClaim() {
         return false;
     }
+
+    /**
+     * Get the value to use as the intended issuer claim within a client request to get an access token.
+     *
+     * @return the issuer related to the jwtClaim.
+     */
+    String getIssuer();
+
+    /**
+     * Get the value to use as the audience issuer claim within a client request to get an access token.
+     *
+     * @return the audience related to the jwtClaim.
+     */
+    String getAudience();
 }

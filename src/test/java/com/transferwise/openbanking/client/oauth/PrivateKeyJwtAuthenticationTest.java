@@ -5,16 +5,26 @@ import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
 import org.jose4j.jws.AlgorithmIdentifiers;
+import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
 import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 class PrivateKeyJwtAuthenticationTest {
@@ -31,7 +41,7 @@ class PrivateKeyJwtAuthenticationTest {
 
     @Test
     void getSupportedMethod() {
-        Assertions.assertEquals(ClientAuthenticationMethod.PRIVATE_KEY_JWT,
+        assertEquals(ClientAuthenticationMethod.PRIVATE_KEY_JWT,
             privateKeyJwtAuthentication.getSupportedMethod());
     }
 
@@ -41,7 +51,7 @@ class PrivateKeyJwtAuthenticationTest {
         AspspDetails aspspDetails = aAspspDefinition();
 
         String signedPayload = "signed-payload";
-        Mockito.when(jwtClaimsSigner.createSignature(
+        when(jwtClaimsSigner.createSignature(
             Mockito.argThat(jwtClaims -> {
                 try {
                     return jwtClaims.getIssuer().equals(aspspDetails.getClientId()) &&
@@ -54,14 +64,14 @@ class PrivateKeyJwtAuthenticationTest {
                     throw new RuntimeException(e);
                 }
             }),
-            Mockito.eq(aspspDetails)))
+            eq(aspspDetails)))
             .thenReturn(signedPayload);
 
         privateKeyJwtAuthentication.addClientAuthentication(getAccessTokenRequest, aspspDetails);
 
-        Assertions.assertEquals("urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+        assertEquals("urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
             getAccessTokenRequest.getRequestBody().get("client_assertion_type"));
-        Assertions.assertEquals(signedPayload, getAccessTokenRequest.getRequestBody().get("client_assertion"));
+        assertEquals(signedPayload, getAccessTokenRequest.getRequestBody().get("client_assertion"));
     }
 
     private AspspDetails aAspspDefinition() {
@@ -70,5 +80,71 @@ class PrivateKeyJwtAuthenticationTest {
             .privateKeyJwtAuthenticationAudience("/token-issuer-url")
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
             .build();
+    }
+
+    @Test
+    void addClientAuthentication_defaultAspsDetails() throws Exception {
+        // Given
+        GetAccessTokenRequest getAccessTokenRequest = new GetAccessTokenRequest();
+        AspspDetails aspspDetails = TestAspspDetails.builder()
+            .clientId("aClientId")
+            .privateKeyJwtAuthenticationAudience("/autenticationAudienceUrl")
+            .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
+            .build();
+
+        when(jwtClaimsSigner.createSignature(any(JwtClaims.class), any(AspspDetails.class))).thenReturn("aJwtSignature");
+
+        // When
+        privateKeyJwtAuthentication.addClientAuthentication(getAccessTokenRequest, aspspDetails);
+
+        // Then
+        assertEquals("urn:ietf:params:oauth:client-assertion-type:jwt-bearer", getAccessTokenRequest.getRequestBody().get("client_assertion_type"));
+        assertEquals("aJwtSignature", getAccessTokenRequest.getRequestBody().get("client_assertion"));
+
+        ArgumentCaptor<JwtClaims> jwtClaimsCaptor = ArgumentCaptor.forClass(JwtClaims.class);
+        verify(jwtClaimsSigner).createSignature(jwtClaimsCaptor.capture(), eq(aspspDetails));
+
+        JwtClaims jwtClaims = jwtClaimsCaptor.getValue();
+        assertEquals("aClientId", jwtClaims.getIssuer());
+        assertEquals("aClientId", jwtClaims.getSubject());
+        assertEquals(1, jwtClaims.getAudience().size());
+        assertEquals("/autenticationAudienceUrl", jwtClaims.getAudience().get(0));
+        assertNotNull(jwtClaims.getIssuedAt());
+        assertNotNull(jwtClaims.getExpirationTime());
+        assertNotNull(jwtClaims.getJwtId());
+    }
+
+    @Test
+    void addClientAuthentication_additionalJwtAspsDetails() throws Exception {
+        // Given
+        GetAccessTokenRequest getAccessTokenRequest = new GetAccessTokenRequest();
+        AspspDetails aspspDetails = TestAspspDetails.builder()
+            .clientId("aClientId")
+            .privateKeyJwtAuthenticationAudience("/autenticationAudienceUrl")
+            .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
+            .issuer("/anIssuer")
+            .audience("/anAudience")
+            .build();
+
+        when(jwtClaimsSigner.createSignature(any(JwtClaims.class), any(AspspDetails.class))).thenReturn("aJwtSignature");
+
+        // When
+        privateKeyJwtAuthentication.addClientAuthentication(getAccessTokenRequest, aspspDetails);
+
+        // Then
+        assertEquals("urn:ietf:params:oauth:client-assertion-type:jwt-bearer", getAccessTokenRequest.getRequestBody().get("client_assertion_type"));
+        assertEquals("aJwtSignature", getAccessTokenRequest.getRequestBody().get("client_assertion"));
+
+        ArgumentCaptor<JwtClaims> jwtClaimsCaptor = ArgumentCaptor.forClass(JwtClaims.class);
+        verify(jwtClaimsSigner).createSignature(jwtClaimsCaptor.capture(), eq(aspspDetails));
+
+        JwtClaims jwtClaims = jwtClaimsCaptor.getValue();
+        assertEquals("/anIssuer", jwtClaims.getIssuer());
+        assertEquals("aClientId", jwtClaims.getSubject());
+        assertEquals(1, jwtClaims.getAudience().size());
+        assertEquals("/anAudience", jwtClaims.getAudience().get(0));
+        assertNotNull(jwtClaims.getIssuedAt());
+        assertNotNull(jwtClaims.getExpirationTime());
+        assertNotNull(jwtClaims.getJwtId());
     }
 }

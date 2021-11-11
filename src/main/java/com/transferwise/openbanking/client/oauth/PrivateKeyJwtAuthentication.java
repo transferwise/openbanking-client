@@ -35,9 +35,9 @@ public class PrivateKeyJwtAuthentication implements ClientAuthentication {
 
     private String getClientAssertionToken(AspspDetails aspspDetails) {
         JwtClaims jwtClaims = new JwtClaims();
-        jwtClaims.setIssuer(aspspDetails.getClientId());
+        jwtClaims.setIssuer(aspspDetails.getIssuer() !=null ? aspspDetails.getIssuer() : aspspDetails.getClientId());
         jwtClaims.setSubject(aspspDetails.getClientId());
-        jwtClaims.setAudience(aspspDetails.getPrivateKeyJwtAuthenticationAudience());
+        jwtClaims.setAudience(aspspDetails.getAudience() !=null ? aspspDetails.getAudience() : aspspDetails.getPrivateKeyJwtAuthenticationAudience());
         jwtClaims.setIssuedAtToNow();
         jwtClaims.setExpirationTimeMinutesInTheFuture(CLAIMS_VALID_FOR_MINUTES);
         jwtClaims.setJwtId(UUID.randomUUID().toString());

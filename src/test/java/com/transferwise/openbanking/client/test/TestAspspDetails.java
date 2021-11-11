@@ -35,6 +35,8 @@ public class TestAspspDetails implements AspspDetails {
     private boolean registrationUsesJoseContentType;
     private boolean detachedSignatureUsesDirectoryIssFormat;
     private boolean registrationRequiresLowerCaseJtiClaim;
+    private String issuer;
+    private String audience;
 
     @Override
     public String getApiBaseUrl(String majorVersion, String resource) {
