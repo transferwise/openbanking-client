@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.JUnitAssertionsShouldIncludeMessage", "PMD.JUnitTestContainsTooManyAsserts"})
 class PrivateKeyJwtAuthenticationTest {
 
     @Mock
