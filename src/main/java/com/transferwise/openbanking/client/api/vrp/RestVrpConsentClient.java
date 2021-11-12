@@ -46,12 +46,6 @@ public class RestVrpConsentClient extends BasePaymentClient implements VrpConsen
         this.jwtClaimsSigner = jwtClaimsSigner;
     }
 
-    /**
-     * TODO remove this comment
-     * x-fapi-auth-date - is not required
-     * x-fapi-customer-ip-address - is not required
-     * x-customer-user-agent - is not required
-     */
     @Override
     public OBDomesticVRPConsentResponse createDomesticVrpConsent(
         OBDomesticVRPConsentRequest domesticVRPConsentRequest,

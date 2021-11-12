@@ -639,7 +639,7 @@ components:
         ErrorCode:
           description: "Low level textual error code, e.g., UK.OBIE.Field.Missing"
           type: "string"
-          x-namespaced-enum:
+          enum:
             - "UK.OBIE.Field.Expected"
             - "UK.OBIE.Field.Invalid"
             - "UK.OBIE.Field.InvalidDate"
@@ -905,7 +905,7 @@ components:
               type: string
               minLength: 1
               maxLength: 35
-              description : ^
+              description: ^
                 Unique reference, as assigned by the creditor,
                 to unambiguously refer to the payment transaction.
                 Usage - If available, the initiating party should provide this reference in the structured remittance information, to enable reconciliation by the creditor upon receipt of the amount of money. If the business context requires the use of a creditor reference or a payment remit identification, and only one identifier can be passed through the end-to-end chain, the creditor's reference or payment remittance identification should be quoted in the end-to-end transaction identification.
@@ -946,8 +946,6 @@ components:
       properties:
         SchemeName:
           $ref: '#/components/schemas/OBExternalAccountIdentification4Code'
-          description: |-
-            Name of the identification scheme, in a coded form as published in an external list.
 
         Identification:
           type: string
@@ -1385,7 +1383,7 @@ components:
       type: string
       description: |-
         Name of the identification scheme, in a coded form as published in an external list.
-      x-namespaced-enum:
+      enum:
         - UK.OBIE.BBAN
         - UK.OBIE.IBAN
         - UK.OBIE.PAN
@@ -1396,7 +1394,7 @@ components:
       description: |-
         Name of the identification scheme, in a coded form as published in an external list.
       type: string
-      x-namespaced-enum:
+      enum:
         - "UK.OBIE.BICFI"
 
     OBExternalLocalInstrument1Code:
@@ -1404,7 +1402,7 @@ components:
       description: |-
         User community specific instrument.
         Usage: This element is used to specify a local instrument, local clearing option and/or further qualify the service or service level.
-      x-namespaced-enum:
+      enum:
         - UK.OBIE.BACS
         - UK.OBIE.BalanceTransfer
         - UK.OBIE.CHAPS
@@ -1550,13 +1548,13 @@ components:
 
     OBVRPConsentType:
       type: string
-      x-namespaced-enum:
+      enum:
         - UK.OBIE.VRPType.Sweeping
         - UK.OBIE.VRPType.Other
 
     OBVRPAuthenticationMethods:
       type: string
-      x-namespaced-enum:
+      enum:
         - UK.OBIE.SCA
         - UK.OBIE.SCANotRequired
 

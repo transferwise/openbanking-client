@@ -2,10 +2,11 @@ package com.transferwise.openbanking.client.oauth;
 
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
-import com.transferwise.openbanking.client.test.TestAspspDetails;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aAspspDetails;
 
 class TlsAuthenticationTest {
 
@@ -24,16 +25,10 @@ class TlsAuthenticationTest {
     @Test
     void addClientAuthentication() {
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
-        AspspDetails aspspDetails = aAspspDefinition();
+        AspspDetails aspspDetails = aAspspDetails();
 
         tlsAuthentication.addClientAuthentication(getAccessTokenRequest, aspspDetails);
 
         Assertions.assertEquals(aspspDetails.getClientId(), getAccessTokenRequest.getRequestBody().get("client_id"));
-    }
-
-    private AspspDetails aAspspDefinition() {
-        return TestAspspDetails.builder()
-            .clientId("client-id")
-            .build();
     }
 }

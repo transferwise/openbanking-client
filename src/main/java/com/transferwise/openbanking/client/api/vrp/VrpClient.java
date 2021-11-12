@@ -24,7 +24,7 @@ public interface VrpClient {
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
      *                                                                   failed
      */
-    public OBDomesticVRPResponse submitDomesticVrp(
+    OBDomesticVRPResponse submitDomesticVrp(
         OBDomesticVRPRequest vrpRequest,
         AuthorizationContext authorizationContext,
         AspspDetails aspspDetails,

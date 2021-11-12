@@ -3,14 +3,13 @@ package com.transferwise.openbanking.client.api.registration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
-import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
-import com.transferwise.openbanking.client.test.TestAspspDetails;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +35,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aAspspDetails;
+import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({"PMD.UnusedPrivateMethod", "PMD.AvoidDuplicateLiterals"}) // PMD considers argumentsForRegisterClientTest unused
@@ -70,7 +72,7 @@ class RestRegistrationClientTest {
     @MethodSource("argumentsForContentTypeTest")
     void registerClient(boolean registrationUsesJoseContentType, String expectedContentType) throws Exception {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDefinition(registrationUsesJoseContentType);
+        AspspDetails aspspDetails = aAspspDetails(registrationUsesJoseContentType);
 
         String signedClaims = "signed-claims";
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
@@ -102,7 +104,7 @@ class RestRegistrationClientTest {
     @Test
     void registerClientHandlesTimestampIssuedAtValues() {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDefinition();
+        AspspDetails aspspDetails = aAspspDetails();
 
         String signedClaims = "signed-claims";
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
@@ -130,7 +132,7 @@ class RestRegistrationClientTest {
     @Test
     void registerClientThrowsApiCallExceptionOnApiCallFailure() {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDefinition();
+        AspspDetails aspspDetails = aAspspDetails();
 
         String signedClaims = "signed-claims";
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
@@ -149,7 +151,7 @@ class RestRegistrationClientTest {
     @Test
     void updateRegistration() throws Exception {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDefinition();
+        AspspDetails aspspDetails = aAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
@@ -198,7 +200,7 @@ class RestRegistrationClientTest {
         throws Exception {
 
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDefinition(registrationUsesJoseContentType);
+        AspspDetails aspspDetails = aAspspDetails(registrationUsesJoseContentType);
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
@@ -237,7 +239,7 @@ class RestRegistrationClientTest {
         throws Exception {
 
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDefinition(false, registrationAuthenticationScopes);
+        AspspDetails aspspDetails = aAspspDetails(false, registrationAuthenticationScopes);
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
@@ -276,7 +278,7 @@ class RestRegistrationClientTest {
     @Test
     void updateRegistrationThrowsApiCallExceptionOnApiCallFailure() {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDefinition();
+        AspspDetails aspspDetails = aAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
@@ -307,7 +309,7 @@ class RestRegistrationClientTest {
     void deleteRegistrationSupportsDifferentAuthenticationScopes(Set<Scope> registrationAuthenticationScopes,
                                                                  String expectedAuthenticationScope) {
 
-        AspspDetails aspspDetails = aAspspDefinition(false, registrationAuthenticationScopes);
+        AspspDetails aspspDetails = aAspspDetails(false, registrationAuthenticationScopes);
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
@@ -333,7 +335,7 @@ class RestRegistrationClientTest {
 
     @Test
     void deleteRegistrationThrowsApiCallExceptionOnApiCallFailure() {
-        AspspDetails aspspDetails = aAspspDefinition();
+        AspspDetails aspspDetails = aAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
@@ -355,39 +357,6 @@ class RestRegistrationClientTest {
     private static ClientRegistrationRequest aRegistrationClaims() {
         return ClientRegistrationRequest.builder()
             .jti("jwt-id")
-            .build();
-    }
-
-    private static AspspDetails aAspspDefinition() {
-        return TestAspspDetails.builder()
-            .registrationUrl("/registration-url")
-            .registrationAuthenticationScopes(Set.of(Scope.PAYMENTS))
-            .clientId("client-id")
-            .build();
-    }
-
-    private static AspspDetails aAspspDefinition(boolean registrationUsesJoseContentType) {
-        return TestAspspDetails.builder()
-            .registrationUrl("/registration-url")
-            .registrationUsesJoseContentType(registrationUsesJoseContentType)
-            .registrationAuthenticationScopes(Set.of(Scope.PAYMENTS))
-            .clientId("client-id")
-            .build();
-    }
-
-    private static AspspDetails aAspspDefinition(boolean registrationUsesJoseContentType,
-                                                 Set<Scope> registrationAuthenticationScopes) {
-        return TestAspspDetails.builder()
-            .registrationUrl("/registration-url")
-            .registrationUsesJoseContentType(registrationUsesJoseContentType)
-            .registrationAuthenticationScopes(registrationAuthenticationScopes)
-            .clientId("client-id")
-            .build();
-    }
-
-    private static SoftwareStatementDetails aSoftwareStatementDetails() {
-        return SoftwareStatementDetails.builder()
-            .permissions(List.of(Scope.PAYMENTS))
             .build();
     }
 

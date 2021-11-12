@@ -5,7 +5,6 @@ import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
-import com.transferwise.openbanking.client.test.TestAspspDetails;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,6 +30,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.stream.Stream;
+
+import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
+import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aAspspDetails;
 
 @ExtendWith(MockitoExtension.class)
 class RestOAuthClientTest {
@@ -60,7 +62,7 @@ class RestOAuthClientTest {
     @Test
     void getAccessToken() throws Exception {
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
-        AspspDetails aspspDetails = aAspspDefinition();
+        AspspDetails aspspDetails = aAspspDetails();
 
         MultiValueMap<String, String> expectedBody = new LinkedMultiValueMap<>();
         getAccessTokenRequest.getRequestBody().forEach(expectedBody::add);
@@ -89,7 +91,7 @@ class RestOAuthClientTest {
     @Test
     void getAccessTokenThrowsApiCallExceptionOnApiCallFailure() {
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
-        AspspDetails aspspDetails = aAspspDefinition();
+        AspspDetails aspspDetails = aAspspDetails();
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getTokenUrl()))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
@@ -107,7 +109,7 @@ class RestOAuthClientTest {
         throws Exception {
 
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
-        AspspDetails aspspDetails = aAspspDefinition();
+        AspspDetails aspspDetails = aAspspDetails();
 
         String jsonResponse = objectMapper.writeValueAsString(response);
 
@@ -119,19 +121,6 @@ class RestOAuthClientTest {
             () -> restOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
 
         mockAspspServer.verify();
-    }
-
-
-    private AspspDetails aAspspDefinition() {
-        return TestAspspDetails.builder()
-            .tokenUrl("/token-url")
-            .build();
-    }
-
-    private AccessTokenResponse aAccessTokenResponse() {
-        return AccessTokenResponse.builder()
-            .accessToken("access-token")
-            .build();
     }
 
     private static class PartialAccessTokenResponses implements ArgumentsProvider {
