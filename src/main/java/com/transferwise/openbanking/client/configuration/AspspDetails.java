@@ -268,11 +268,4 @@ public interface AspspDetails {
      * @return the issuer related to the jwtClaim.
      */
     String getIssuer();
-
-    /**
-     * Get the value to use as the audience issuer claim within a client request to get an access token.
-     *
-     * @return the audience related to the jwtClaim.
-     */
-    String getAudience();
 }

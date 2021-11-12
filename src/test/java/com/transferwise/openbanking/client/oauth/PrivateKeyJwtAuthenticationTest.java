@@ -120,7 +120,6 @@ class PrivateKeyJwtAuthenticationTest {
             .privateKeyJwtAuthenticationAudience("/autenticationAudienceUrl")
             .signingAlgorithm(AlgorithmIdentifiers.RSA_PSS_USING_SHA256)
             .issuer("/anIssuer")
-            .audience("/anAudience")
             .build();
 
         when(jwtClaimsSigner.createSignature(any(JwtClaims.class), any(AspspDetails.class))).thenReturn("aJwtSignature");
@@ -139,7 +138,7 @@ class PrivateKeyJwtAuthenticationTest {
         assertEquals("/anIssuer", jwtClaims.getIssuer());
         assertEquals("aClientId", jwtClaims.getSubject());
         assertEquals(1, jwtClaims.getAudience().size());
-        assertEquals("/anAudience", jwtClaims.getAudience().get(0));
+        assertEquals("/autenticationAudienceUrl", jwtClaims.getAudience().get(0));
         assertNotNull(jwtClaims.getIssuedAt());
         assertNotNull(jwtClaims.getExpirationTime());
         assertNotNull(jwtClaims.getJwtId());
