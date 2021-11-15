@@ -73,7 +73,7 @@ dependencies {
 
     testImplementation("org.bouncycastle:bcpkix-jdk15on:1.69")
 
-    testImplementation("ch.qos.logback:logback-classic:1.2.6")
+    testImplementation("ch.qos.logback:logback-classic:1.2.7")
 }
 
 swaggerSources {
