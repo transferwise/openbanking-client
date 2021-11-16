@@ -5,9 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [7.2.0] - 2021-11-12
 ### Added
-- Added `VrpConsentClient` interface and its implementation which allows to create domestic VRP consent, 
-  confirm availability of funds for a VRP, retrieve and delete existing VRP consent
-- Added `VrpClient` interface and its implementation which allows to submit domestic VRP and retrieve existing VRP
+- Added `VrpClient` interface and its implementation which allows to create domestic VRP consent, 
+  confirm availability of funds for a VRP, retrieve and delete existing VRP consent. Also, it allows operations with a VRP like submit a domestic VRP and retrieve existing VRP.
 
 ## [7.1.0] - 2021-11-08
 ### Added
