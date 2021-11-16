@@ -13,8 +13,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
-import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aTestAspspDetails;
-
 class ClientSecretBasicAuthenticationTest {
 
     private ClientSecretBasicAuthentication clientSecretBasicAuthentication;

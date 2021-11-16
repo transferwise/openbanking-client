@@ -33,7 +33,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.stream.Stream;
 
 import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
-import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aTestAspspDetails;
 
 @ExtendWith(MockitoExtension.class)
 class RestOAuthClientTest {

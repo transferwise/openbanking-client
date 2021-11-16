@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aTestAspspDetails;
-
 class TlsAuthenticationTest {
 
     private TlsAuthentication tlsAuthentication;
