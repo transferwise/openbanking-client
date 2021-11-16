@@ -2,6 +2,7 @@ package com.transferwise.openbanking.client.oauth;
 
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
+import com.transferwise.openbanking.client.test.factory.AspspDetailsFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
-import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aAspspDetails;
+import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aTestAspspDetails;
 
 class ClientSecretBasicAuthenticationTest {
 
@@ -32,7 +33,7 @@ class ClientSecretBasicAuthenticationTest {
     @Test
     void addClientAuthentication() {
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         String expectedBearerToken = Base64Utils.encodeToString(
             (aspspDetails.getClientId() + ":" + aspspDetails.getClientSecret())

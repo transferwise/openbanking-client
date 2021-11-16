@@ -28,6 +28,7 @@ import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
+import com.transferwise.openbanking.client.test.factory.AspspDetailsFactory;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -53,7 +54,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.stream.Stream;
 
 import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
-import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aAspspDetails;
+import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aTestAspspDetails;
 import static com.transferwise.openbanking.client.test.factory.AuthorizationContextFactory.aAuthorizationContext;
 import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
 
@@ -100,7 +101,7 @@ class RestPaymentClientTest {
     @Test
     void createDomesticPaymentConsent() throws Exception {
         OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -149,7 +150,7 @@ class RestPaymentClientTest {
     @Test
     void createDomesticPaymentConsentThrowsApiCallExceptionOnApiCallFailure() {
         OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -178,7 +179,7 @@ class RestPaymentClientTest {
         throws Exception {
 
         OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -205,7 +206,7 @@ class RestPaymentClientTest {
     @Test
     void submitDomesticPayment() throws Exception {
         OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AuthorizationContext authorizationContext = aAuthorizationContext();
 
@@ -256,7 +257,7 @@ class RestPaymentClientTest {
     @Test
     void submitDomesticPaymentThrowsApiCallExceptionOnApiCallFailure() {
         OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AuthorizationContext authorizationContext = aAuthorizationContext();
 
@@ -287,7 +288,7 @@ class RestPaymentClientTest {
         throws Exception {
 
         OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AuthorizationContext authorizationContext = aAuthorizationContext();
 
@@ -316,7 +317,7 @@ class RestPaymentClientTest {
     @Test
     void getDomesticPaymentConsent() throws Exception {
         String consentId = "consent-id";
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
@@ -352,7 +353,7 @@ class RestPaymentClientTest {
     @Test
     void getDomesticPaymentConsentThrowsApiCallExceptionOnApiCallFailure() {
         String consentId = "consent-id";
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
@@ -373,7 +374,7 @@ class RestPaymentClientTest {
     void getDomesticPaymentConsentThrowsApiCallExceptionPartialResponse(OBWriteDomesticConsentResponse5 response)
         throws Exception {
         String consentId = "consent-id";
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
@@ -393,7 +394,7 @@ class RestPaymentClientTest {
     @Test
     void getDomesticPayment() throws Exception {
         String domesticPaymentId = "domestic-payment-id";
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
@@ -428,7 +429,7 @@ class RestPaymentClientTest {
     @Test
     void getDomesticPaymentThrowsApiCallExceptionOnApiCallFailure() {
         String domesticPaymentId = "domestic-payment-id";
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
@@ -448,7 +449,7 @@ class RestPaymentClientTest {
     @ArgumentsSource(PartialDomesticPaymentResponses.class)
     void getDomesticPaymentThrowsApiCallExceptionPartialResponse(OBWriteDomesticResponse5 response) throws Exception {
         String domesticPaymentId = "domestic-payment-id";
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
@@ -469,7 +470,7 @@ class RestPaymentClientTest {
     void getFundsConfirmation() throws Exception {
         String consentId = "consent-id";
         AuthorizationContext authorizationContext = aAuthorizationContext();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
@@ -507,7 +508,7 @@ class RestPaymentClientTest {
     void getFundsConfirmationThrowsApiCallExceptionOnApiCallFailure() {
         String consentId = "consent-id";
         AuthorizationContext authorizationContext = aAuthorizationContext();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
@@ -529,7 +530,7 @@ class RestPaymentClientTest {
         throws Exception {
         String consentId = "consent-id";
         AuthorizationContext authorizationContext = aAuthorizationContext();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))

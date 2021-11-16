@@ -8,15 +8,15 @@ import java.util.Set;
 
 public class AspspDetailsFactory {
 
-    public static AspspDetails aAspspDetails() {
-        return aAspspDetails(false);
+    public static AspspDetails aTestAspspDetails() {
+        return aTestAspspDetails(false);
     }
 
-    public static AspspDetails aAspspDetails(boolean registrationUsesJoseContentType) {
-        return aAspspDetails(registrationUsesJoseContentType, Set.of(Scope.PAYMENTS));
+    public static AspspDetails aTestAspspDetails(boolean registrationUsesJoseContentType) {
+        return aTestAspspDetails(registrationUsesJoseContentType, Set.of(Scope.PAYMENTS));
     }
 
-    public static AspspDetails aAspspDetails(
+    public static AspspDetails aTestAspspDetails(
         boolean registrationUsesJoseContentType,
         Set<Scope> registrationAuthenticationScopes
     ) {

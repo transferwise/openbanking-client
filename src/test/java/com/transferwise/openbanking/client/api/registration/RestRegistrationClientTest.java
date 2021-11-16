@@ -10,6 +10,7 @@ import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.oauth.domain.Scope;
+import com.transferwise.openbanking.client.test.factory.AspspDetailsFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +37,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aAspspDetails;
+import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aTestAspspDetails;
 import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
 
 @ExtendWith(MockitoExtension.class)
@@ -72,7 +73,7 @@ class RestRegistrationClientTest {
     @MethodSource("argumentsForContentTypeTest")
     void registerClient(boolean registrationUsesJoseContentType, String expectedContentType) throws Exception {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDetails(registrationUsesJoseContentType);
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails(registrationUsesJoseContentType);
 
         String signedClaims = "signed-claims";
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
@@ -104,7 +105,7 @@ class RestRegistrationClientTest {
     @Test
     void registerClientHandlesTimestampIssuedAtValues() {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         String signedClaims = "signed-claims";
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
@@ -132,7 +133,7 @@ class RestRegistrationClientTest {
     @Test
     void registerClientThrowsApiCallExceptionOnApiCallFailure() {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         String signedClaims = "signed-claims";
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
@@ -151,7 +152,7 @@ class RestRegistrationClientTest {
     @Test
     void updateRegistration() throws Exception {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
@@ -200,7 +201,7 @@ class RestRegistrationClientTest {
         throws Exception {
 
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDetails(registrationUsesJoseContentType);
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails(registrationUsesJoseContentType);
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
@@ -239,7 +240,7 @@ class RestRegistrationClientTest {
         throws Exception {
 
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDetails(false, registrationAuthenticationScopes);
+        AspspDetails aspspDetails = aTestAspspDetails(false, registrationAuthenticationScopes);
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
@@ -278,7 +279,7 @@ class RestRegistrationClientTest {
     @Test
     void updateRegistrationThrowsApiCallExceptionOnApiCallFailure() {
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
@@ -309,7 +310,7 @@ class RestRegistrationClientTest {
     void deleteRegistrationSupportsDifferentAuthenticationScopes(Set<Scope> registrationAuthenticationScopes,
                                                                  String expectedAuthenticationScope) {
 
-        AspspDetails aspspDetails = aAspspDetails(false, registrationAuthenticationScopes);
+        AspspDetails aspspDetails = aTestAspspDetails(false, registrationAuthenticationScopes);
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
@@ -335,7 +336,7 @@ class RestRegistrationClientTest {
 
     @Test
     void deleteRegistrationThrowsApiCallExceptionOnApiCallFailure() {
-        AspspDetails aspspDetails = aAspspDetails();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse mockAccessTokenResponse = AccessTokenResponse.builder()
