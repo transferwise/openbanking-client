@@ -2,9 +2,9 @@ plugins {
     id 'java-library'
     id 'checkstyle'
     id 'pmd'
-    id 'com.github.spotbugs' version '4.7.2'
+    id 'com.github.spotbugs' version '4.7.10'
     id 'org.hidetake.swagger.generator' version '2.18.2'
-    id "com.diffplug.spotless" version "5.14.2"
+    id "com.diffplug.spotless" version "6.0.0"
 }
 
 ext.projectName = "Openbanking client"
@@ -73,7 +73,7 @@ dependencies {
 
     testImplementation("org.bouncycastle:bcpkix-jdk15on:1.69")
 
-    testImplementation("ch.qos.logback:logback-classic:1.2.6")
+    testImplementation("ch.qos.logback:logback-classic:1.2.7")
 }
 
 swaggerSources {
