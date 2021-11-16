@@ -1,4 +1,4 @@
-package com.transferwise.openbanking.client.api.payment.common;
+package com.transferwise.openbanking.client.api.common;
 
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.json.JsonConverter;
@@ -32,6 +32,13 @@ public class BasePaymentClient {
             authorizationContext.getAuthorizationCode(),
             authorizationContext.getRedirectUrl());
         return getAccessToken(getAccessTokenRequest, aspspDetails);
+    }
+
+    protected String generateApiUrl(String url, String resource, AspspDetails aspspDetails) {
+        return String.format(url,
+            aspspDetails.getApiBaseUrl("3", resource),
+            aspspDetails.getPaymentApiMinorVersion(),
+            resource);
     }
 
     private String getAccessToken(GetAccessTokenRequest getAccessTokenRequest, AspspDetails aspspDetails) {

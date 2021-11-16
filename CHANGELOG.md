@@ -3,6 +3,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.2.0] - 2021-11-12
+### Added
+- Added `VrpClient` interface and its implementation which allows to create domestic VRP consent, 
+  confirm availability of funds for a VRP, retrieve and delete existing VRP consent. Also, it allows operations with a VRP like submit a domestic VRP and retrieve existing VRP.
+
 ## [7.1.0] - 2021-11-08
 ### Added
 - Added VRP Api specs of version 3.1.9
