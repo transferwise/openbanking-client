@@ -1,8 +1,8 @@
 package com.transferwise.openbanking.client.jwt;
 
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomestic2DataInitiationInstructedAmount;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2DataInitiationInstructedAmount;
 import com.transferwise.openbanking.client.json.JacksonJsonConverter;
 import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.security.KeySupplier;
@@ -24,6 +24,8 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Map;
+
+import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
 
 class JwtClaimsSignerTest {
 
@@ -158,13 +160,6 @@ class JwtClaimsSignerTest {
                 OpenBankingJwsHeaders.OPEN_BANKING_ISS,
                 OpenBankingJwsHeaders.OPEN_BANKING_TAN),
             jsonWebSignature.getObjectHeader(HeaderParameterNames.CRITICAL));
-    }
-
-    private SoftwareStatementDetails aSoftwareStatementDetails() {
-        SoftwareStatementDetails tppConfiguration = new SoftwareStatementDetails();
-        tppConfiguration.setOrganisationId("organisation-id");
-        tppConfiguration.setSoftwareStatementId("software-statement-id");
-        return tppConfiguration;
     }
 
     private AspspDetails aAspspDetails() {

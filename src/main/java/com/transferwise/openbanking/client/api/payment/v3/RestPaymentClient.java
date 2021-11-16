@@ -1,14 +1,14 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
 import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
-import com.transferwise.openbanking.client.api.payment.common.AuthorizationContext;
-import com.transferwise.openbanking.client.api.payment.common.BasePaymentClient;
-import com.transferwise.openbanking.client.api.payment.common.IdempotencyKeyGenerator;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomestic2;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsent4;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticConsentResponse5;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteDomesticResponse5;
-import com.transferwise.openbanking.client.api.payment.v3.model.OBWriteFundsConfirmationResponse1;
+import com.transferwise.openbanking.client.api.common.AuthorizationContext;
+import com.transferwise.openbanking.client.api.common.BasePaymentClient;
+import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomestic2;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomesticConsent4;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomesticConsentResponse5;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomesticResponse5;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteFundsConfirmationResponse1;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
@@ -64,7 +64,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         ResponseEntity<String> response;
         try {
-            response = restOperations.exchange(generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE),
+            response = restOperations.exchange(generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_CONSENT_RESOURCE, aspspDetails),
                 HttpMethod.POST,
                 request,
                 String.class);
@@ -102,7 +102,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateApiUrl(aspspDetails, PAYMENT_RESOURCE),
+                generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_RESOURCE, aspspDetails),
                 HttpMethod.POST,
                 request,
                 String.class);
@@ -133,7 +133,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE) + "/{consentId}",
+                generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_CONSENT_RESOURCE, aspspDetails) + "/{consentId}",
                 HttpMethod.GET,
                 request,
                 String.class,
@@ -165,7 +165,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateApiUrl(aspspDetails, PAYMENT_RESOURCE) + "/{domesticPaymentId}",
+                generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_RESOURCE, aspspDetails) + "/{domesticPaymentId}",
                 HttpMethod.GET,
                 request,
                 String.class,
@@ -199,7 +199,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateApiUrl(aspspDetails, PAYMENT_CONSENT_RESOURCE) + "/{consentId}/funds-confirmation",
+                generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_CONSENT_RESOURCE, aspspDetails) + "/{consentId}/funds-confirmation",
                 HttpMethod.GET,
                 request,
                 String.class,
@@ -217,13 +217,6 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         validateResponse(fundsConfirmationResponse);
 
         return fundsConfirmationResponse;
-    }
-
-    private String generateApiUrl(AspspDetails aspspDetails, String resource) {
-        return String.format(ENDPOINT_PATH_FORMAT,
-            aspspDetails.getApiBaseUrl("3", resource),
-            aspspDetails.getPaymentApiMinorVersion(),
-            resource);
     }
 
     private void validateResponse(OBWriteDomesticConsentResponse5 response) {
