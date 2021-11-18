@@ -1,4 +1,4 @@
-package com.transferwise.openbanking.client.api.payment.common;
+package com.transferwise.openbanking.client.api.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
