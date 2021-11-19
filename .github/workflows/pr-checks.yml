@@ -19,3 +19,43 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
       - name: Build with Gradle
         run: ./gradlew check --console=plain --no-daemon
+  release:
+    name: Publish new version
+    runs-on:
+      - self-hosted
+      - production
+    container: docker.tw.ee/actions_java11
+    if: github.ref == 'refs/heads/master'
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Clear dirty Gradle runner
+        run: |
+          rm -rfv ~/.gradle || true
+
+      - name: Restore Gradle cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle
+          key: gradle-v3-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', '**/*.gradle*') }}
+          restore-keys: |
+            gradle-v3-
+
+      - name: Set git config
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global user.name "TW GitHub Actions" && git config --global user.email circle@circle.tw.ee
+
+      - name: Release new version
+        run: |
+          if ./.github/version-changed.sh ; then
+            GRADLE_USER_HOME=$HOME/.gradle ./gradlew publish pushTag
+          fi
+        env:
+          ARTIFACTORY_USER: ${{ secrets.ARTIFACTORY_USER }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
