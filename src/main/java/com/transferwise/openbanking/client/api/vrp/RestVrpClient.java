@@ -41,7 +41,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
     private final IdempotencyKeyGenerator<OBDomesticVRPConsentRequest, OBDomesticVRPRequest> idempotencyKeyGenerator;
     private final JwtClaimsSigner jwtClaimsSigner;
 
-    protected RestVrpClient(
+    public RestVrpClient(
         RestOperations restOperations,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,
