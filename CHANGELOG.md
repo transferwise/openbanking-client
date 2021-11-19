@@ -5,7 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [7.2.1] - 2021-11-19
 ### Changed
-- Fixed the constructor scope for `RestVrpClient`
+- Make `RestVrpClient` constructor public
 
 ## [7.2.0] - 2021-11-12
 ### Added
