@@ -5,7 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [7.2.2] - 2021-11-19
 ### Changed
-- use client_credential as for domestic_vrp_payment 
+- Use client_credential for domestic Vrp initiation and funds confirmation flows.
+ As both of them are not tied to the consent creation flow.      
 
 ## [7.2.1] - 2021-11-19
 ### Changed

@@ -1,6 +1,5 @@
 package com.transferwise.openbanking.client.api.vrp;
 
-import com.transferwise.openbanking.client.api.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBActiveOrHistoricCurrencyAndAmount;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBCashAccountCreditor3;
