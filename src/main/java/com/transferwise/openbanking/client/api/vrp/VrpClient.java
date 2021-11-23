@@ -1,6 +1,5 @@
 package com.transferwise.openbanking.client.api.vrp;
 
-import com.transferwise.openbanking.client.api.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPConsentRequest;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPConsentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPDetails;
@@ -42,7 +41,6 @@ public interface VrpClient {
      *
      * @param consentId                     The ID of the domestic VRP consent to get the details of
      * @param obVRPFundsConfirmationRequest The details of the VRP funds confirmation request
-     * @param authorizationContext          The successful consent authorisation data
      * @param aspspDetails                  The details of the ASPSP to send the request to
      * @return OBVRPFundsConfirmationResponse
      * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
@@ -51,7 +49,6 @@ public interface VrpClient {
      */
     OBVRPFundsConfirmationResponse getFundsConfirmation(String consentId,
                                                         OBVRPFundsConfirmationRequest obVRPFundsConfirmationRequest,
-                                                        AuthorizationContext authorizationContext,
                                                         AspspDetails aspspDetails);
 
     /**
@@ -80,7 +77,6 @@ public interface VrpClient {
      * Create a domestic VRP
      *
      * @param vrpRequest               The details of the domestic VRP to setup
-     * @param authorizationContext     The successful payment authorisation data
      * @param aspspDetails             The details of the ASPSP to send the request to
      * @param softwareStatementDetails The details of the software statement that the ASPSP registration uses
      * @return OBDomesticVRPResponse
@@ -90,7 +86,6 @@ public interface VrpClient {
      */
     OBDomesticVRPResponse submitDomesticVrp(
         OBDomesticVRPRequest vrpRequest,
-        AuthorizationContext authorizationContext,
         AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails
     );

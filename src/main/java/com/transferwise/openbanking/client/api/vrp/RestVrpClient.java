@@ -1,6 +1,5 @@
 package com.transferwise.openbanking.client.api.vrp;
 
-import com.transferwise.openbanking.client.api.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.common.BasePaymentClient;
 import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
@@ -96,12 +95,11 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
     public OBVRPFundsConfirmationResponse getFundsConfirmation(
         String consentId,
         OBVRPFundsConfirmationRequest fundsConfirmationRequest,
-        AuthorizationContext authorizationContext,
         AspspDetails aspspDetails
     ) {
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(
             aspspDetails.getOrganisationId(),
-            exchangeAuthorizationCode(authorizationContext, aspspDetails)
+            getClientCredentialsToken(aspspDetails)
         );
 
         String body = jsonConverter.writeValueAsString(fundsConfirmationRequest);
@@ -196,12 +194,11 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
     @Override
     public OBDomesticVRPResponse submitDomesticVrp(
         OBDomesticVRPRequest vrpRequest,
-        AuthorizationContext authorizationContext,
         AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails
     ) {
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
-            exchangeAuthorizationCode(authorizationContext, aspspDetails),
+            getClientCredentialsToken(aspspDetails),
             idempotencyKeyGenerator.generateKeyForSubmission(vrpRequest),
             jwtClaimsSigner.createDetachedSignature(vrpRequest, aspspDetails, softwareStatementDetails));
 
