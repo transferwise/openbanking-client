@@ -1,6 +1,5 @@
 package com.transferwise.openbanking.client.api.vrp;
 
-import com.transferwise.openbanking.client.api.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBActiveOrHistoricCurrencyAndAmount;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBCashAccountCreditor3;
@@ -69,7 +68,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
-import static com.transferwise.openbanking.client.test.factory.AuthorizationContextFactory.aAuthorizationContext;
 import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
 
 @ExtendWith(MockitoExtension.class)
@@ -222,16 +220,14 @@ class RestVrpClientTest {
     void getFundsConfirmation() {
         String consentId = "vrp-consent-id";
         OBVRPFundsConfirmationRequest fundsConfirmationRequest = aVrpFundsConfirmationRequest();
-        AuthorizationContext authorizationContext = aAuthorizationContext();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "authorization_code".equals(request.getRequestBody().get("grant_type")) &&
-                        authorizationContext.getAuthorizationCode().equals(request.getRequestBody().get("code")) &&
-                        authorizationContext.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -248,7 +244,6 @@ class RestVrpClientTest {
         OBVRPFundsConfirmationResponse fundsConfirmationResponse = restVrpClient.getFundsConfirmation(
             consentId,
             fundsConfirmationRequest,
-            authorizationContext,
             aspspDetails);
 
         Assertions.assertEquals(mockFundsConfirmationResponse, fundsConfirmationResponse);
@@ -263,7 +258,6 @@ class RestVrpClientTest {
     void getFundsConfirmationThrowsApiCallExceptionOnApiCallFailure() {
         String consentId = "vrp-consent-id";
         OBVRPFundsConfirmationRequest fundsConfirmationRequest = aVrpFundsConfirmationRequest();
-        AuthorizationContext authorizationContext = aAuthorizationContext();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -278,7 +272,6 @@ class RestVrpClientTest {
             () -> restVrpClient.getFundsConfirmation(
                 consentId,
                 fundsConfirmationRequest,
-                authorizationContext,
                 aspspDetails
             ));
 
@@ -290,7 +283,6 @@ class RestVrpClientTest {
     void getFundsConfirmationThrowsApiCallExceptionPartialResponse(OBVRPFundsConfirmationResponse response) {
         String consentId = "vrp-consent-id";
         OBVRPFundsConfirmationRequest fundsConfirmationRequest = aVrpFundsConfirmationRequest();
-        AuthorizationContext authorizationContext = aAuthorizationContext();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -306,7 +298,6 @@ class RestVrpClientTest {
             () -> restVrpClient.getFundsConfirmation(
                 consentId,
                 fundsConfirmationRequest,
-                authorizationContext,
                 aspspDetails
             ));
 
@@ -468,15 +459,12 @@ class RestVrpClientTest {
         OBDomesticVRPRequest domesticVrpRequest = aDomesticVrpRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
-        AuthorizationContext authorizationContext = aAuthorizationContext();
-
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "authorization_code".equals(request.getRequestBody().get("grant_type")) &&
-                        authorizationContext.getAuthorizationCode().equals(request.getRequestBody().get("code")) &&
-                        authorizationContext.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -505,7 +493,6 @@ class RestVrpClientTest {
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         OBDomesticVRPResponse domesticPaymentResponse = restVrpClient.submitDomesticVrp(domesticVrpRequest,
-            authorizationContext,
             aspspDetails,
             softwareStatementDetails);
 
@@ -519,7 +506,6 @@ class RestVrpClientTest {
         OBDomesticVRPRequest domesticVrpRequest = aDomesticVrpRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
-        AuthorizationContext authorizationContext = aAuthorizationContext();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
@@ -535,7 +521,6 @@ class RestVrpClientTest {
         Assertions.assertThrows(ApiCallException.class,
             () -> restVrpClient.submitDomesticVrp(
                 domesticVrpRequest,
-                authorizationContext,
                 aspspDetails,
                 softwareStatementDetails));
 
@@ -549,7 +534,6 @@ class RestVrpClientTest {
         OBDomesticVRPRequest domesticVrpRequest = aDomesticVrpRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
-        AuthorizationContext authorizationContext = aAuthorizationContext();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
@@ -566,7 +550,6 @@ class RestVrpClientTest {
         Assertions.assertThrows(ApiCallException.class,
             () -> restVrpClient.submitDomesticVrp(
                 domesticVrpRequest,
-                authorizationContext,
                 aspspDetails,
                 softwareStatementDetails));
 
