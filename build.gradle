@@ -42,7 +42,7 @@ configurations {
 }
 
 dependencies {
-    openApiGen("org.openapitools:openapi-generator-cli:3.3.4")
+    openApiGen("org.openapitools:openapi-generator-cli:5.3.1")
     swaggerCodegenV3("io.swagger.codegen.v3:swagger-codegen-cli:3.0.31")
     api("org.springframework:spring-web:${libs.spring}")
 
