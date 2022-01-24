@@ -7,7 +7,8 @@ import lombok.RequiredArgsConstructor;
 public enum Scope {
     ACCOUNTS("accounts"),
     PAYMENTS("payments"),
-    OPENID("openid");
+    OPENID("openid"),
+    COPPHASE2("name-verification");
 
     private final String value;
 
