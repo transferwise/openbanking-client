@@ -23,7 +23,7 @@ import java.security.cert.X509Certificate;
 @RequiredArgsConstructor
 public class JwtClaimsSigner {
 
-    private static final String TRUST_ANCHOR_VALUE = "openbankingtest.org.uk"; // openbankingtest.org.uk"
+    private static final String TRUST_ANCHOR_VALUE = "openbanking.org.uk";
 
     private static final String X509_CERTIFICATE_TYPE = "X.509";
 
@@ -55,12 +55,6 @@ public class JwtClaimsSigner {
         return signJsonPayload(jsonConverter.writeValueAsString(jwtClaims), aspspDetails);
     }
 
-    public String createDetachedSignature(Object jwtClaims,
-                                          AspspDetails aspspDetails,
-                                          SoftwareStatementDetails softwareStatementDetails) {
-        return createDetachedSignatureX(jsonConverter.writeValueAsString(jwtClaims), aspspDetails, softwareStatementDetails);
-    }
-
     /**
      * Sign the given claims to produce JWS string, with a detached payload (the claims).
      * <p>
@@ -72,11 +66,11 @@ public class JwtClaimsSigner {
      * @param softwareStatementDetails The details of the software statement that the ASPSP registration uses
      * @return The signed claims as a detached compact and URL friendly string.
      */
-    public String createDetachedSignatureX(String jwtClaims,
+    public String createDetachedSignature(Object jwtClaims,
                                           AspspDetails aspspDetails,
                                           SoftwareStatementDetails softwareStatementDetails) {
         JsonWebSignature jsonWebSignature = new JsonWebSignature();
-        jsonWebSignature.setPayload(jwtClaims);
+        jsonWebSignature.setPayload(jsonConverter.writeValueAsString(jwtClaims));
         jsonWebSignature.setKey(keySupplier.getSigningKey(aspspDetails));
         jsonWebSignature.setAlgorithmHeaderValue(AlgorithmIdentifiers.RSA_PSS_USING_SHA256);
         jsonWebSignature.setKeyIdHeaderValue(aspspDetails.getSigningKeyId());
@@ -96,9 +90,6 @@ public class JwtClaimsSigner {
                 OpenBankingJwsHeaders.OPEN_BANKING_ISS,
                 OpenBankingJwsHeaders.OPEN_BANKING_TAN);
         }
-
-        jsonWebSignature.setContentTypeHeaderValue("application/json");
-        jsonWebSignature.setHeader(HeaderParameterNames.TYPE, "JOSE");
 
         try {
             return jsonWebSignature.getDetachedContentCompactSerialization();
