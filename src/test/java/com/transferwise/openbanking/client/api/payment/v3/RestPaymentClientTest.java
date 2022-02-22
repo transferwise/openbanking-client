@@ -172,6 +172,32 @@ class RestPaymentClientTest {
         mockAspspServer.verify();
     }
 
+    @Test
+    void createDomesticPaymentConsentThrowsApiCallExceptionOnResponseWithNoContent() {
+        OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
+            .thenReturn(accessTokenResponse);
+
+        Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(Mockito.any(OBWriteDomesticConsent4.class)))
+            .thenReturn(IDEMPOTENCY_KEY);
+
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents"))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
+            .andRespond(MockRestResponseCreators.withNoContent());
+
+        Assertions.assertThrows(ApiCallException.class,
+            () -> restPaymentClient.createDomesticPaymentConsent(
+                domesticPaymentConsentRequest,
+                aspspDetails,
+                softwareStatementDetails));
+
+        mockAspspServer.verify();
+    }
+
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentConsentResponses.class)
     void createDomesticPaymentConsentThrowsApiCallExceptionOnPartialResponse(OBWriteDomesticConsentResponse5 response)
