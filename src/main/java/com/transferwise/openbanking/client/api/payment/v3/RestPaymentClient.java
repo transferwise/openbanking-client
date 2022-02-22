@@ -75,8 +75,8 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             throw new ApiCallException("Call to create payment consent endpoint failed, and no response body returned", e);
         }
 
-        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = jsonConverter.readValue(response.getBody(),
-            OBWriteDomesticConsentResponse5.class);
+        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = response.getBody() != null ? jsonConverter.readValue(response.getBody(),
+            OBWriteDomesticConsentResponse5.class) : null;
         validateResponse(domesticPaymentConsentResponse);
 
         return domesticPaymentConsentResponse;
