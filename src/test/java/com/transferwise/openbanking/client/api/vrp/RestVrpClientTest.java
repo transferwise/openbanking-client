@@ -459,15 +459,7 @@ class RestVrpClientTest {
         OBDomesticVRPRequest domesticVrpRequest = aDomesticVrpRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
-        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
-        Mockito
-            .when(oAuthClient.getAccessToken(
-                Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
-                Mockito.eq(aspspDetails)))
-            .thenReturn(accessTokenResponse);
-
+        String accessToken = "access-token";
         Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(domesticVrpRequest))
             .thenReturn(IDEMPOTENCY_KEY);
 
@@ -482,7 +474,7 @@ class RestVrpClientTest {
         String jsonResponse = jsonConverter.writeValueAsString(mockDomesticPaymentResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_URL))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header("x-idempotency-key", IDEMPOTENCY_KEY))
@@ -492,7 +484,9 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.content().json(jsonConverter.writeValueAsString(domesticVrpRequest)))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        OBDomesticVRPResponse domesticPaymentResponse = restVrpClient.submitDomesticVrp(domesticVrpRequest,
+        OBDomesticVRPResponse domesticPaymentResponse = restVrpClient.submitDomesticVrp(
+            domesticVrpRequest,
+            accessToken,
             aspspDetails,
             softwareStatementDetails);
 
@@ -507,9 +501,7 @@ class RestVrpClientTest {
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
-        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
-        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
-            .thenReturn(accessTokenResponse);
+        String accessToken = "access-token";
 
         Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(OBDomesticVRPRequest.class)))
             .thenReturn(IDEMPOTENCY_KEY);
@@ -521,6 +513,7 @@ class RestVrpClientTest {
         Assertions.assertThrows(ApiCallException.class,
             () -> restVrpClient.submitDomesticVrp(
                 domesticVrpRequest,
+                accessToken,
                 aspspDetails,
                 softwareStatementDetails));
 
@@ -535,10 +528,7 @@ class RestVrpClientTest {
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
-        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
-        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
-            .thenReturn(accessTokenResponse);
-
+        String accessToken = "access-token";
         Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(OBDomesticVRPRequest.class)))
             .thenReturn(IDEMPOTENCY_KEY);
 
@@ -550,6 +540,7 @@ class RestVrpClientTest {
         Assertions.assertThrows(ApiCallException.class,
             () -> restVrpClient.submitDomesticVrp(
                 domesticVrpRequest,
+                accessToken,
                 aspspDetails,
                 softwareStatementDetails));
 
