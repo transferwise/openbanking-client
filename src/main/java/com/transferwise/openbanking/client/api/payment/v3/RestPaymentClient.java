@@ -89,7 +89,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                                                           SoftwareStatementDetails softwareStatementDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
-            exchangeAuthorizationCode(authorizationContext, aspspDetails),
+            exchangeAuthorizationCode(authorizationContext, aspspDetails).getAccessToken(),
             idempotencyKeyGenerator.generateKeyForSubmission(domesticPaymentRequest),
             jwtClaimsSigner.createDetachedSignature(domesticPaymentRequest, aspspDetails, softwareStatementDetails));
 
@@ -189,8 +189,9 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                                                                   AuthorizationContext authorizationContext,
                                                                   AspspDetails aspspDetails) {
 
-        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(aspspDetails.getOrganisationId(),
-            exchangeAuthorizationCode(authorizationContext, aspspDetails));
+        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(
+            aspspDetails.getOrganisationId(),
+            exchangeAuthorizationCode(authorizationContext, aspspDetails).getAccessToken());
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 

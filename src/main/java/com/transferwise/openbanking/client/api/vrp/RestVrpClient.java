@@ -194,11 +194,13 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
     @Override
     public OBDomesticVRPResponse submitDomesticVrp(
         OBDomesticVRPRequest vrpRequest,
+        String accessToken,
         AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails
     ) {
-        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
-            getClientCredentialsToken(aspspDetails),
+        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(
+            aspspDetails.getOrganisationId(),
+            accessToken,
             idempotencyKeyGenerator.generateKeyForSubmission(vrpRequest),
             jwtClaimsSigner.createDetachedSignature(vrpRequest, aspspDetails, softwareStatementDetails));
 

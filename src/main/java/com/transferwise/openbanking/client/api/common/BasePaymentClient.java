@@ -22,16 +22,22 @@ public class BasePaymentClient {
 
     private final OAuthClient oAuthClient;
 
-    protected String getClientCredentialsToken(AspspDetails aspspDetails) {
-        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest(PAYMENTS_SCOPE);
-        return getAccessToken(getAccessTokenRequest, aspspDetails);
-    }
-
-    protected String exchangeAuthorizationCode(AuthorizationContext authorizationContext, AspspDetails aspspDetails) {
+    public AccessTokenResponse exchangeAuthorizationCode(AuthorizationContext authorizationContext, AspspDetails aspspDetails) {
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.authorizationCodeRequest(
             authorizationContext.getAuthorizationCode(),
             authorizationContext.getRedirectUrl());
         return getAccessToken(getAccessTokenRequest, aspspDetails);
+    }
+
+    public AccessTokenResponse exchangeRefreshToken(String refreshToken, AspspDetails aspspDetails) {
+        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.refreshTokenRequest(
+            refreshToken);
+        return getAccessToken(getAccessTokenRequest, aspspDetails);
+    }
+
+    protected String getClientCredentialsToken(AspspDetails aspspDetails) {
+        GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest(PAYMENTS_SCOPE);
+        return getAccessToken(getAccessTokenRequest, aspspDetails).getAccessToken();
     }
 
     protected String generateApiUrl(String url, String resource, AspspDetails aspspDetails) {
@@ -41,8 +47,7 @@ public class BasePaymentClient {
             resource);
     }
 
-    private String getAccessToken(GetAccessTokenRequest getAccessTokenRequest, AspspDetails aspspDetails) {
-        AccessTokenResponse accessTokenResponse = oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);
-        return accessTokenResponse.getAccessToken();
+    private AccessTokenResponse getAccessToken(GetAccessTokenRequest getAccessTokenRequest, AspspDetails aspspDetails) {
+        return oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);
     }
 }

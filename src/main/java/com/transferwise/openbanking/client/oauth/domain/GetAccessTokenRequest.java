@@ -21,6 +21,7 @@ public class GetAccessTokenRequest {
     private static final String CLIENT_SECRET_PARAM = "client_secret";
     private static final String CLIENT_ASSERTION_TYPE_PARAM = "client_assertion_type";
     private static final String CLIENT_ASSERTION_PARAM = "client_assertion";
+    private static final String REFRESH_TOKEN_PARAM = "refresh_token";
 
     private final Map<String, String> requestBody = new HashMap<>();
     private final FapiHeaders requestHeaders = FapiHeaders.defaultHeaders();
@@ -46,6 +47,12 @@ public class GetAccessTokenRequest {
             .setRedirectUri(redirectUri);
     }
 
+    public static GetAccessTokenRequest refreshTokenRequest(String refreshToken) {
+        return new GetAccessTokenRequest()
+            .setGrantType(GrantType.REFRESH_TOKEN.getValue())
+            .setRefreshToken(refreshToken);
+    }
+
     public GetAccessTokenRequest setGrantType(String grantType) {
         setBodyParameter(GRANT_TYPE_PARAM, grantType);
         return this;
@@ -62,6 +69,11 @@ public class GetAccessTokenRequest {
 
     public GetAccessTokenRequest setAuthorisationCode(String authorisationCode) {
         setBodyParameter(CODE_PARAM, authorisationCode);
+        return this;
+    }
+
+    public GetAccessTokenRequest setRefreshToken(String authorisationCode) {
+        setBodyParameter(REFRESH_TOKEN_PARAM, authorisationCode);
         return this;
     }
 

@@ -34,6 +34,7 @@ ext {
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 configurations {

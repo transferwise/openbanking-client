@@ -124,6 +124,17 @@ OBWriteDomesticResponse5 paymentResponse = paymentClient.createDomesticPayment(p
     authorizationCode, 
     aspspDetails);
 ```
+## How to contribute
+
+1. Prepare a PR for review (all commits must be signed)
+2. We receive a notification and review your PR
+3. We merge approved PR and release a new version
+
+### How to configure GPG signing
+
+1. [Generate a GPG key](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key)
+2. [Upload your GPG public key to your GitHub account](https://docs.github.com/en/authentication/managing-commit-signature-verification/associating-an-email-with-your-gpg-key)
+3. [Configure Git to use your GPG key](https://docs.github.com/en/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key)
 
 ## License
 

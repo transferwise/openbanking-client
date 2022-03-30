@@ -1,5 +1,6 @@
 package com.transferwise.openbanking.client.api.vrp;
 
+import com.transferwise.openbanking.client.api.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPConsentRequest;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPConsentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPDetails;
@@ -9,6 +10,7 @@ import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBVRPFundsCo
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBVRPFundsConfirmationResponse;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
+import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 
 /**
  * An interface specifying the operations for a client supporting version 3.1.9 domestic variable recurring payments.
@@ -29,6 +31,24 @@ public interface VrpClient {
     OBDomesticVRPConsentResponse createDomesticVrpConsent(OBDomesticVRPConsentRequest domesticVRPConsentRequest,
                                                           AspspDetails aspspDetails,
                                                           SoftwareStatementDetails softwareStatementDetails);
+
+    /**
+     * Exchange authorization code for access_token.
+     *
+     * @param authorizationContext Authorization context for a request
+     * @param aspspDetails The details of the ASPSP to send the request to
+     * @return AccessTokenResponse
+     */
+    AccessTokenResponse exchangeAuthorizationCode(AuthorizationContext authorizationContext, AspspDetails aspspDetails);
+
+    /**
+     * Exchange refresh token for access_token.
+     *
+     * @param refreshToken Refresh token
+     * @param aspspDetails The details of the ASPSP to send the request to
+     * @return AccessTokenResponse
+     */
+    AccessTokenResponse exchangeRefreshToken(String refreshToken, AspspDetails aspspDetails);
 
     /**
      * Get confirmation of whether not funds are available for a domestic VRP consent, which has been authorised
@@ -86,6 +106,7 @@ public interface VrpClient {
      */
     OBDomesticVRPResponse submitDomesticVrp(
         OBDomesticVRPRequest vrpRequest,
+        String accessToken,
         AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails
     );
