@@ -76,8 +76,8 @@ class RestVrpClientTest {
 
     private static final String IDEMPOTENCY_KEY = "idempotency-key";
     private static final String DETACHED_JWS_SIGNATURE = "detached-jws-signature";
-    public static final String DOMESTIC_VRP_CONSENTS_URL = "https://aspsp.co.uk/open-banking/v3.1/vrp/domestic-vrp-consents";
-    public static final String DOMESTIC_VRP_URL = "https://aspsp.co.uk/open-banking/v3.1/vrp/domestic-vrps";
+    public static final String DOMESTIC_VRP_CONSENTS_URL = "https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-vrp-consents";
+    public static final String DOMESTIC_VRP_URL = "https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-vrps";
 
     private static JsonConverter jsonConverter;
 

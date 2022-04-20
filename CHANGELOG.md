@@ -3,6 +3,14 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.1] - 2022-04-20
+## Changes
+- Add default `AspspDetails.getVrpBaseResourceName()` method to support dynamic resource name for VRP
+- Upgrade `com.diffplug.spotless` to `6.4.2`
+- Upgrade `io.swagger.codegen.v3:swagger-codegen-cli` to `3.0.34`
+- Upgrade `org.bitbucket.b_c:jose4j` to `0.7.11`
+- Upgrade `ch.qos.logback:logback-classic` to `1.2.11`
+
 ## [8.0.0] - 2022-03-25
 ### Changed
 - Add `refresh_token` to `com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse` so it can be used to get valid access token

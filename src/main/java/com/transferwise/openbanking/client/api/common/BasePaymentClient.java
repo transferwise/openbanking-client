@@ -47,6 +47,14 @@ public class BasePaymentClient {
             resource);
     }
 
+    protected String generateVrpApiUrl(String url, String resource, AspspDetails aspspDetails) {
+        return String.format(url,
+            aspspDetails.getApiBaseUrl("3", resource),
+            aspspDetails.getPaymentApiMinorVersion(),
+            aspspDetails.getVrpBaseResourceName(),
+            resource);
+    }
+
     private AccessTokenResponse getAccessToken(GetAccessTokenRequest getAccessTokenRequest, AspspDetails aspspDetails) {
         return oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);
     }

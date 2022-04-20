@@ -27,7 +27,7 @@ import org.springframework.web.client.RestOperations;
 @Slf4j
 public class RestVrpClient extends BasePaymentClient implements VrpClient {
 
-    private static final String BASE_ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/vrp/%s";
+    private static final String BASE_ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/%s/%s";
 
     private static final String VRP_CONSENT_RESOURCE = "domestic-vrp-consents";
     private static final String CONSENT_BY_ID_ENDPOINT_PATH_FORMAT = BASE_ENDPOINT_PATH_FORMAT + "/{consentId}";
@@ -73,7 +73,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
 
         ResponseEntity<String> response;
         try {
-            response = restOperations.exchange(generateApiUrl(BASE_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
+            response = restOperations.exchange(
+                generateVrpApiUrl(BASE_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
                 HttpMethod.POST,
                 request,
                 String.class
@@ -110,7 +111,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateApiUrl(FUNDS_CONFIRMATION_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
+                generateVrpApiUrl(FUNDS_CONFIRMATION_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
                 HttpMethod.GET,
                 request,
                 String.class,
@@ -143,7 +144,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateApiUrl(CONSENT_BY_ID_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
+                generateVrpApiUrl(CONSENT_BY_ID_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
                 HttpMethod.GET,
                 request,
                 String.class,
@@ -176,7 +177,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateApiUrl(CONSENT_BY_ID_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
+                generateVrpApiUrl(CONSENT_BY_ID_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
                 HttpMethod.DELETE,
                 request,
                 String.class,
@@ -212,7 +213,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateApiUrl(BASE_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails),
+                generateVrpApiUrl(BASE_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails),
                 HttpMethod.POST,
                 request,
                 String.class);
@@ -242,7 +243,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateApiUrl(VRP_BY_ID_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails),
+                generateVrpApiUrl(VRP_BY_ID_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails),
                 HttpMethod.GET,
                 request,
                 String.class,
@@ -273,7 +274,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateApiUrl(VRP_DETAILS_BY_ID_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails),
+                generateVrpApiUrl(VRP_DETAILS_BY_ID_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails),
                 HttpMethod.GET,
                 request,
                 String.class,
