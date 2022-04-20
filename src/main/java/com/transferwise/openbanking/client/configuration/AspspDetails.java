@@ -261,4 +261,8 @@ public interface AspspDetails {
     default boolean registrationRequiresLowerCaseJtiClaim() {
         return false;
     }
+
+    default String getVrpBaseResourceName() {
+        return "pisp";
+    }
 }
