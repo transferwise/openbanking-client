@@ -69,6 +69,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         String body = jsonConverter.writeValueAsString(domesticVRPConsentRequest);
         HttpEntity<String> request = new HttpEntity<>(body, headers);
 
+        log.debug("method=createDomesticVrpConsentRequest body={} headers={}", body, headers);
         log.info("Calling create VRP consent API, with interaction ID {}", headers.getInteractionId());
 
         ResponseEntity<String> response;
@@ -84,7 +85,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         } catch (RestClientException e) {
             throw new ApiCallException("Call to create VRP consent endpoint failed, and no response body returned", e);
         }
-
+        log.debug("method=createDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
         OBDomesticVRPConsentResponse domesticVRPConsentResponse = jsonConverter.readValue(response.getBody(),
             OBDomesticVRPConsentResponse.class);
         validateResponse(domesticVRPConsentResponse);
@@ -106,6 +107,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         String body = jsonConverter.writeValueAsString(fundsConfirmationRequest);
         HttpEntity<?> request = new HttpEntity<>(body, headers);
 
+        log.debug("method=getFundsConfirmationRequest body={} headers={}", body, headers);
         log.info("Calling get VRP confirmation of funds API, with interaction ID {}", headers.getInteractionId());
 
         ResponseEntity<String> response;
@@ -123,6 +125,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             throw new ApiCallException("Call to get VRP confirmation of funds endpoint failed, and no response body returned", e);
         }
 
+        log.debug("method=getFundsConfirmationResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
         OBVRPFundsConfirmationResponse fundsConfirmationResponse = jsonConverter.readValue(response.getBody(),
             OBVRPFundsConfirmationResponse.class);
         validateResponse(fundsConfirmationResponse);
@@ -139,6 +142,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
+        log.debug("method=getDomesticVrpConsentRequest headers={}", headers);
         log.info("Calling get VRP consent API, with interaction ID {}", headers.getInteractionId());
 
         ResponseEntity<String> response;
@@ -156,6 +160,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             throw new ApiCallException("Call to get VRP consent endpoint failed, and no response body returned", e);
         }
 
+        log.debug("method=getDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
         OBDomesticVRPConsentResponse domesticVRPConsentResponse = jsonConverter.readValue(response.getBody(),
             OBDomesticVRPConsentResponse.class);
         validateResponse(domesticVRPConsentResponse);
@@ -172,6 +177,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
+        log.debug("method=deleteDomesticVrpConsentRequest headers={}", headers);
         log.info("Calling delete VRP consent API, with interaction ID {}", headers.getInteractionId());
 
         ResponseEntity<String> response;
@@ -189,6 +195,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             throw new ApiCallException("Call to delete VRP consent endpoint failed, and no response body returned", e);
         }
 
+        log.debug("method=deleteDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
         validateResponseCode(response);
     }
 
@@ -208,6 +215,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         String body = jsonConverter.writeValueAsString(vrpRequest);
         HttpEntity<String> request = new HttpEntity<>(body, headers);
 
+        log.debug("method=submitDomesticVrpRequest body={} headers={}", body, headers);
         log.info("Calling submit VRP API, with interaction ID {}", headers.getInteractionId());
 
         ResponseEntity<String> response;
@@ -224,6 +232,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             throw new ApiCallException("Call to submit VRP endpoint failed, and no response body returned", e);
         }
 
+        log.debug("method=submitDomesticVrpResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
         OBDomesticVRPResponse domesticVrpResponse = jsonConverter.readValue(response.getBody(),
             OBDomesticVRPResponse.class);
         validateResponse(domesticVrpResponse);
@@ -238,6 +247,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
+        log.debug("method=getDomesticVrpRequest headers={}", headers);
         log.info("Calling get VRP API, with interaction ID {}", headers.getInteractionId());
 
         ResponseEntity<String> response;
@@ -255,6 +265,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             throw new ApiCallException("Call to get VRP endpoint failed, and no response body returned", e);
         }
 
+        log.debug("method=getDomesticVrpResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
         OBDomesticVRPResponse domesticVrpResponse = jsonConverter.readValue(response.getBody(),
             OBDomesticVRPResponse.class);
         validateResponse(domesticVrpResponse);
@@ -269,6 +280,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
+        log.debug("method=getDomesticVrpDetailsRequest headers={}", headers);
         log.info("Calling get VRP API, with interaction ID {}", headers.getInteractionId());
 
         ResponseEntity<String> response;
@@ -286,6 +298,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             throw new ApiCallException("Call to get VRP endpoint failed, and no response body returned", e);
         }
 
+        log.debug("method=getDomesticVrpDetailsResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
         OBDomesticVRPDetails domesticVrpDetailsResponse = jsonConverter.readValue(response.getBody(),
             OBDomesticVRPDetails.class);
         validateResponse(domesticVrpDetailsResponse);
