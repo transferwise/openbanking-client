@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [9.0.0] - 2022-05-04
+## Changes
+- Update `specs/vrp-openapi.yaml` with VRP 3.1.9 specification
+- Upgrade `com.diffplug.spotless` to `v6.5.1`
+- Upgrade `org.bitbucket.b_c:jose4j` to `0.7.12`
+
 ## [8.0.2] - 2022-04-20
 ## Changes
 - Add debug logs to `RestVrpClient` 
