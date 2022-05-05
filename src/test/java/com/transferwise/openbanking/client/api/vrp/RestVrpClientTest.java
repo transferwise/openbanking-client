@@ -723,7 +723,7 @@ class RestVrpClientTest {
             .creditorAccount(creditorAccount)
             .remittanceInformation(remittanceInformation);
         OBDomesticVRPConsentRequestData data = new OBDomesticVRPConsentRequestData()
-            .readRefundAccount(OBDomesticVRPConsentRequestData.ReadRefundAccountEnum.TRUE)
+            .readRefundAccount(OBDomesticVRPConsentRequestData.ReadRefundAccountEnum.YES)
             .controlParameters(controlParameters)
             .initiation(initiation);
         OBRisk1 risk = new OBRisk1()
