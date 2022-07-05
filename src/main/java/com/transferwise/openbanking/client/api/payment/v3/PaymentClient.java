@@ -34,7 +34,7 @@ public interface PaymentClient {
      * <p>
      * This involves exchanging the provided authorization code for an access token, if the authorization code has
      * already been exchanged, further attempts to exchange it will be rejected by the ASPSP and a
-     * {@link com.transferwise.openbanking.client.error.ApiCallException} will be thrown. If the implementation caches
+     * {@link com.transferwise.openbanking.client.api.payment.v3.PaymentApiCallException} will be thrown. If the implementation caches
      * or otherwise stores access tokens, then the issue is avoided.
      *
      * @param domesticPaymentRequest   The details of the payment to submit for execution
@@ -81,7 +81,7 @@ public interface PaymentClient {
      * <p>
      * This involves exchanging the provided authorization code for an access token, if the authorization code has
      * already been exchanged, further attempts to exchange it will be rejected by the ASPSP and a
-     * {@link com.transferwise.openbanking.client.error.ApiCallException} will be thrown. If the implementation caches
+     * {@link com.transferwise.openbanking.client.api.payment.v3.PaymentApiCallException} will be thrown. If the implementation caches
      * or otherwise stores access tokens, then the issue is avoided.
      *
      * @param consentId            The ID of the domestic payment consent to get the funds confirmation for

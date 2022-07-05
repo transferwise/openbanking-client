@@ -33,7 +33,6 @@ import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBVRPFundsCo
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBVRPRemittanceInformation;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
-import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.json.JacksonJsonConverter;
 import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
@@ -162,7 +161,7 @@ class RestVrpClientTest {
     }
 
     @Test
-    void createDomesticVrpConsentThrowsApiCallExceptionOnApiCallFailure() {
+    void createDomesticVrpConsentThrowsVrpApiCallExceptionOnApiCallFailure() {
         OBDomesticVRPConsentRequest domesticVRPConsentRequest = aDomesticVrpConsentRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
@@ -178,7 +177,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withServerError());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.createDomesticVrpConsent(
                 domesticVRPConsentRequest,
                 aspspDetails,
@@ -190,7 +189,7 @@ class RestVrpClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticVrpConsentResponses.class)
-    void createDomesticVrpConsentThrowsApiCallExceptionOnPartialResponse(OBDomesticVRPConsentResponse response) {
+    void createDomesticVrpConsentThrowsVrpApiCallExceptionOnPartialResponse(OBDomesticVRPConsentResponse response) {
         OBDomesticVRPConsentRequest domesticVRPConsentRequest = aDomesticVrpConsentRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
@@ -207,7 +206,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.createDomesticVrpConsent(
                 domesticVRPConsentRequest,
                 aspspDetails,
@@ -255,7 +254,7 @@ class RestVrpClientTest {
     }
 
     @Test
-    void getFundsConfirmationThrowsApiCallExceptionOnApiCallFailure() {
+    void getFundsConfirmationThrowsVrpApiCallExceptionOnApiCallFailure() {
         String consentId = "vrp-consent-id";
         OBVRPFundsConfirmationRequest fundsConfirmationRequest = aVrpFundsConfirmationRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
@@ -268,7 +267,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withServerError());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getFundsConfirmation(
                 consentId,
                 fundsConfirmationRequest,
@@ -280,7 +279,7 @@ class RestVrpClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialVrpFundsConfirmationResponses.class)
-    void getFundsConfirmationThrowsApiCallExceptionPartialResponse(OBVRPFundsConfirmationResponse response) {
+    void getFundsConfirmationThrowsVrpApiCallExceptionPartialResponse(OBVRPFundsConfirmationResponse response) {
         String consentId = "vrp-consent-id";
         OBVRPFundsConfirmationRequest fundsConfirmationRequest = aVrpFundsConfirmationRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
@@ -294,7 +293,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getFundsConfirmation(
                 consentId,
                 fundsConfirmationRequest,
@@ -341,7 +340,7 @@ class RestVrpClientTest {
     }
 
     @Test
-    void getDomesticVrpConsentThrowsApiCallExceptionOnApiCallFailure() {
+    void getDomesticVrpConsentThrowsVrpApiCallExceptionOnApiCallFailure() {
         String consentId = "vrp-consent-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -353,7 +352,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withServerError());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrpConsent(consentId, aspspDetails));
 
         mockAspspServer.verify();
@@ -361,7 +360,7 @@ class RestVrpClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticVrpConsentResponses.class)
-    void getDomesticVrpConsentThrowsApiCallExceptionPartialResponse(OBDomesticVRPConsentResponse response) {
+    void getDomesticVrpConsentThrowsVrpApiCallExceptionPartialResponse(OBDomesticVRPConsentResponse response) {
         String consentId = "vrp-consent-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -374,7 +373,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrpConsent(consentId, aspspDetails));
 
         mockAspspServer.verify();
@@ -416,7 +415,7 @@ class RestVrpClientTest {
     }
 
     @Test
-    void deleteDomesticVrpConsentThrowsApiCallExceptionOnApiCallFailure() {
+    void deleteDomesticVrpConsentThrowsVrpApiCallExceptionOnApiCallFailure() {
         String consentId = "vrp-consent-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -428,7 +427,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
             .andRespond(MockRestResponseCreators.withServerError());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.deleteDomesticVrpConsent(consentId, aspspDetails));
 
         mockAspspServer.verify();
@@ -436,7 +435,7 @@ class RestVrpClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(DeleteVrpConsentResponses.class)
-    void deleteDomesticVrpConsentThrowsApiCallExceptionPartialResponse(DefaultResponseCreator response) {
+    void deleteDomesticVrpConsentThrowsVrpApiCallExceptionPartialResponse(DefaultResponseCreator response) {
         String consentId = "vrp-consent-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -448,7 +447,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
             .andRespond(response);
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.deleteDomesticVrpConsent(consentId, aspspDetails));
 
         mockAspspServer.verify();
@@ -496,7 +495,7 @@ class RestVrpClientTest {
     }
 
     @Test
-    void submitDomesticVrpThrowsApiCallExceptionOnApiCallFailure() {
+    void submitDomesticVrpThrowsVrpApiCallExceptionOnApiCallFailure() {
         OBDomesticVRPRequest domesticVrpRequest = aDomesticVrpRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
@@ -510,7 +509,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withBadRequest());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.submitDomesticVrp(
                 domesticVrpRequest,
                 accessToken,
@@ -522,7 +521,7 @@ class RestVrpClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(RestVrpClientTest.PartialDomesticVrpResponses.class)
-    void submitDomesticVrpThrowsApiCallExceptionOnPartialResponse(OBDomesticVRPResponse response) {
+    void submitDomesticVrpThrowsVrpApiCallExceptionOnPartialResponse(OBDomesticVRPResponse response) {
 
         OBDomesticVRPRequest domesticVrpRequest = aDomesticVrpRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
@@ -537,7 +536,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.submitDomesticVrp(
                 domesticVrpRequest,
                 accessToken,
@@ -582,7 +581,7 @@ class RestVrpClientTest {
     }
 
     @Test
-    void getDomesticVrpThrowsApiCallExceptionOnApiCallFailure() {
+    void getDomesticVrpThrowsVrpApiCallExceptionOnApiCallFailure() {
         String vrpId = "vrp-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -594,7 +593,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withServerError());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrp(vrpId, aspspDetails));
 
         mockAspspServer.verify();
@@ -602,7 +601,7 @@ class RestVrpClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(RestVrpClientTest.PartialDomesticVrpResponses.class)
-    void getDomesticVrpThrowsApiCallExceptionPartialResponse(OBDomesticVRPResponse response) {
+    void getDomesticVrpThrowsVrpApiCallExceptionPartialResponse(OBDomesticVRPResponse response) {
         String vrpId = "vrp-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -615,7 +614,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrp(vrpId, aspspDetails));
 
         mockAspspServer.verify();
@@ -656,7 +655,7 @@ class RestVrpClientTest {
     }
 
     @Test
-    void getDomesticVrpDetailsThrowsApiCallExceptionOnApiCallFailure() {
+    void getDomesticVrpDetailsThrowsVrpApiCallExceptionOnApiCallFailure() {
         String vrpId = "vrp-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -668,7 +667,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withServerError());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrpDetails(vrpId, aspspDetails));
 
         mockAspspServer.verify();
@@ -676,7 +675,7 @@ class RestVrpClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(RestVrpClientTest.PartialDomesticVrpDetailsResponses.class)
-    void getDomesticVrpDetailsThrowsApiCallExceptionPartialResponse(OBDomesticVRPDetails response) {
+    void getDomesticVrpDetailsThrowsVrpApiCallExceptionPartialResponse(OBDomesticVRPDetails response) {
         String vrpId = "vrp-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -689,7 +688,7 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrpDetails(vrpId, aspspDetails));
 
         mockAspspServer.verify();

@@ -9,9 +9,9 @@ import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteD
 import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomesticConsentResponse5;
 import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomesticResponse5;
 import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteFundsConfirmationResponse1;
+import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBErrorResponse1;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
-import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
@@ -69,10 +69,12 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                 request,
                 String.class);
         } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to create payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
+            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
+            throw new PaymentApiCallException("Call to create payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e,
+                errorResponse);
         } catch (RestClientException e) {
-            throw new ApiCallException("Call to create payment consent endpoint failed, and no response body returned", e);
+            throw new PaymentApiCallException("Call to create payment consent endpoint failed, and no response body returned", e);
         }
 
         OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = response.getBody() != null ? jsonConverter.readValue(response.getBody(),
@@ -107,10 +109,12 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                 request,
                 String.class);
         } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to submit payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
+            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
+            throw new PaymentApiCallException("Call to submit payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e,
+                errorResponse);
         } catch (RestClientException e) {
-            throw new ApiCallException("Call to submit payment endpoint failed, and no response body returned", e);
+            throw new PaymentApiCallException("Call to submit payment endpoint failed, and no response body returned", e);
         }
 
         OBWriteDomesticResponse5 domesticPaymentResponse = jsonConverter.readValue(response.getBody(),
@@ -139,10 +143,12 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                 String.class,
                 consentId);
         } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to get payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
+            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
+            throw new PaymentApiCallException("Call to get payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e,
+                errorResponse);
         } catch (RestClientException e) {
-            throw new ApiCallException("Call to get payment consent endpoint failed, and no response body returned", e);
+            throw new PaymentApiCallException("Call to get payment consent endpoint failed, and no response body returned", e);
         }
 
         OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = jsonConverter.readValue(response.getBody(),
@@ -171,10 +177,12 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                 String.class,
                 domesticPaymentId);
         } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to get payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
+            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
+            throw new PaymentApiCallException("Call to get payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e,
+                errorResponse);
         } catch (RestClientException e) {
-            throw new ApiCallException("Call to get payment endpoint failed, and no response body returned", e);
+            throw new PaymentApiCallException("Call to get payment endpoint failed, and no response body returned", e);
         }
 
         OBWriteDomesticResponse5 domesticPaymentResponse = jsonConverter.readValue(response.getBody(),
@@ -206,10 +214,12 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
                 String.class,
                 consentId);
         } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to get confirmation of funds endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
+            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
+            throw new PaymentApiCallException("Call to get confirmation of funds endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
+                e,
+                errorResponse);
         } catch (RestClientException e) {
-            throw new ApiCallException("Call to get confirmation of funds endpoint failed, and no response body returned",
+            throw new PaymentApiCallException("Call to get confirmation of funds endpoint failed, and no response body returned",
                 e);
         }
 
@@ -226,7 +236,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             response.getData().getStatus() == null ||
             response.getData().getConsentId() == null ||
             response.getData().getConsentId().isBlank()) {
-            throw new ApiCallException("Empty or partial domestic payment consent response returned " + response);
+            throw new PaymentApiCallException("Empty or partial domestic payment consent response returned " + response);
         }
     }
 
@@ -236,13 +246,21 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             response.getData().getStatus() == null ||
             response.getData().getDomesticPaymentId() == null ||
             response.getData().getDomesticPaymentId().isBlank()) {
-            throw new ApiCallException("Empty or partial domestic payment response returned " + response);
+            throw new PaymentApiCallException("Empty or partial domestic payment response returned " + response);
         }
     }
 
     private void validateResponse(OBWriteFundsConfirmationResponse1 response) {
         if (response == null || response.getData() == null) {
-            throw new ApiCallException("Empty or partial funds confirmation response returned " + response);
+            throw new PaymentApiCallException("Empty or partial funds confirmation response returned " + response);
+        }
+    }
+
+    private OBErrorResponse1 mapBodyToObErrorResponse(String responseBodyAsString) {
+        try {
+            return jsonConverter.readValue(responseBodyAsString, OBErrorResponse1.class);
+        } catch (Exception ex) {
+            return null;
         }
     }
 }
