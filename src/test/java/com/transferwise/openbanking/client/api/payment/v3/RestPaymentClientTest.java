@@ -22,7 +22,6 @@ import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteF
 import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteFundsConfirmationResponse1DataFundsAvailableResult;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
-import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.json.JacksonJsonConverter;
 import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
@@ -147,7 +146,7 @@ class RestPaymentClientTest {
     }
 
     @Test
-    void createDomesticPaymentConsentThrowsApiCallExceptionOnApiCallFailure() {
+    void createDomesticPaymentConsentThrowsPaymentApiCallExceptionOnApiCallFailure() {
         OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
@@ -163,7 +162,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withServerError());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(PaymentApiCallException.class,
             () -> restPaymentClient.createDomesticPaymentConsent(
                 domesticPaymentConsentRequest,
                 aspspDetails,
@@ -173,7 +172,7 @@ class RestPaymentClientTest {
     }
 
     @Test
-    void createDomesticPaymentConsentThrowsApiCallExceptionOnResponseWithNoContent() {
+    void createDomesticPaymentConsentThrowsPaymentApiCallExceptionOnResponseWithNoContent() {
         OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
@@ -189,7 +188,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withNoContent());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(PaymentApiCallException.class,
             () -> restPaymentClient.createDomesticPaymentConsent(
                 domesticPaymentConsentRequest,
                 aspspDetails,
@@ -200,7 +199,7 @@ class RestPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentConsentResponses.class)
-    void createDomesticPaymentConsentThrowsApiCallExceptionOnPartialResponse(OBWriteDomesticConsentResponse5 response)
+    void createDomesticPaymentConsentThrowsPaymentApiCallExceptionOnPartialResponse(OBWriteDomesticConsentResponse5 response)
         throws Exception {
 
         OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
@@ -219,7 +218,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(PaymentApiCallException.class,
             () -> restPaymentClient.createDomesticPaymentConsent(
                 domesticPaymentConsentRequest,
                 aspspDetails,
@@ -280,7 +279,7 @@ class RestPaymentClientTest {
     }
 
     @Test
-    void submitDomesticPaymentThrowsApiCallExceptionOnApiCallFailure() {
+    void submitDomesticPaymentThrowsPaymentApiCallExceptionOnApiCallFailure() {
         OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
@@ -297,7 +296,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withBadRequest());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(PaymentApiCallException.class,
             () -> restPaymentClient.submitDomesticPayment(
                 domesticPaymentRequest,
                 authorizationContext,
@@ -309,7 +308,7 @@ class RestPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentResponses.class)
-    void submitDomesticPaymentThrowsApiCallExceptionOnPartialResponse(OBWriteDomesticResponse5 response)
+    void submitDomesticPaymentThrowsPaymentApiCallExceptionOnPartialResponse(OBWriteDomesticResponse5 response)
         throws Exception {
 
         OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
@@ -329,7 +328,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(PaymentApiCallException.class,
             () -> restPaymentClient.submitDomesticPayment(
                 domesticPaymentRequest,
                 authorizationContext,
@@ -376,7 +375,7 @@ class RestPaymentClientTest {
     }
 
     @Test
-    void getDomesticPaymentConsentThrowsApiCallExceptionOnApiCallFailure() {
+    void getDomesticPaymentConsentThrowsPaymentApiCallExceptionOnApiCallFailure() {
         String consentId = "consent-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -388,7 +387,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withServerError());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(PaymentApiCallException.class,
             () -> restPaymentClient.getDomesticPaymentConsent(consentId, aspspDetails));
 
         mockAspspServer.verify();
@@ -396,7 +395,7 @@ class RestPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentConsentResponses.class)
-    void getDomesticPaymentConsentThrowsApiCallExceptionPartialResponse(OBWriteDomesticConsentResponse5 response)
+    void getDomesticPaymentConsentThrowsPaymentApiCallExceptionPartialResponse(OBWriteDomesticConsentResponse5 response)
         throws Exception {
         String consentId = "consent-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
@@ -410,7 +409,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(PaymentApiCallException.class,
             () -> restPaymentClient.getDomesticPaymentConsent(consentId, aspspDetails));
 
         mockAspspServer.verify();
@@ -452,7 +451,7 @@ class RestPaymentClientTest {
     }
 
     @Test
-    void getDomesticPaymentThrowsApiCallExceptionOnApiCallFailure() {
+    void getDomesticPaymentThrowsPaymentApiCallExceptionOnApiCallFailure() {
         String domesticPaymentId = "domestic-payment-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -464,7 +463,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withServerError());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(PaymentApiCallException.class,
             () -> restPaymentClient.getDomesticPayment(domesticPaymentId, aspspDetails));
 
         mockAspspServer.verify();
@@ -472,7 +471,7 @@ class RestPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentResponses.class)
-    void getDomesticPaymentThrowsApiCallExceptionPartialResponse(OBWriteDomesticResponse5 response) throws Exception {
+    void getDomesticPaymentThrowsPaymentApiCallExceptionPartialResponse(OBWriteDomesticResponse5 response) throws Exception {
         String domesticPaymentId = "domestic-payment-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -485,7 +484,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(PaymentApiCallException.class,
             () -> restPaymentClient.getDomesticPayment(domesticPaymentId, aspspDetails));
 
         mockAspspServer.verify();
@@ -530,7 +529,7 @@ class RestPaymentClientTest {
     }
 
     @Test
-    void getFundsConfirmationThrowsApiCallExceptionOnApiCallFailure() {
+    void getFundsConfirmationThrowsPaymentApiCallExceptionOnApiCallFailure() {
         String consentId = "consent-id";
         AuthorizationContext authorizationContext = aAuthorizationContext();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
@@ -543,7 +542,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withServerError());
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(PaymentApiCallException.class,
             () -> restPaymentClient.getFundsConfirmation(consentId, authorizationContext, aspspDetails));
 
         mockAspspServer.verify();
@@ -551,7 +550,7 @@ class RestPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialFundsConfirmationResponses.class)
-    void getFundsConfirmationThrowsApiCallExceptionPartialResponse(OBWriteFundsConfirmationResponse1 response)
+    void getFundsConfirmationThrowsPaymentApiCallExceptionPartialResponse(OBWriteFundsConfirmationResponse1 response)
         throws Exception {
         String consentId = "consent-id";
         AuthorizationContext authorizationContext = aAuthorizationContext();
@@ -566,7 +565,7 @@ class RestPaymentClientTest {
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Assertions.assertThrows(ApiCallException.class,
+        Assertions.assertThrows(PaymentApiCallException.class,
             () -> restPaymentClient.getFundsConfirmation(consentId, authorizationContext, aspspDetails));
 
         mockAspspServer.verify();

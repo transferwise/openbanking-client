@@ -36,7 +36,7 @@ public interface VrpClient {
      * Exchange authorization code for access_token.
      *
      * @param authorizationContext Authorization context for a request
-     * @param aspspDetails The details of the ASPSP to send the request to
+     * @param aspspDetails         The details of the ASPSP to send the request to
      * @return AccessTokenResponse
      */
     AccessTokenResponse exchangeAuthorizationCode(AuthorizationContext authorizationContext, AspspDetails aspspDetails);
@@ -56,7 +56,7 @@ public interface VrpClient {
      * <p>
      * This involves exchanging the provided authorization code for an access token, if the authorization code has
      * already been exchanged, further attempts to exchange it will be rejected by the ASPSP and a
-     * {@link com.transferwise.openbanking.client.error.ApiCallException} will be thrown. If the implementation caches
+     * {@link com.transferwise.openbanking.client.api.vrp.VrpApiCallException} will be thrown. If the implementation caches
      * or otherwise stores access tokens, then the issue is avoided.
      *
      * @param consentId                     The ID of the domestic VRP consent to get the details of
@@ -86,7 +86,8 @@ public interface VrpClient {
     /**
      * Delete a domestic VRP
      *
-     * @param consentId ConsentId
+     * @param consentId    ConsentId
+     * @param aspspDetails The details of the ASPSP to send the request to
      * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
      *                                                                   failed
@@ -97,6 +98,7 @@ public interface VrpClient {
      * Create a domestic VRP
      *
      * @param vrpRequest               The details of the domestic VRP to setup
+     * @param accessToken              The access token
      * @param aspspDetails             The details of the ASPSP to send the request to
      * @param softwareStatementDetails The details of the software statement that the ASPSP registration uses
      * @return OBDomesticVRPResponse
