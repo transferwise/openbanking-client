@@ -61,7 +61,9 @@ public interface VrpClient {
      *
      * @param consentId                     The ID of the domestic VRP consent to get the details of
      * @param obVRPFundsConfirmationRequest The details of the VRP funds confirmation request
+     * @param accessToken                   The access token
      * @param aspspDetails                  The details of the ASPSP to send the request to
+     * @param softwareStatementDetails      The details of the software statement that the ASPSP registration uses
      * @return OBVRPFundsConfirmationResponse
      * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
      *                                                                   to the ASPSP or the HTTP call to the ASPSP
@@ -69,7 +71,9 @@ public interface VrpClient {
      */
     OBVRPFundsConfirmationResponse getFundsConfirmation(String consentId,
                                                         OBVRPFundsConfirmationRequest obVRPFundsConfirmationRequest,
-                                                        AspspDetails aspspDetails);
+                                                        String accessToken,
+                                                        AspspDetails aspspDetails,
+                                                        SoftwareStatementDetails softwareStatementDetails);
 
     /**
      * Retrieve a domestic VRP consent
