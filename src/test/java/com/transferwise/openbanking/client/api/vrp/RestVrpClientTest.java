@@ -218,37 +218,38 @@ class RestVrpClientTest {
     @Test
     void getFundsConfirmation() {
         String consentId = "vrp-consent-id";
+        String accessToken = "access-token";
         OBVRPFundsConfirmationRequest fundsConfirmationRequest = aVrpFundsConfirmationRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
-        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
-        Mockito
-            .when(oAuthClient.getAccessToken(
-                Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
-                Mockito.eq(aspspDetails)))
-            .thenReturn(accessTokenResponse);
+        Mockito.when(
+                jwtClaimsSigner.createDetachedSignature(
+                    fundsConfirmationRequest,
+                    aspspDetails,
+                    softwareStatementDetails))
+            .thenReturn(DETACHED_JWS_SIGNATURE);
 
         OBVRPFundsConfirmationResponse mockFundsConfirmationResponse = aFundsConfirmationResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockFundsConfirmationResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
+            .andExpect(MockRestRequestMatchers.headerDoesNotExist("x-idempotency-key"))
+            .andExpect(MockRestRequestMatchers.header("x-jws-signature", DETACHED_JWS_SIGNATURE))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         OBVRPFundsConfirmationResponse fundsConfirmationResponse = restVrpClient.getFundsConfirmation(
             consentId,
             fundsConfirmationRequest,
-            aspspDetails);
+            accessToken,
+            aspspDetails,
+            softwareStatementDetails);
 
         Assertions.assertEquals(mockFundsConfirmationResponse, fundsConfirmationResponse);
-
-        Mockito.verify(jwtClaimsSigner, Mockito.never())
-            .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
 
         mockAspspServer.verify();
     }
@@ -256,12 +257,17 @@ class RestVrpClientTest {
     @Test
     void getFundsConfirmationThrowsVrpApiCallExceptionOnApiCallFailure() {
         String consentId = "vrp-consent-id";
+        String accessToken = "access-token";
         OBVRPFundsConfirmationRequest fundsConfirmationRequest = aVrpFundsConfirmationRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
-        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
-        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
-            .thenReturn(accessTokenResponse);
+        Mockito.when(
+                jwtClaimsSigner.createDetachedSignature(
+                    fundsConfirmationRequest,
+                    aspspDetails,
+                    softwareStatementDetails))
+            .thenReturn(DETACHED_JWS_SIGNATURE);
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
@@ -271,7 +277,9 @@ class RestVrpClientTest {
             () -> restVrpClient.getFundsConfirmation(
                 consentId,
                 fundsConfirmationRequest,
-                aspspDetails
+                accessToken,
+                aspspDetails,
+                softwareStatementDetails
             ));
 
         mockAspspServer.verify();
@@ -281,12 +289,17 @@ class RestVrpClientTest {
     @ArgumentsSource(PartialVrpFundsConfirmationResponses.class)
     void getFundsConfirmationThrowsVrpApiCallExceptionPartialResponse(OBVRPFundsConfirmationResponse response) {
         String consentId = "vrp-consent-id";
+        String accessToken = "access-token";
         OBVRPFundsConfirmationRequest fundsConfirmationRequest = aVrpFundsConfirmationRequest();
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
-        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
-        Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
-            .thenReturn(accessTokenResponse);
+        Mockito.when(
+                jwtClaimsSigner.createDetachedSignature(
+                    fundsConfirmationRequest,
+                    aspspDetails,
+                    softwareStatementDetails))
+            .thenReturn(DETACHED_JWS_SIGNATURE);
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation"))
@@ -297,7 +310,9 @@ class RestVrpClientTest {
             () -> restVrpClient.getFundsConfirmation(
                 consentId,
                 fundsConfirmationRequest,
-                aspspDetails
+                accessToken,
+                aspspDetails,
+                softwareStatementDetails
             ));
 
         mockAspspServer.verify();

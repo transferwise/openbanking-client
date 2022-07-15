@@ -98,11 +98,15 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
     public OBVRPFundsConfirmationResponse getFundsConfirmation(
         String consentId,
         OBVRPFundsConfirmationRequest fundsConfirmationRequest,
-        AspspDetails aspspDetails
+        String accessToken,
+        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails
     ) {
-        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(
+        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(
             aspspDetails.getOrganisationId(),
-            getClientCredentialsToken(aspspDetails)
+            accessToken,
+            null,
+            jwtClaimsSigner.createDetachedSignature(fundsConfirmationRequest, aspspDetails, softwareStatementDetails)
         );
 
         String body = jsonConverter.writeValueAsString(fundsConfirmationRequest);

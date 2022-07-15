@@ -45,7 +45,7 @@ public class OpenBankingHeaders extends FapiHeaders {
      *
      * @param financialId    The ASPSP financial ID value to use as the x-fapi-financial-id header value
      * @param bearerToken    The bearer token to use for the Authorization header value
-     * @param idempotencyKey The idempotency key for the request, to use as the x-idempotency-key header value
+     * @param idempotencyKey The idempotency key for the request, to use as the x-idempotency-key header value. Can be null if no idempotency key is needed
      * @param jwsSignature   The JWS signature for the request, to use as the x-jws-signature header value
      * @return The built HTTP headers
      */
@@ -55,8 +55,10 @@ public class OpenBankingHeaders extends FapiHeaders {
                                                  String jwsSignature) {
         OpenBankingHeaders headers = defaultHeaders(financialId, bearerToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setIdempotencyKey(idempotencyKey);
         headers.setJwsSignature(jwsSignature);
+        if (idempotencyKey != null) {
+            headers.setIdempotencyKey(idempotencyKey);
+        }
         return headers;
     }
 

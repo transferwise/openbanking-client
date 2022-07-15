@@ -3,6 +3,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [11.1.0] - 2022-07-14
+## Changes
+- Fix headers for `POST` request sent via `RestVrpClient/getFundsConfirmation` to external endpoints. The header now uses
+access token provided by the client along with a detached JWS signature of the body of the payload. 
+
 ## [11.0.1] - 2022-07-14
 ## Changes
 - Make `getFundsConfirmation` function in `RestVrpClient` call the external endpoint with a `POST` method instead of `GET`
