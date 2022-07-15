@@ -115,7 +115,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         try {
             response = restOperations.exchange(
                 generateVrpApiUrl(FUNDS_CONFIRMATION_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
-                HttpMethod.GET,
+                HttpMethod.POST,
                 request,
                 String.class,
                 consentId

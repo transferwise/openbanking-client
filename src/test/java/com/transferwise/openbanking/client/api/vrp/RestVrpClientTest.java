@@ -233,7 +233,7 @@ class RestVrpClientTest {
         OBVRPFundsConfirmationResponse mockFundsConfirmationResponse = aFundsConfirmationResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockFundsConfirmationResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
@@ -264,7 +264,7 @@ class RestVrpClientTest {
             .thenReturn(accessTokenResponse);
 
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withServerError());
 
         Assertions.assertThrows(VrpApiCallException.class,
@@ -290,7 +290,7 @@ class RestVrpClientTest {
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         Assertions.assertThrows(VrpApiCallException.class,

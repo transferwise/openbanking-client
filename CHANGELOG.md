@@ -3,6 +3,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [11.0.1] - 2022-07-14
+## Changes
+- Make `getFundsConfirmation` function in `RestVrpClient` call the external endpoint with a `POST` method instead of `GET`
+  as it is a `POST` method according to [open banking standards](https://openbankinguk.github.io/read-write-api-site3/v3.1.10/resources-and-data-models/vrp/domestic-vrp-consents.html#post-domestic-vrp-consentsconsentidfunds-confirmation).
+
 ## [11.0.0] - 2022-07-05
 ## Changes
 - Extend existing `ApiCallException` class with two implementations: `PaymentApiCallException` and `VrpApiCallException`.
