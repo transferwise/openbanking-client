@@ -96,6 +96,15 @@ swaggerSources {
             configuration = configurations.openApiGen
         }
     }
+    event {
+        inputFile = file('specs/events-openapi.yaml')
+        code {
+            language = 'java'
+            components = ['models']
+            configFile = file('specs/events-openapi-config.json')
+            configuration = configurations.openApiGen
+        }
+    }
 }
 
 compileJava.dependsOn(generateSwaggerCode)
