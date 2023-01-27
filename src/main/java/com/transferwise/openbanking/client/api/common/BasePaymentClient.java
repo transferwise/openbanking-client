@@ -56,6 +56,13 @@ public class BasePaymentClient {
             resource);
     }
 
+    protected String generateEventApiUrl(String url, String resource, AspspDetails aspspDetails) {
+        return String.format(url,
+            aspspDetails.getApiBaseUrl(BASE_API_MAJOR_VERSION, resource),
+            aspspDetails.getPaymentApiMinorVersion(),
+            resource);
+    }
+
     private AccessTokenResponse getAccessToken(GetAccessTokenRequest getAccessTokenRequest, AspspDetails aspspDetails) {
         return oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);
     }
