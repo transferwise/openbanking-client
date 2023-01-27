@@ -15,6 +15,7 @@ import org.springframework.web.client.RestOperations;
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class BasePaymentClient {
 
+    private static final String BASE_API_MAJOR_VERSION = "3";
     private static final String PAYMENTS_SCOPE = "payments";
 
     protected final RestOperations restOperations;
@@ -42,14 +43,14 @@ public class BasePaymentClient {
 
     protected String generateApiUrl(String url, String resource, AspspDetails aspspDetails) {
         return String.format(url,
-            aspspDetails.getApiBaseUrl("3", resource),
+            aspspDetails.getApiBaseUrl(BASE_API_MAJOR_VERSION, resource),
             aspspDetails.getPaymentApiMinorVersion(),
             resource);
     }
 
     protected String generateVrpApiUrl(String url, String resource, AspspDetails aspspDetails) {
         return String.format(url,
-            aspspDetails.getApiBaseUrl("3", resource),
+            aspspDetails.getApiBaseUrl(BASE_API_MAJOR_VERSION, resource),
             aspspDetails.getPaymentApiMinorVersion(),
             aspspDetails.getVrpBaseResourceName(),
             resource);
