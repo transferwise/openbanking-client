@@ -51,7 +51,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateVrpApiUrl(BASE_ENDPOINT_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails),
+                generateEventApiUrl(BASE_ENDPOINT_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails),
                 HttpMethod.POST,
                 request,
                 String.class
