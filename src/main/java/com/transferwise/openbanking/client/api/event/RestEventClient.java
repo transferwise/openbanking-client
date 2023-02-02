@@ -24,7 +24,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
 
     private final JwtClaimsSigner jwtClaimsSigner;
 
-    protected RestEventClient(RestOperations restOperations,
+    public RestEventClient(RestOperations restOperations,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,
         JwtClaimsSigner jwtClaimsSigner
