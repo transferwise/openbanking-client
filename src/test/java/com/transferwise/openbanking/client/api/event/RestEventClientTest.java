@@ -162,4 +162,32 @@ public class RestEventClientTest {
                     .data(new OBEventSubscriptionsResponse1Data()
                         .eventSubscription(List.of(eventSubscription)));
     }
+
+    @Test
+    void deleteEventSubscription() {
+        final String subscriptionId = "event-subs-id";
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
+
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        "payments".equals(request.getRequestBody().get("scope"))),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(accessTokenResponse);
+
+
+        OBEventSubscriptionResponse1 mockEventSubscriptionResponse = aOBEventSubscriptionResponse();
+        String jsonResponse = jsonConverter.writeValueAsString(mockEventSubscriptionResponse);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
+            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        restEventClient.deleteAnEventResource(subscriptionId, aspspDetails);
+        mockAspspServer.verify();
+    }
 }

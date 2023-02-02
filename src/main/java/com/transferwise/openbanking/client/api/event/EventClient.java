@@ -20,7 +20,7 @@ public interface EventClient {
      */
     OBEventSubscriptionResponse1 subscribeToAnEvent(OBEventSubscription1 eventSubscriptionRequest, AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails);
-    
+
     /**
      *
      * @param aspspDetails detail of ASPSP which has the event to subscribe.
@@ -28,4 +28,11 @@ public interface EventClient {
      */
     public OBEventSubscriptionsResponse1 getEventResources( AspspDetails aspspDetails);
 
+    /**
+     *
+     * @param eventSubscriptionId
+     * @param aspspDetails
+     */
+    public void deleteAnEventResource(
+        String eventSubscriptionId, AspspDetails aspspDetails);
 }

@@ -97,6 +97,37 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         return eventSubscriptionResponse;
     }
 
+
+    @Override
+    public void deleteAnEventResource(
+        String eventSubscriptionId, AspspDetails aspspDetails) {
+        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(
+            aspspDetails.getOrganisationId(),
+            getClientCredentialsToken(aspspDetails)
+        );
+        HttpEntity<?> request = new HttpEntity<>(headers);
+        ResponseEntity<String> response;
+        try {
+            response = restOperations.exchange(
+                generateEventApiUrl(BASE_ENDPOINT_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails),
+                HttpMethod.DELETE,
+                request,
+                String.class,
+                eventSubscriptionId
+            );
+        } catch (RestClientResponseException e) {
+            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
+            throw new EventApiCallException("Call to delete event endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e, errorResponse);
+        } catch (RestClientException e) {
+            throw new EventApiCallException("Call to subscribe event endpoint failed, and no response body returned", e);
+        }
+
+        if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
+            throw new EventApiCallException("Call to delete event subscription endpoint failed. Status code " + response.getStatusCode().name());
+        }
+    }
+
+
     private OBErrorResponse1 mapBodyToObErrorResponse(String responseBodyAsString) {
         try {
             return jsonConverter.readValue(responseBodyAsString, OBErrorResponse1.class);
