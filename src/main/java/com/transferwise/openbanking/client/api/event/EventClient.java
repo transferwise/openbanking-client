@@ -1,6 +1,7 @@
 package com.transferwise.openbanking.client.api.event;
 
 import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscription1;
+import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscriptionsResponse1;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscriptionResponse1;
@@ -19,5 +20,12 @@ public interface EventClient {
      */
     OBEventSubscriptionResponse1 subscribeToAnEvent(OBEventSubscription1 eventSubscriptionRequest, AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails);
+    
+    /**
+     *
+     * @param aspspDetails detail of ASPSP which has the event to subscribe.
+     * @return
+     */
+    public OBEventSubscriptionsResponse1 getEventResources( AspspDetails aspspDetails);
 
 }

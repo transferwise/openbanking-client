@@ -5,6 +5,8 @@ import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
 import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscription1;
 import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscriptionResponse1;
 import com.transferwise.openbanking.client.api.payment.v3.model.event.OBErrorResponse1;
+import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscriptionsResponse1;
+import com.transferwise.openbanking.client.api.vrp.VrpApiCallException;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.json.JsonConverter;
@@ -63,6 +65,35 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
             throw new EventApiCallException("Call to subscribe event endpoint failed, and no response body returned", e);
         }
         OBEventSubscriptionResponse1 eventSubscriptionResponse = jsonConverter.readValue(response.getBody(), OBEventSubscriptionResponse1.class);
+        return eventSubscriptionResponse;
+    }
+
+    public OBEventSubscriptionsResponse1 getEventResources( AspspDetails aspspDetails)  {
+        OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(
+            aspspDetails.getOrganisationId(),
+            getClientCredentialsToken(aspspDetails)
+        );
+
+        HttpEntity<?> request = new HttpEntity<>(headers);
+        ResponseEntity<String> response;
+        try {
+            response = restOperations.exchange(
+                generateEventApiUrl(BASE_ENDPOINT_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails),
+                HttpMethod.GET,
+                request,
+                String.class
+            );
+        } catch (RestClientResponseException e) {
+            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
+            throw new EventApiCallException("Call to delete event endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e, errorResponse);
+        } catch (RestClientException e) {
+            throw new EventApiCallException("Call to subscribe event endpoint failed, and no response body returned", e);
+        }
+
+        if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
+            throw new EventApiCallException("Call to delete event subscription endpoint failed. Status code " + response.getStatusCode().name());
+        }
+        OBEventSubscriptionsResponse1 eventSubscriptionResponse = jsonConverter.readValue(response.getBody(), OBEventSubscriptionsResponse1.class);
         return eventSubscriptionResponse;
     }
 

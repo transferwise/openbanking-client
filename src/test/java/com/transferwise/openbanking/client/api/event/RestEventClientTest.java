@@ -7,6 +7,9 @@ import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSub
 import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscription1Data;
 import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscriptionResponse1;
 import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscriptionResponse1Data;
+import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscriptionsResponse1;
+import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscriptionsResponse1Data;
+import com.transferwise.openbanking.client.api.payment.v3.model.event.OBEventSubscriptionsResponse1DataEventSubscription;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.json.JacksonJsonConverter;
@@ -126,4 +129,37 @@ public class RestEventClientTest {
         return new OBEventSubscriptionResponse1().data(data);
     }
 
+    @Test
+    void getEventSubscriptions() {
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        "payments".equals(request.getRequestBody().get("scope"))),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(accessTokenResponse);
+        OBEventSubscriptionsResponse1 mockEventSubscriptionsResponse = aOBEventSubscriptionsResponse();
+        String jsonResponse = jsonConverter.writeValueAsString(mockEventSubscriptionsResponse);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
+            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        restEventClient.getEventResources(aspspDetails);
+        mockAspspServer.verify();
+    }
+
+    private OBEventSubscriptionsResponse1 aOBEventSubscriptionsResponse() {
+        OBEventSubscriptionsResponse1DataEventSubscription eventSubscription = new OBEventSubscriptionsResponse1DataEventSubscription()
+            .eventSubscriptionId("event-subs-id")
+            .callbackUrl("callback-url")
+            .eventTypes(List.of("event1"));
+        return new OBEventSubscriptionsResponse1()
+                    .data(new OBEventSubscriptionsResponse1Data()
+                        .eventSubscription(List.of(eventSubscription)));
+    }
 }
