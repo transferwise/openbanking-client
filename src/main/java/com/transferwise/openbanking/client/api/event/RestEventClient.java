@@ -26,7 +26,8 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
 
     private final JwtClaimsSigner jwtClaimsSigner;
 
-    public RestEventClient(RestOperations restOperations,
+    public RestEventClient(
+        RestOperations restOperations,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,
         JwtClaimsSigner jwtClaimsSigner
@@ -37,7 +38,8 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
 
     @Override
     public OBEventSubscriptionResponse1 subscribeToAnEvent(
-        OBEventSubscription1 eventSubscriptionRequest, AspspDetails aspspDetails,
+        OBEventSubscription1 eventSubscriptionRequest,
+        AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails) {
 
         OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
@@ -64,8 +66,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         } catch (RestClientException e) {
             throw new EventApiCallException("Call to subscribe event endpoint failed, and no response body returned", e);
         }
-        OBEventSubscriptionResponse1 eventSubscriptionResponse = jsonConverter.readValue(response.getBody(), OBEventSubscriptionResponse1.class);
-        return eventSubscriptionResponse;
+        return jsonConverter.readValue(response.getBody(), OBEventSubscriptionResponse1.class);
     }
 
     public OBEventSubscriptionsResponse1 getEventResources( AspspDetails aspspDetails)  {
@@ -99,8 +100,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
 
 
     @Override
-    public void deleteAnEventResource(
-        String eventSubscriptionId, AspspDetails aspspDetails) {
+    public void deleteAnEventResource( String eventSubscriptionId, AspspDetails aspspDetails) {
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(
             aspspDetails.getOrganisationId(),
             getClientCredentialsToken(aspspDetails)
