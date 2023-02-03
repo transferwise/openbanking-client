@@ -165,7 +165,7 @@ public class RestEventClientTest {
 
     @Test
     void deleteEventSubscription() {
-        final String subscriptionId = "event-subs-id";
+        final String eventSubscriptionId = "event-subs-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -180,14 +180,14 @@ public class RestEventClientTest {
 
         OBEventSubscriptionResponse1 mockEventSubscriptionResponse = aOBEventSubscriptionResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockEventSubscriptionResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL))
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL + "/"+ eventSubscriptionId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
-        restEventClient.deleteAnEventResource(subscriptionId, aspspDetails);
+        restEventClient.deleteAnEventResource(eventSubscriptionId, aspspDetails);
         mockAspspServer.verify();
     }
 }

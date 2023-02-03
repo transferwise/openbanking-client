@@ -23,6 +23,8 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
     private static final String BASE_ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/%s";
     private static final String EVENT_SUBSCRIPTION_RESOURCE = "event-subscriptions";
 
+    public static final String BASE_ENDPOINT_WITH_EVENT_SUBSCRIPTION_ID_PATH_FORMAT = BASE_ENDPOINT_PATH_FORMAT + "/{eventSubscriptionId}";
+
     private final JwtClaimsSigner jwtClaimsSigner;
 
     public RestEventClient(
@@ -109,7 +111,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateEventApiUrl(BASE_ENDPOINT_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails),
+                generateEventApiUrl(BASE_ENDPOINT_WITH_EVENT_SUBSCRIPTION_ID_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails) + "/"+ eventSubscriptionId,
                 HttpMethod.DELETE,
                 request,
                 String.class,
