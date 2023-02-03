@@ -68,6 +68,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         return jsonConverter.readValue(response.getBody(), OBEventSubscriptionResponse1.class);
     }
 
+    @Override
     public OBEventSubscriptionsResponse1 getEventResources( AspspDetails aspspDetails)  {
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(
             aspspDetails.getOrganisationId(),
