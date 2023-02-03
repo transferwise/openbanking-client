@@ -34,6 +34,17 @@ public interface EventClient {
     public OBEventSubscriptionsResponse1 getEventResources( AspspDetails aspspDetails);
 
     /**
+     * Ask ASPSP to change a subscribed event. .
+     *
+     * @param changedResponse new response with new entries like callbackURL, eventTypes, version.
+     * @param aspspDetails details of ASPSP which has the subscribed event resources.
+     */
+    public OBEventSubscriptionResponse1 changeAnEventResource(
+        OBEventSubscriptionResponse1 changedResponse,
+        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails);
+
+    /**
      * Ask ASPSP to delete the given subscribed Event resource.
      *
      * @param eventSubscriptionId Unique identification as assigned by the ASPSP,

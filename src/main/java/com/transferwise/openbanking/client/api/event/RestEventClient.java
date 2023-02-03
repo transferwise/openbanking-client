@@ -100,6 +100,39 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         return eventSubscriptionResponse;
     }
 
+    @Override
+    public OBEventSubscriptionResponse1 changeAnEventResource(
+        OBEventSubscriptionResponse1 changedResponse,
+        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails) {
+
+        OpenBankingHeaders headers = OpenBankingHeaders.postHeaders(aspspDetails.getOrganisationId(),
+            getClientCredentialsToken(aspspDetails),
+            null,
+            jwtClaimsSigner.createDetachedSignature(changedResponse,
+                aspspDetails,
+                softwareStatementDetails
+            ));
+        String body = jsonConverter.writeValueAsString(changedResponse);
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
+        ResponseEntity<String> response;
+        try {
+            response = restOperations.exchange(
+                generateEventApiUrl(BASE_ENDPOINT_WITH_EVENT_SUBSCRIPTION_ID_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails),
+                HttpMethod.PUT,
+                request,
+                String.class,
+                changedResponse.getData().getEventSubscriptionId()
+            );
+        } catch (RestClientResponseException e) {
+            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
+            throw new EventApiCallException("Call to change event resource endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e, errorResponse);
+        } catch (RestClientException e) {
+            throw new EventApiCallException("Call to change event resource failed, and no response body returned", e);
+        }
+        return jsonConverter.readValue(response.getBody(), OBEventSubscriptionResponse1.class);
+    }
+
 
     @Override
     public void deleteAnEventResource( String eventSubscriptionId, AspspDetails aspspDetails) {
@@ -111,7 +144,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         ResponseEntity<String> response;
         try {
             response = restOperations.exchange(
-                generateEventApiUrl(BASE_ENDPOINT_WITH_EVENT_SUBSCRIPTION_ID_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails) + "/"+ eventSubscriptionId,
+                generateEventApiUrl(BASE_ENDPOINT_WITH_EVENT_SUBSCRIPTION_ID_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails),
                 HttpMethod.DELETE,
                 request,
                 String.class,

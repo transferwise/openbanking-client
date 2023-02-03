@@ -153,6 +153,45 @@ public class RestEventClientTest {
         mockAspspServer.verify();
     }
 
+    @Test
+    void changeEventSubscriptions() {
+        final String eventSubscriptionId = "event-subs-old-id";
+        OBEventSubscriptionResponse1Data data = new OBEventSubscriptionResponse1Data()
+            .eventSubscriptionId(eventSubscriptionId)
+            .callbackUrl("callback-url")
+            .eventTypes(List.of("event1"));
+        OBEventSubscriptionResponse1 eventSubscriptionOldResponse = new OBEventSubscriptionResponse1().data(data);
+        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
+        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
+
+        Mockito
+            .when(oAuthClient.getAccessToken(
+                Mockito.argThat(request ->
+                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
+                        "payments".equals(request.getRequestBody().get("scope"))),
+                Mockito.eq(aspspDetails)))
+            .thenReturn(accessTokenResponse);
+        Mockito.when(
+                jwtClaimsSigner.createDetachedSignature(
+                    eventSubscriptionOldResponse,
+                    aspspDetails,
+                    softwareStatementDetails))
+            .thenReturn(DETACHED_JWS_SIGNATURE);
+
+        OBEventSubscriptionResponse1 mockEventSubscriptionResponse = aOBEventSubscriptionResponse();
+        String jsonResponse = jsonConverter.writeValueAsString(mockEventSubscriptionResponse);
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL + "/"+ eventSubscriptionId))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
+            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
+            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        var result = restEventClient.changeAnEventResource(eventSubscriptionOldResponse, aspspDetails, softwareStatementDetails);
+        mockAspspServer.verify();
+    }
+
     private OBEventSubscriptionsResponse1 aOBEventSubscriptionsResponse() {
         OBEventSubscriptionsResponse1DataEventSubscription eventSubscription = new OBEventSubscriptionsResponse1DataEventSubscription()
             .eventSubscriptionId("event-subs-id")
