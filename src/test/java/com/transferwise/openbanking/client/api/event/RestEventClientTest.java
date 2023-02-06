@@ -130,7 +130,7 @@ public class RestEventClientTest {
     }
 
     @Test
-    void getEventSubscriptions() {
+    void getAllEventSubscriptions() {
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
@@ -149,7 +149,7 @@ public class RestEventClientTest {
             .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
-        restEventClient.getEventResources(aspspDetails);
+        restEventClient.getAllEventResources(aspspDetails);
         mockAspspServer.verify();
     }
 

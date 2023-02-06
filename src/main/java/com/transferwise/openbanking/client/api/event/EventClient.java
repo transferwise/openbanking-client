@@ -35,7 +35,7 @@ public interface EventClient {
      * @return OBEventSubscriptionsResponse1    List of subscribed events.
      * @throws EventApiCallException    If get all events API call to ASPSP fails
      */
-    public OBEventSubscriptionsResponse1 getEventResources( AspspDetails aspspDetails);
+    public OBEventSubscriptionsResponse1 getAllEventResources(AspspDetails aspspDetails);
 
     /**
      * Change a subscribed event.

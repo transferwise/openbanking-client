@@ -71,7 +71,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
     }
 
     @Override
-    public OBEventSubscriptionsResponse1 getEventResources( AspspDetails aspspDetails)  {
+    public OBEventSubscriptionsResponse1 getAllEventResources( AspspDetails aspspDetails)  {
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(
             aspspDetails.getOrganisationId(),
             getClientCredentialsToken(aspspDetails)
