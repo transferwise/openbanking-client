@@ -47,7 +47,7 @@ dependencies {
     swaggerCodegenV3("io.swagger.codegen.v3:swagger-codegen-cli:3.0.35")
     api("org.springframework:spring-web:${libs.spring}")
 
-    implementation('org.apache.httpcomponents:httpclient:4.5.13')
+    implementation('org.apache.httpcomponents:httpclient:4.5.14')
 
     api("com.fasterxml.jackson.core:jackson-annotations:${libs.jackson}")
     api("com.fasterxml.jackson.core:jackson-databind:${libs.jackson}")
