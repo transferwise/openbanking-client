@@ -41,19 +41,31 @@ public class RestEventClientTest {
 
     private static final String DETACHED_JWS_SIGNATURE = "detached-jws-signature";
     public static final String EVENT_SUBSCRIPTION_URL = "https://aspsp.co.uk/open-banking/v3.1/event-subscriptions";
-
+    private static final String INTERACTION_ID = "x-fapi-interaction-id";
+    private static final String FINANCIAL_ID = "x-fapi-financial-id";
+    private static final String BEARER_AUTHORISATION_PREFIX = "Bearer";
+    private static final String JWS_SIGNATURE = "x-jws-signature";
+    public static final String CALLBACK_URL = "callback-url";
+    public static final String EVENT_SUBSCRIPTION_ID = "event-subs-id";
+    private static JsonConverter jsonConverter;
+    private static AccessTokenResponse accessTokenResponse;
+    private static AspspDetails aspspDetails;
+    private static SoftwareStatementDetails softwareStatementDetails;
+    private MockRestServiceServer mockAspspServer;
+    private RestEventClient restEventClient;
     @Mock
     private OAuthClient oAuthClient;
     @Mock
     private JwtClaimsSigner jwtClaimsSigner;
-
-    private MockRestServiceServer mockAspspServer;
-    private static JsonConverter jsonConverter;
-    private RestEventClient restEventClient;
+    private List<String> events;
 
     @BeforeAll
     static void initAll() {
+
         jsonConverter = new JacksonJsonConverter();
+        aspspDetails = AspspDetailsFactory.aTestAspspDetails();
+        softwareStatementDetails = aSoftwareStatementDetails();
+        accessTokenResponse = aAccessTokenResponse();
     }
 
     @BeforeEach
@@ -66,14 +78,9 @@ public class RestEventClientTest {
             jsonConverter,
             oAuthClient,
             jwtClaimsSigner);
-    }
 
-    @Test
-    void testSubscribeToAnEvent() {
-        OBEventSubscription1 eventSubscriptionRequest = aEventSubscriptionRequest();
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
-        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
-        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
+
+        events = List.of("event1");
 
         Mockito
             .when(oAuthClient.getAccessToken(
@@ -82,6 +89,11 @@ public class RestEventClientTest {
                         "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
+    }
+
+    @Test
+    void testSubscribeToAnEvent() {
+        OBEventSubscription1 eventSubscriptionRequest = aEventSubscriptionRequest();
         Mockito.when(
                 jwtClaimsSigner.createDetachedSignature(
                     eventSubscriptionRequest,
@@ -95,12 +107,12 @@ public class RestEventClientTest {
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION,
-                "Bearer " + accessTokenResponse.getAccessToken()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id",
+                BEARER_AUTHORISATION_PREFIX + " " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.header(INTERACTION_ID,
                 CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id",
+            .andExpect(MockRestRequestMatchers.header(FINANCIAL_ID,
                 aspspDetails.getOrganisationId()))
-            .andExpect(MockRestRequestMatchers.header("x-jws-signature", DETACHED_JWS_SIGNATURE))
+            .andExpect(MockRestRequestMatchers.header(JWS_SIGNATURE, DETACHED_JWS_SIGNATURE))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE,
                 MediaType.APPLICATION_JSON_VALUE))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT,
@@ -110,68 +122,48 @@ public class RestEventClientTest {
             .andRespond(
                 MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        OBEventSubscriptionResponse1 eventSubscriptionResponse = restEventClient.subscribeToAnEvent(
+        var response = restEventClient.subscribeToAnEvent(
             eventSubscriptionRequest, aspspDetails, softwareStatementDetails);
-        Assertions.assertEquals(mockEventSubscriptionResponse, eventSubscriptionResponse);
+        Assertions.assertEquals(mockEventSubscriptionResponse, response);
         mockAspspServer.verify();
     }
 
     private OBEventSubscription1 aEventSubscriptionRequest() {
-        OBEventSubscription1Data data = new OBEventSubscription1Data().callbackUrl("callback-url")
+        OBEventSubscription1Data data = new OBEventSubscription1Data().callbackUrl(CALLBACK_URL)
             .eventTypes(
-                List.of("event1"));
+                events);
         return new OBEventSubscription1().data(data);
     }
 
     private OBEventSubscriptionResponse1 aOBEventSubscriptionResponse() {
         OBEventSubscriptionResponse1Data data = new OBEventSubscriptionResponse1Data().eventSubscriptionId(
-            "event-subs-id").callbackUrl("callback-url").eventTypes(List.of("event1"));
+            EVENT_SUBSCRIPTION_ID).callbackUrl(CALLBACK_URL).eventTypes(events);
         return new OBEventSubscriptionResponse1().data(data);
     }
 
     @Test
     void getAllEventSubscriptions() {
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
-        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
-        Mockito
-            .when(oAuthClient.getAccessToken(
-                Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
-                Mockito.eq(aspspDetails)))
-            .thenReturn(accessTokenResponse);
         OBEventSubscriptionsResponse1 mockEventSubscriptionsResponse = aOBEventSubscriptionsResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockEventSubscriptionsResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, BEARER_AUTHORISATION_PREFIX + " " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.header(INTERACTION_ID, CoreMatchers.notNullValue()))
+            .andExpect(MockRestRequestMatchers.header(FINANCIAL_ID, aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
-        restEventClient.getAllEventResources(aspspDetails);
+        var response = restEventClient.getAllEventResources(aspspDetails);
+        Assertions.assertEquals(mockEventSubscriptionsResponse, response);
         mockAspspServer.verify();
     }
 
     @Test
     void changeEventSubscriptions() {
-        final String eventSubscriptionId = "event-subs-old-id";
         OBEventSubscriptionResponse1Data data = new OBEventSubscriptionResponse1Data()
-            .eventSubscriptionId(eventSubscriptionId)
-            .callbackUrl("callback-url")
-            .eventTypes(List.of("event1"));
+            .eventSubscriptionId(EVENT_SUBSCRIPTION_ID)
+            .callbackUrl(CALLBACK_URL)
+            .eventTypes(events);
         OBEventSubscriptionResponse1 eventSubscriptionOldResponse = new OBEventSubscriptionResponse1().data(data);
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
-        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
-        SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
-
-        Mockito
-            .when(oAuthClient.getAccessToken(
-                Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
-                Mockito.eq(aspspDetails)))
-            .thenReturn(accessTokenResponse);
         Mockito.when(
                 jwtClaimsSigner.createDetachedSignature(
                     eventSubscriptionOldResponse,
@@ -181,22 +173,24 @@ public class RestEventClientTest {
 
         OBEventSubscriptionResponse1 mockEventSubscriptionResponse = aOBEventSubscriptionResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockEventSubscriptionResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL + "/"+ eventSubscriptionId))
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL + "/"+ EVENT_SUBSCRIPTION_ID))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, BEARER_AUTHORISATION_PREFIX + " " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.header(INTERACTION_ID, CoreMatchers.notNullValue()))
+            .andExpect(MockRestRequestMatchers.header(FINANCIAL_ID, aspspDetails.getOrganisationId()))
+            .andExpect(MockRestRequestMatchers.header(JWS_SIGNATURE, DETACHED_JWS_SIGNATURE))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
-        var result = restEventClient.changeAnEventResource(eventSubscriptionOldResponse, aspspDetails, softwareStatementDetails);
+        var response = restEventClient.changeAnEventResource(eventSubscriptionOldResponse, aspspDetails, softwareStatementDetails);
+        Assertions.assertEquals(mockEventSubscriptionResponse, response);
         mockAspspServer.verify();
     }
 
     private OBEventSubscriptionsResponse1 aOBEventSubscriptionsResponse() {
         OBEventSubscriptionsResponse1DataEventSubscription eventSubscription = new OBEventSubscriptionsResponse1DataEventSubscription()
-            .eventSubscriptionId("event-subs-id")
-            .callbackUrl("callback-url")
-            .eventTypes(List.of("event1"));
+            .eventSubscriptionId(EVENT_SUBSCRIPTION_ID)
+            .callbackUrl(CALLBACK_URL)
+            .eventTypes(events);
         return new OBEventSubscriptionsResponse1()
                     .data(new OBEventSubscriptionsResponse1Data()
                         .eventSubscription(List.of(eventSubscription)));
@@ -204,29 +198,16 @@ public class RestEventClientTest {
 
     @Test
     void deleteEventSubscription() {
-        final String eventSubscriptionId = "event-subs-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
-
-        AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
-        Mockito
-            .when(oAuthClient.getAccessToken(
-                Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
-                Mockito.eq(aspspDetails)))
-            .thenReturn(accessTokenResponse);
-
-
         OBEventSubscriptionResponse1 mockEventSubscriptionResponse = aOBEventSubscriptionResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockEventSubscriptionResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL + "/"+ eventSubscriptionId))
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL + "/"+ EVENT_SUBSCRIPTION_ID))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
+            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, BEARER_AUTHORISATION_PREFIX + " " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.header(INTERACTION_ID, CoreMatchers.notNullValue()))
+            .andExpect(MockRestRequestMatchers.header(FINANCIAL_ID, aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
-        restEventClient.deleteAnEventResource(eventSubscriptionId, aspspDetails);
+        restEventClient.deleteAnEventResource(EVENT_SUBSCRIPTION_ID, aspspDetails);
         mockAspspServer.verify();
     }
 }
