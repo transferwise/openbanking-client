@@ -39,14 +39,14 @@ import org.springframework.web.client.RestTemplate;
 @ExtendWith(MockitoExtension.class)
 public class RestEventClientTest {
 
+    private static final String EVENT_SUBSCRIPTION_URL = "https://aspsp.co.uk/open-banking/v3.1/event-subscriptions";
+    private static final String CALLBACK_URL = "callback-url";
+    private static final String EVENT_SUBSCRIPTION_ID = "event-subs-id";
     private static final String DETACHED_JWS_SIGNATURE = "detached-jws-signature";
-    public static final String EVENT_SUBSCRIPTION_URL = "https://aspsp.co.uk/open-banking/v3.1/event-subscriptions";
     private static final String INTERACTION_ID = "x-fapi-interaction-id";
     private static final String FINANCIAL_ID = "x-fapi-financial-id";
     private static final String BEARER_AUTHORISATION_PREFIX = "Bearer";
     private static final String JWS_SIGNATURE = "x-jws-signature";
-    public static final String CALLBACK_URL = "callback-url";
-    public static final String EVENT_SUBSCRIPTION_ID = "event-subs-id";
     private static JsonConverter jsonConverter;
     private static AccessTokenResponse accessTokenResponse;
     private static AspspDetails aspspDetails;
@@ -61,7 +61,6 @@ public class RestEventClientTest {
 
     @BeforeAll
     static void initAll() {
-
         jsonConverter = new JacksonJsonConverter();
         aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         softwareStatementDetails = aSoftwareStatementDetails();
@@ -122,23 +121,9 @@ public class RestEventClientTest {
             .andRespond(
                 MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        var response = restEventClient.subscribeToAnEvent(
-            eventSubscriptionRequest, aspspDetails, softwareStatementDetails);
+        var response = restEventClient.subscribeToAnEvent(eventSubscriptionRequest, aspspDetails, softwareStatementDetails);
         Assertions.assertEquals(mockEventSubscriptionResponse, response);
         mockAspspServer.verify();
-    }
-
-    private OBEventSubscription1 aEventSubscriptionRequest() {
-        OBEventSubscription1Data data = new OBEventSubscription1Data().callbackUrl(CALLBACK_URL)
-            .eventTypes(
-                events);
-        return new OBEventSubscription1().data(data);
-    }
-
-    private OBEventSubscriptionResponse1 aOBEventSubscriptionResponse() {
-        OBEventSubscriptionResponse1Data data = new OBEventSubscriptionResponse1Data().eventSubscriptionId(
-            EVENT_SUBSCRIPTION_ID).callbackUrl(CALLBACK_URL).eventTypes(events);
-        return new OBEventSubscriptionResponse1().data(data);
     }
 
     @Test
@@ -186,16 +171,6 @@ public class RestEventClientTest {
         mockAspspServer.verify();
     }
 
-    private OBEventSubscriptionsResponse1 aOBEventSubscriptionsResponse() {
-        OBEventSubscriptionsResponse1DataEventSubscription eventSubscription = new OBEventSubscriptionsResponse1DataEventSubscription()
-            .eventSubscriptionId(EVENT_SUBSCRIPTION_ID)
-            .callbackUrl(CALLBACK_URL)
-            .eventTypes(events);
-        return new OBEventSubscriptionsResponse1()
-                    .data(new OBEventSubscriptionsResponse1Data()
-                        .eventSubscription(List.of(eventSubscription)));
-    }
-
     @Test
     void deleteEventSubscription() {
         OBEventSubscriptionResponse1 mockEventSubscriptionResponse = aOBEventSubscriptionResponse();
@@ -209,5 +184,23 @@ public class RestEventClientTest {
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
         restEventClient.deleteAnEventResource(EVENT_SUBSCRIPTION_ID, aspspDetails);
         mockAspspServer.verify();
+    }
+
+    private OBEventSubscription1 aEventSubscriptionRequest() {
+        OBEventSubscription1Data data = new OBEventSubscription1Data().callbackUrl(CALLBACK_URL).eventTypes(events);
+        return new OBEventSubscription1().data(data);
+    }
+
+    private OBEventSubscriptionResponse1 aOBEventSubscriptionResponse() {
+        OBEventSubscriptionResponse1Data data =
+            new OBEventSubscriptionResponse1Data().eventSubscriptionId(EVENT_SUBSCRIPTION_ID).callbackUrl(CALLBACK_URL).eventTypes(events);
+        return new OBEventSubscriptionResponse1().data(data);
+    }
+
+    private OBEventSubscriptionsResponse1 aOBEventSubscriptionsResponse() {
+        OBEventSubscriptionsResponse1DataEventSubscription eventSubscription =
+            new OBEventSubscriptionsResponse1DataEventSubscription().eventSubscriptionId(EVENT_SUBSCRIPTION_ID).callbackUrl(CALLBACK_URL)
+                .eventTypes(events);
+        return new OBEventSubscriptionsResponse1().data(new OBEventSubscriptionsResponse1Data().eventSubscription(List.of(eventSubscription)));
     }
 }

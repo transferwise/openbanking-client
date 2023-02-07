@@ -57,6 +57,5 @@ public interface EventClient {
      * @param aspspDetails  The details of the ASPSP.
      * @throws EventApiCallException    If delete event API call to ASPSP fails
      */
-    public void deleteAnEventResource(
-        String eventSubscriptionId, AspspDetails aspspDetails);
+    public void deleteAnEventResource(String eventSubscriptionId, AspspDetails aspspDetails);
 }
