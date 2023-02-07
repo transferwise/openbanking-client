@@ -37,6 +37,12 @@ import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({
+    "PMD.AvoidDuplicateLiterals",
+    "checkstyle:membername",
+    "checkstyle:variabledeclarationusagedistance",
+    "checkstyle:methodname",
+    "checkstyle:abbreviationaswordinname"})
 public class RestEventClientTest {
 
     private static final String EVENT_SUBSCRIPTION_URL = "https://aspsp.co.uk/open-banking/v3.1/event-subscriptions";
@@ -84,8 +90,8 @@ public class RestEventClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
     }
@@ -131,8 +137,9 @@ public class RestEventClientTest {
         OBEventSubscriptionsResponse1 mockEventSubscriptionsResponse = aOBEventSubscriptionsResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockEventSubscriptionsResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, BEARER_AUTHORISATION_PREFIX + " " + accessTokenResponse.getAccessToken()))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET)).andExpect(
+                MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION,
+                    BEARER_AUTHORISATION_PREFIX + " " + accessTokenResponse.getAccessToken()))
             .andExpect(MockRestRequestMatchers.header(INTERACTION_ID, CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header(FINANCIAL_ID, aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
@@ -158,9 +165,10 @@ public class RestEventClientTest {
 
         OBEventSubscriptionResponse1 mockEventSubscriptionResponse = aOBEventSubscriptionResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockEventSubscriptionResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL + "/"+ EVENT_SUBSCRIPTION_ID))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, BEARER_AUTHORISATION_PREFIX + " " + accessTokenResponse.getAccessToken()))
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL + "/" + EVENT_SUBSCRIPTION_ID))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT)).andExpect(
+                MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION,
+                    BEARER_AUTHORISATION_PREFIX + " " + accessTokenResponse.getAccessToken()))
             .andExpect(MockRestRequestMatchers.header(INTERACTION_ID, CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header(FINANCIAL_ID, aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(JWS_SIGNATURE, DETACHED_JWS_SIGNATURE))
@@ -175,9 +183,10 @@ public class RestEventClientTest {
     void deleteEventSubscription() {
         OBEventSubscriptionResponse1 mockEventSubscriptionResponse = aOBEventSubscriptionResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockEventSubscriptionResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL + "/"+ EVENT_SUBSCRIPTION_ID))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, BEARER_AUTHORISATION_PREFIX + " " + accessTokenResponse.getAccessToken()))
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(EVENT_SUBSCRIPTION_URL + "/" + EVENT_SUBSCRIPTION_ID))
+            .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE)).andExpect(
+                MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION,
+                    BEARER_AUTHORISATION_PREFIX + " " + accessTokenResponse.getAccessToken()))
             .andExpect(MockRestRequestMatchers.header(INTERACTION_ID, CoreMatchers.notNullValue()))
             .andExpect(MockRestRequestMatchers.header(FINANCIAL_ID, aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))

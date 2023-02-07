@@ -11,6 +11,7 @@ import com.transferwise.openbanking.client.configuration.SoftwareStatementDetail
  *
  * @since 12.0.0
  */
+@SuppressWarnings("checkstyle:abbreviationaswordinname")
 public interface EventClient {
 
     /**
