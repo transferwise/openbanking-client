@@ -2,7 +2,6 @@ package com.transferwise.openbanking.client.api.registration;
 
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
-import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
@@ -10,6 +9,10 @@ import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -21,12 +24,9 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("checkstyle:membername")
 public class RestRegistrationClient implements RegistrationClient {
 
     private final JwtClaimsSigner jwtClaimsSigner;
@@ -34,8 +34,10 @@ public class RestRegistrationClient implements RegistrationClient {
     private final RestOperations restTemplate;
 
     @Override
-    public ClientRegistrationResponse registerClient(ClientRegistrationRequest clientRegistrationRequest,
-                                                     AspspDetails aspspDetails) {
+    public ClientRegistrationResponse registerClient(
+        ClientRegistrationRequest clientRegistrationRequest,
+        AspspDetails aspspDetails
+    ) {
 
         HttpHeaders headers = new HttpHeaders();
         if (aspspDetails.registrationUsesJoseContentType()) {
@@ -76,9 +78,11 @@ public class RestRegistrationClient implements RegistrationClient {
     }
 
     @Override
-    public ClientRegistrationResponse updateRegistration(ClientRegistrationRequest clientRegistrationRequest,
-                                                         AspspDetails aspspDetails,
-                                                         SoftwareStatementDetails softwareStatementDetails) {
+    public ClientRegistrationResponse updateRegistration(
+        ClientRegistrationRequest clientRegistrationRequest,
+        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails
+    ) {
 
         HttpHeaders headers = new HttpHeaders();
         if (aspspDetails.registrationUsesJoseContentType()) {
@@ -151,8 +155,10 @@ public class RestRegistrationClient implements RegistrationClient {
         }
     }
 
-    private String getClientCredentialsToken(AspspDetails aspspDetails,
-                                             SoftwareStatementDetails softwareStatementDetails) {
+    private String getClientCredentialsToken(
+        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails
+    ) {
         String scope = generateScopeValue(aspspDetails, softwareStatementDetails);
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest(scope);
         AccessTokenResponse accessTokenResponse = oAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails);

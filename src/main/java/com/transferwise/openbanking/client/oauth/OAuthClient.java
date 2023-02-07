@@ -15,9 +15,8 @@ public interface OAuthClient {
      * @param getAccessTokenRequest The details of the token to get
      * @param aspspDetails          The details of the ASPSP to send the request to
      * @return The result, from the ASPSP, of the access token request
-     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
-     *                                                                   to the ASPSP or the HTTP call to the ASPSP
-     *                                                                   failed
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s) to the ASPSP or the HTTP call
+     *                                                                   to the ASPSP failed
      */
     AccessTokenResponse getAccessToken(GetAccessTokenRequest getAccessTokenRequest, AspspDetails aspspDetails);
 }

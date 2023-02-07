@@ -1,5 +1,9 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
+import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
+import static com.transferwise.openbanking.client.test.factory.AuthorizationContextFactory.aAuthorizationContext;
+import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
+
 import com.transferwise.openbanking.client.api.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBExternalAccountIdentification4Code;
@@ -28,6 +32,7 @@ import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.test.factory.AspspDetailsFactory;
+import java.util.stream.Stream;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -50,14 +55,8 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.stream.Stream;
-
-import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
-import static com.transferwise.openbanking.client.test.factory.AuthorizationContextFactory.aAuthorizationContext;
-import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
-
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+@SuppressWarnings({"PMD.AvoidDuplicateLiterals", "checkstyle:membername", "checkstyle:variabledeclarationusagedistance", "checkstyle:methodname"})
 class RestPaymentClientTest {
 
     private static final String IDEMPOTENCY_KEY = "idempotency-key";
@@ -106,8 +105,8 @@ class RestPaymentClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -115,10 +114,10 @@ class RestPaymentClientTest {
             .thenReturn(IDEMPOTENCY_KEY);
 
         Mockito.when(
-            jwtClaimsSigner.createDetachedSignature(
-                domesticPaymentConsentRequest,
-                aspspDetails,
-                softwareStatementDetails))
+                jwtClaimsSigner.createDetachedSignature(
+                    domesticPaymentConsentRequest,
+                    aspspDetails,
+                    softwareStatementDetails))
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
         OBWriteDomesticConsentResponse5 mockPaymentConsentResponse = aDomesticPaymentConsentResponse();
@@ -238,9 +237,9 @@ class RestPaymentClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "authorization_code".equals(request.getRequestBody().get("grant_type")) &&
-                        authorizationContext.getAuthorizationCode().equals(request.getRequestBody().get("code")) &&
-                        authorizationContext.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
+                    "authorization_code".equals(request.getRequestBody().get("grant_type"))
+                        && authorizationContext.getAuthorizationCode().equals(request.getRequestBody().get("code"))
+                        && authorizationContext.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -248,10 +247,10 @@ class RestPaymentClientTest {
             .thenReturn(IDEMPOTENCY_KEY);
 
         Mockito.when(
-            jwtClaimsSigner.createDetachedSignature(
-                domesticPaymentRequest,
-                aspspDetails,
-                softwareStatementDetails))
+                jwtClaimsSigner.createDetachedSignature(
+                    domesticPaymentRequest,
+                    aspspDetails,
+                    softwareStatementDetails))
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
         OBWriteDomesticResponse5 mockDomesticPaymentResponse = aDomesticPaymentResponse();
@@ -347,8 +346,8 @@ class RestPaymentClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -424,8 +423,8 @@ class RestPaymentClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -500,15 +499,16 @@ class RestPaymentClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "authorization_code".equals(request.getRequestBody().get("grant_type")) &&
-                        authorizationContext.getAuthorizationCode().equals(request.getRequestBody().get("code")) &&
-                        authorizationContext.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
+                    "authorization_code".equals(request.getRequestBody().get("grant_type"))
+                        && authorizationContext.getAuthorizationCode().equals(request.getRequestBody().get("code"))
+                        && authorizationContext.getRedirectUrl().equals(request.getRequestBody().get("redirect_uri"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
         OBWriteFundsConfirmationResponse1 mockFundsConfirmationResponse = aFundsConfirmationResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockFundsConfirmationResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(
+                "https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
             .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
@@ -538,7 +538,8 @@ class RestPaymentClientTest {
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(
+                "https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withServerError());
 
@@ -561,7 +562,8 @@ class RestPaymentClientTest {
             .thenReturn(accessTokenResponse);
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo("https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
+        mockAspspServer.expect(MockRestRequestMatchers.requestTo(
+                "https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
@@ -677,7 +679,7 @@ class RestPaymentClientTest {
         }
 
         private OBWriteDomesticConsentResponse5 ofData(String consentId,
-                                                       OBWriteDomesticConsentResponse5Data.StatusEnum status) {
+            OBWriteDomesticConsentResponse5Data.StatusEnum status) {
             OBWriteDomesticConsentResponse5Data data = new OBWriteDomesticConsentResponse5Data()
                 .consentId(consentId)
                 .status(status);
@@ -704,7 +706,7 @@ class RestPaymentClientTest {
         }
 
         private OBWriteDomesticResponse5 ofData(String domesticPaymentId,
-                                                OBWriteDomesticResponse5Data.StatusEnum status) {
+            OBWriteDomesticResponse5Data.StatusEnum status) {
             OBWriteDomesticResponse5Data data = new OBWriteDomesticResponse5Data()
                 .domesticPaymentId(domesticPaymentId)
                 .status(status);

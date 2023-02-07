@@ -1,11 +1,14 @@
 package com.transferwise.openbanking.client.oauth;
 
+import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import com.transferwise.openbanking.client.test.factory.AspspDetailsFactory;
+import java.util.stream.Stream;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -29,10 +32,6 @@ import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.stream.Stream;
-
-import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
 
 @ExtendWith(MockitoExtension.class)
 class RestOAuthClientTest {

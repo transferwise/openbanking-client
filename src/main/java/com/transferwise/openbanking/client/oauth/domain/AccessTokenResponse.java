@@ -28,8 +28,7 @@ public class AccessTokenResponse {
     private String tokenType;
 
     /**
-     * The lifetime in seconds of the access token. Note, this is an optional field and may not be returned by all
-     * servers.
+     * The lifetime in seconds of the access token. Note, this is an optional field and may not be returned by all servers.
      */
     @JsonProperty("expires_in")
     private Long expiresIn;

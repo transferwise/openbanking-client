@@ -1,16 +1,15 @@
 package com.transferwise.openbanking.client.configuration;
 
-import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod;
 import com.transferwise.openbanking.client.oauth.domain.GrantType;
 import com.transferwise.openbanking.client.oauth.domain.ResponseType;
-import org.jose4j.jws.AlgorithmIdentifiers;
-
-import javax.security.auth.x500.X500Principal;
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import java.security.cert.X509Certificate;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import javax.security.auth.x500.X500Principal;
+import org.jose4j.jws.AlgorithmIdentifiers;
 
 /**
  * Defines the integration details with a specific ASPSP.
@@ -18,8 +17,7 @@ import java.util.Set;
 public interface AspspDetails {
 
     /**
-     * Get the identifier of the ASPSP, which is intended for internal use, to differentiate between interface
-     * implementations.
+     * Get the identifier of the ASPSP, which is intended for internal use, to differentiate between interface implementations.
      *
      * <p>Values should be unique across all implementation of this interface.
      *
@@ -44,7 +42,7 @@ public interface AspspDetails {
      * Get the base URL for the ASPSPs Open Banking API, to use as the prefix for an API call to the ASPSP.
      *
      * @param majorVersion The major version of the API that will be called
-     * @param resource The resource within the API that will be called
+     * @param resource     The resource within the API that will be called
      * @return the API base URL
      */
     String getApiBaseUrl(String majorVersion, String resource);
@@ -68,9 +66,8 @@ public interface AspspDetails {
     }
 
     /**
-     * Get the value to use as the intended audience claim within a client registration request. For most ASPSPs this
-     * will be ASPSP organisation ID (within the Open Banking directory), however some ASPSPs may require a different
-     * value.
+     * Get the value to use as the intended audience claim within a client registration request. For most ASPSPs this will be ASPSP organisation ID
+     * (within the Open Banking directory), however some ASPSPs may require a different value.
      *
      * <p>Not all ASPSPs support a registration API, therefore not all implementations implement this method.
      *
@@ -81,8 +78,8 @@ public interface AspspDetails {
     }
 
     /**
-     * Get the value to use as the issuer claim within a client registration request. For most ASPSPs this will be the
-     * ID of the software statement used for the registration, however some ASPSPs may require a different value.
+     * Get the value to use as the issuer claim within a client registration request. For most ASPSPs this will be the ID of the software statement
+     * used for the registration, however some ASPSPs may require a different value.
      *
      * @param softwareStatementDetails the details of the software statement being used for the registration
      * @return the issuer claim value to use, defaults to the software statement ID
@@ -92,12 +89,11 @@ public interface AspspDetails {
     }
 
     /**
-     * Get the set of scopes to request for when obtaining an access token, to use for an authenticated get / update /
-     * delete client registration API call.
+     * Get the set of scopes to request for when obtaining an access token, to use for an authenticated get / update / delete client registration API
+     * call.
      *
      * <p>Some ASPSPs require the set of requested scopes to not contain the {@link Scope#OPENID}
-     * scope, some require it to contain the {@link Scope#OPENID} scope, and some require no scopes to
-     * be requested at all.
+     * scope, some require it to contain the {@link Scope#OPENID} scope, and some require no scopes to be requested at all.
      *
      * <p>By default this returns {@link Scope#OPENID} plus the permissions in
      * {@link SoftwareStatementDetails#permissions}.
@@ -116,8 +112,8 @@ public interface AspspDetails {
     }
 
     /**
-     * Get the subject distinguished name of the given transport certificate, to use as the subject distinguished name
-     * claim in a registration request, when using TLS client authentication.
+     * Get the subject distinguished name of the given transport certificate, to use as the subject distinguished name claim in a registration
+     * request, when using TLS client authentication.
      *
      * <p>Some ASPSPs require this value to be in a specific format.
      *
@@ -161,8 +157,8 @@ public interface AspspDetails {
     }
 
     /**
-     * Get the value to use as the intended audience claim, in the JWT generated for requesting an OAuth access token,
-     * when using the private key JWT client authentication method.
+     * Get the value to use as the intended audience claim, in the JWT generated for requesting an OAuth access token, when using the private key JWT
+     * client authentication method.
      *
      * @return the JWT intended audience claim value to use, defaults to the token URL
      */
@@ -190,8 +186,7 @@ public interface AspspDetails {
     String getSigningKeyId();
 
     /**
-     * Get the OAuth grant types, that the ASPSP supports and the TPP may request, to specify to the ASPSP during
-     * registration.
+     * Get the OAuth grant types, that the ASPSP supports and the TPP may request, to specify to the ASPSP during registration.
      *
      * @return the grant types to specify, defaults to all types
      */
@@ -200,8 +195,7 @@ public interface AspspDetails {
     }
 
     /**
-     * Get the OAUth response types, that the ASPSP supports and the TPP may request, to specify to the ASPSP during
-     * registration.
+     * Get the OAUth response types, that the ASPSP supports and the TPP may request, to specify to the ASPSP during registration.
      *
      * @return the response types to specify, defaults to <code>CODE_AND_ID_TOKEN</code>
      */
@@ -219,8 +213,8 @@ public interface AspspDetails {
     }
 
     /**
-     * Whether or not the ASPSP expects client registration requests to use the 'application/jose' content type, rather
-     * than the 'application/jwt' content type.
+     * Whether or not the ASPSP expects client registration requests to use the 'application/jose' content type, rather than the 'application/jwt'
+     * content type.
      *
      * @return <code>true</code> if the jose content type should be used, <code>false</code> otherwise
      */
@@ -238,20 +232,18 @@ public interface AspspDetails {
     }
 
     /**
-     * Whether or not the ASPSP expects detached message signatures to use the Open Banking directory format for the
-     * 'http://openbanking.org.uk/iss' claim, i.e. '{{org-id}}/{{software-statement-id}}', or to use the signing
-     * certificate subject value.
+     * Whether or not the ASPSP expects detached message signatures to use the Open Banking directory format for the 'http://openbanking.org.uk/iss'
+     * claim, i.e. '{{org-id}}/{{software-statement-id}}', or to use the signing certificate subject value.
      *
-     * @return <code>true</code> if the detached signature should use the Open Banking directory format for the ISS
-     * claim, <code>false</code> otherwise
+     * @return <code>true</code> if the detached signature should use the Open Banking directory format for the ISS claim,
+     * <code>false</code> otherwise
      */
     default boolean detachedSignatureUsesDirectoryIssFormat() {
         return true;
     }
 
     /**
-     * Whether or not the ASPSP requires the JWT ID (jti) claim, within client registration requests, to use only lower
-     * case characters.
+     * Whether or not the ASPSP requires the JWT ID (jti) claim, within client registration requests, to use only lower case characters.
      *
      * <p>This is false by default, as Version 3 of the registration API specifies it should be an uppercase v4 UUID,
      * however some ASPSPs do not follow this requirement and instead require lowercase characters.

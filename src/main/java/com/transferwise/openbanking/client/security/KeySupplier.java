@@ -1,13 +1,11 @@
 package com.transferwise.openbanking.client.security;
 
 import com.transferwise.openbanking.client.configuration.AspspDetails;
-
 import java.security.Key;
 import java.security.cert.Certificate;
 
 /**
- * An interface specifying the operations for supplying keys and certificates to use, as part of sending requests to
- * ASPSPs.
+ * An interface specifying the operations for supplying keys and certificates to use, as part of sending requests to ASPSPs.
  */
 public interface KeySupplier {
 

@@ -3,15 +3,14 @@ package com.transferwise.openbanking.client.oauth;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import com.transferwise.openbanking.client.test.factory.AspspDetailsFactory;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.Base64Utils;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
 
 class ClientSecretBasicAuthenticationTest {
 

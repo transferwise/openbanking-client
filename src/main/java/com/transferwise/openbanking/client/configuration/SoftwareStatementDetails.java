@@ -1,12 +1,11 @@
 package com.transferwise.openbanking.client.configuration;
 
 import com.transferwise.openbanking.client.oauth.domain.Scope;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @Builder
@@ -30,8 +29,7 @@ public class SoftwareStatementDetails {
     private List<String> redirectUrls;
 
     /**
-     * The permissions that the TPP has, according to the National Competent Authority (the FCA), and wants to use when
-     * registering with an ASPSP.
+     * The permissions that the TPP has, according to the National Competent Authority (the FCA), and wants to use when registering with an ASPSP.
      */
     private List<Scope> permissions;
 }

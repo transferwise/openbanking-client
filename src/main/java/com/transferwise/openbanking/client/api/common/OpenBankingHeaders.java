@@ -4,8 +4,8 @@ import com.transferwise.openbanking.client.oauth.domain.FapiHeaders;
 import org.springframework.http.MediaType;
 
 /**
- * An extension of the Spring {@link org.springframework.http.HttpHeaders} data structure, containing functionality
- * for setting common HTTP headers for Open Banking API requests.
+ * An extension of the Spring {@link org.springframework.http.HttpHeaders} data structure, containing functionality for setting common HTTP headers
+ * for Open Banking API requests.
  */
 public class OpenBankingHeaders extends FapiHeaders {
 
@@ -45,14 +45,17 @@ public class OpenBankingHeaders extends FapiHeaders {
      *
      * @param financialId    The ASPSP financial ID value to use as the x-fapi-financial-id header value
      * @param bearerToken    The bearer token to use for the Authorization header value
-     * @param idempotencyKey The idempotency key for the request, to use as the x-idempotency-key header value. Can be null if no idempotency key is needed
+     * @param idempotencyKey The idempotency key for the request, to use as the x-idempotency-key header value. Can be null if no idempotency key is
+     *                       needed
      * @param jwsSignature   The JWS signature for the request, to use as the x-jws-signature header value
      * @return The built HTTP headers
      */
-    public static OpenBankingHeaders postHeaders(String financialId,
-                                                 String bearerToken,
-                                                 String idempotencyKey,
-                                                 String jwsSignature) {
+    public static OpenBankingHeaders postHeaders(
+        String financialId,
+        String bearerToken,
+        String idempotencyKey,
+        String jwsSignature
+    ) {
         OpenBankingHeaders headers = defaultHeaders(financialId, bearerToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setJwsSignature(jwsSignature);

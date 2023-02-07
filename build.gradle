@@ -125,7 +125,9 @@ jar {
 
 checkstyle {
     configFile = new File(rootDir, "checkstyle.xml")
-    sourceSets = [project.sourceSets.main]
+    sourceSets = [project.sourceSets.main, project.sourceSets.test]
+    ignoreFailures = false
+    maxWarnings = 0
 }
 
 tasks.withType(Checkstyle) {

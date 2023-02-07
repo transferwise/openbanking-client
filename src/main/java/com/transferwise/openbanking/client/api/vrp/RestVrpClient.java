@@ -25,6 +25,7 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
 
 @Slf4j
+@SuppressWarnings({"checkstyle:abbreviationaswordinname", "checkstyle:parametername"})
 public class RestVrpClient extends BasePaymentClient implements VrpClient {
 
     private static final String BASE_ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/%s/%s";
@@ -82,11 +83,13 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             );
         } catch (RestClientResponseException e) {
             OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new VrpApiCallException("Call to create VRP consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e, errorResponse);
+            throw new VrpApiCallException("Call to create VRP consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e,
+                errorResponse);
         } catch (RestClientException e) {
             throw new VrpApiCallException("Call to create VRP consent endpoint failed, and no response body returned", e);
         }
-        log.debug("method=createDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
+        log.debug("method=createDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
+            response.getHeaders());
         OBDomesticVRPConsentResponse domesticVRPConsentResponse = jsonConverter.readValue(response.getBody(),
             OBDomesticVRPConsentResponse.class);
         validateResponse(domesticVRPConsentResponse);
@@ -126,12 +129,14 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             );
         } catch (RestClientResponseException e) {
             OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new VrpApiCallException("Call to get VRP confirmation of funds endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e, errorResponse);
+            throw new VrpApiCallException(
+                "Call to get VRP confirmation of funds endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e, errorResponse);
         } catch (RestClientException e) {
             throw new VrpApiCallException("Call to get VRP confirmation of funds endpoint failed, and no response body returned", e);
         }
 
-        log.debug("method=getFundsConfirmationResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
+        log.debug("method=getFundsConfirmationResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
+            response.getHeaders());
         OBVRPFundsConfirmationResponse fundsConfirmationResponse = jsonConverter.readValue(response.getBody(),
             OBVRPFundsConfirmationResponse.class);
         validateResponse(fundsConfirmationResponse);
@@ -168,7 +173,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             throw new VrpApiCallException("Call to get VRP consent endpoint failed, and no response body returned", e);
         }
 
-        log.debug("method=getDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
+        log.debug("method=getDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
+            response.getHeaders());
         OBDomesticVRPConsentResponse domesticVRPConsentResponse = jsonConverter.readValue(response.getBody(),
             OBDomesticVRPConsentResponse.class);
         validateResponse(domesticVRPConsentResponse);
@@ -205,7 +211,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             throw new VrpApiCallException("Call to delete VRP consent endpoint failed, and no response body returned", e);
         }
 
-        log.debug("method=deleteDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
+        log.debug("method=deleteDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
+            response.getHeaders());
         validateResponseCode(response);
     }
 
@@ -244,7 +251,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             throw new VrpApiCallException("Call to submit VRP endpoint failed, and no response body returned", e);
         }
 
-        log.debug("method=submitDomesticVrpResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
+        log.debug("method=submitDomesticVrpResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
+            response.getHeaders());
         OBDomesticVRPResponse domesticVrpResponse = jsonConverter.readValue(response.getBody(),
             OBDomesticVRPResponse.class);
         validateResponse(domesticVrpResponse);
@@ -279,7 +287,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             throw new VrpApiCallException("Call to get VRP endpoint failed, and no response body returned", e);
         }
 
-        log.debug("method=getDomesticVrpResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
+        log.debug("method=getDomesticVrpResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
+            response.getHeaders());
         OBDomesticVRPResponse domesticVrpResponse = jsonConverter.readValue(response.getBody(),
             OBDomesticVRPResponse.class);
         validateResponse(domesticVrpResponse);
@@ -314,7 +323,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             throw new VrpApiCallException("Call to get VRP endpoint failed, and no response body returned", e);
         }
 
-        log.debug("method=getDomesticVrpDetailsResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(), response.getHeaders());
+        log.debug("method=getDomesticVrpDetailsResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
+            response.getHeaders());
         OBDomesticVRPDetails domesticVrpDetailsResponse = jsonConverter.readValue(response.getBody(),
             OBDomesticVRPDetails.class);
         validateResponse(domesticVrpDetailsResponse);
@@ -323,11 +333,11 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
     }
 
     private void validateResponse(OBDomesticVRPConsentResponse response) {
-        if (response == null ||
-            response.getData() == null ||
-            response.getData().getStatus() == null ||
-            response.getData().getConsentId() == null ||
-            response.getData().getConsentId().isBlank()
+        if (response == null
+            || response.getData() == null
+            || response.getData().getStatus() == null
+            || response.getData().getConsentId() == null
+            || response.getData().getConsentId().isBlank()
         ) {
             throw new VrpApiCallException("Empty or partial VRP consent response returned ");
         }
@@ -339,37 +349,37 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         }
     }
 
-    private void validateResponseCode(ResponseEntity<String> response) {
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return;
-        }
-        if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
-            throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + response.getStatusCode().name());
-        }
-        log.info("Call to delete VRP consent endpoint failed with unexpected status code {}", response.getStatusCode().value());
-        throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + response.getStatusCode().name());
-    }
-
-
     private void validateResponse(OBDomesticVRPResponse response) {
-        if (response == null ||
-            response.getData() == null ||
-            response.getData().getStatus() == null ||
-            response.getData().getConsentId() == null ||
-            response.getData().getConsentId().isBlank() ||
-            response.getData().getDomesticVRPId() == null ||
-            response.getData().getDomesticVRPId().isBlank()) {
+        if (response == null
+            || response.getData() == null
+            || response.getData().getStatus() == null
+            || response.getData().getConsentId() == null
+            || response.getData().getConsentId().isBlank()
+            || response.getData().getDomesticVRPId() == null
+            || response.getData().getDomesticVRPId().isBlank()) {
             throw new VrpApiCallException("Empty or partial domestic VRP response returned ");
         }
     }
 
     private void validateResponse(OBDomesticVRPDetails response) {
-        if (response == null ||
-            response.getData() == null ||
-            response.getData().getPaymentStatus() == null ||
-            response.getData().getPaymentStatus().isEmpty()) {
+        if (response == null
+            || response.getData() == null
+            || response.getData().getPaymentStatus() == null
+            || response.getData().getPaymentStatus().isEmpty()) {
             throw new VrpApiCallException("Empty or partial domestic VRP details response returned " + response);
         }
+    }
+
+    private void validateResponseCode(ResponseEntity<String> response) {
+        if (response.getStatusCode().is2xxSuccessful()) {
+            return;
+        }
+        if (response.getStatusCode().is4xxClientError()
+            || response.getStatusCode().is5xxServerError()) {
+            throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + response.getStatusCode().name());
+        }
+        log.info("Call to delete VRP consent endpoint failed with unexpected status code {}", response.getStatusCode().value());
+        throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + response.getStatusCode().name());
     }
 
     private OBErrorResponse1 mapBodyToObErrorResponse(String responseBodyAsString) {

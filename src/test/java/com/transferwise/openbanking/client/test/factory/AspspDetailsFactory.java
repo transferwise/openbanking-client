@@ -3,9 +3,9 @@ package com.transferwise.openbanking.client.test.factory;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
-
 import java.util.Set;
 
+@SuppressWarnings("checkstyle:methodname")
 public class AspspDetailsFactory {
 
     public static AspspDetails aTestAspspDetails() {

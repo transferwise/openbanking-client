@@ -17,9 +17,9 @@ public interface JsonConverter {
     /**
      * De-serialize the given JSON string to a Java object.
      *
-     * @param content The JSON string to de-serialize
+     * @param content   The JSON string to de-serialize
      * @param valueType The class type to de-serialize to
-     * @param <T> The type to de-serialize to
+     * @param <T>       The type to de-serialize to
      * @return The de-serialized JSON object
      * @throws JsonReadException if there was a problem reading the JSON to an object
      */

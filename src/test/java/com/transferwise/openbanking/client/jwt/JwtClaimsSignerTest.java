@@ -1,5 +1,7 @@
 package com.transferwise.openbanking.client.jwt;
 
+import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
+
 import com.transferwise.openbanking.client.api.payment.v3.model.payment.OBWriteDomestic2DataInitiationInstructedAmount;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
@@ -8,6 +10,10 @@ import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.security.KeySupplier;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
 import com.transferwise.openbanking.client.test.TestKeyUtils;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Map;
 import org.jose4j.jwa.AlgorithmConstraints;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
@@ -20,13 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Map;
-
-import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
-
+@SuppressWarnings("checkstyle:methodname")
 class JwtClaimsSignerTest {
 
     private static final AlgorithmConstraints PS256_ALGORITHM = new AlgorithmConstraints(
@@ -111,8 +111,8 @@ class JwtClaimsSignerTest {
         Assertions.assertEquals("openbanking.org.uk",
             jsonWebSignature.getHeader(OpenBankingJwsHeaders.OPEN_BANKING_TAN));
 
-        long generatedAtTimeDifference = NumericDate.now().getValue() -
-            ((long) jsonWebSignature.getObjectHeader(OpenBankingJwsHeaders.OPEN_BANKING_IAT));
+        long generatedAtTimeDifference = NumericDate.now().getValue()
+            - ((long) jsonWebSignature.getObjectHeader(OpenBankingJwsHeaders.OPEN_BANKING_IAT));
         Assertions.assertTrue(generatedAtTimeDifference <= 5);
 
         Assertions.assertEquals(
@@ -150,8 +150,8 @@ class JwtClaimsSignerTest {
         Assertions.assertEquals("openbanking.org.uk",
             jsonWebSignature.getHeader(OpenBankingJwsHeaders.OPEN_BANKING_TAN));
 
-        long generatedAtTimeDifference = NumericDate.now().getValue() -
-            ((long) jsonWebSignature.getObjectHeader(OpenBankingJwsHeaders.OPEN_BANKING_IAT));
+        long generatedAtTimeDifference = NumericDate.now().getValue()
+            - ((long) jsonWebSignature.getObjectHeader(OpenBankingJwsHeaders.OPEN_BANKING_IAT));
         Assertions.assertTrue(generatedAtTimeDifference <= 5);
 
         Assertions.assertEquals(

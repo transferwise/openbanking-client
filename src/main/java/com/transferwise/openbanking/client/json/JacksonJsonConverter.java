@@ -10,9 +10,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /**
  * Implementation of the {@link JsonConverter} interface, using the Jackson library for JSON operations.
- * <p>
- * Instances of this class are thread safe and can be re-used to to avoid un-necessarily creating multiple instances of
- * the heavy {@link ObjectMapper} class.
+ *
+ * <p>Instances of this class are thread safe and can be re-used to to avoid un-necessarily creating multiple instances of the heavy
+ * {@link ObjectMapper} class.
  */
 public class JacksonJsonConverter implements JsonConverter {
 

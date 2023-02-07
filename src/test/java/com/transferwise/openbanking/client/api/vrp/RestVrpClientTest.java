@@ -1,5 +1,8 @@
 package com.transferwise.openbanking.client.api.vrp;
 
+import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
+import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
+
 import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBActiveOrHistoricCurrencyAndAmount;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBCashAccountCreditor3;
@@ -39,6 +42,9 @@ import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.test.factory.AspspDetailsFactory;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.stream.Stream;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -62,15 +68,13 @@ import org.springframework.test.web.client.response.DefaultResponseCreator;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.stream.Stream;
-
-import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
-import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
-
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+@SuppressWarnings({
+    "PMD.AvoidDuplicateLiterals",
+    "checkstyle:membername",
+    "checkstyle:variabledeclarationusagedistance",
+    "checkstyle:methodname",
+    "checkstyle:abbreviationaswordinname"})
 class RestVrpClientTest {
 
     private static final String IDEMPOTENCY_KEY = "idempotency-key";
@@ -121,8 +125,8 @@ class RestVrpClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -130,10 +134,10 @@ class RestVrpClientTest {
             .thenReturn(IDEMPOTENCY_KEY);
 
         Mockito.when(
-            jwtClaimsSigner.createDetachedSignature(
-                domesticVRPConsentRequest,
-                aspspDetails,
-                softwareStatementDetails))
+                jwtClaimsSigner.createDetachedSignature(
+                    domesticVRPConsentRequest,
+                    aspspDetails,
+                    softwareStatementDetails))
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
         OBDomesticVRPConsentResponse mockDomesticVrpConsentResponse = aDomesticVrpConsentResponse();
@@ -327,8 +331,8 @@ class RestVrpClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -404,8 +408,8 @@ class RestVrpClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -478,10 +482,10 @@ class RestVrpClientTest {
             .thenReturn(IDEMPOTENCY_KEY);
 
         Mockito.when(
-            jwtClaimsSigner.createDetachedSignature(
-                domesticVrpRequest,
-                aspspDetails,
-                softwareStatementDetails))
+                jwtClaimsSigner.createDetachedSignature(
+                    domesticVrpRequest,
+                    aspspDetails,
+                    softwareStatementDetails))
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
         OBDomesticVRPResponse mockDomesticPaymentResponse = aDomesticVrpResponse();
@@ -570,8 +574,8 @@ class RestVrpClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 
@@ -644,8 +648,8 @@ class RestVrpClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
 

@@ -2,9 +2,9 @@ package com.transferwise.openbanking.client.test.factory;
 
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.oauth.domain.Scope;
-
 import java.util.List;
 
+@SuppressWarnings("checkstyle:methodname")
 public class SoftwareStatementDetailsFactory {
 
     public static SoftwareStatementDetails aSoftwareStatementDetails() {

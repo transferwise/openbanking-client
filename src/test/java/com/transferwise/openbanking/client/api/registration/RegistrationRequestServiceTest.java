@@ -1,5 +1,7 @@
 package com.transferwise.openbanking.client.api.registration;
 
+import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
+
 import com.transferwise.openbanking.client.api.registration.domain.ApplicationType;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
@@ -10,6 +12,8 @@ import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.security.KeySupplier;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
 import com.transferwise.openbanking.client.test.TestKeyUtils;
+import java.security.cert.X509Certificate;
+import java.util.List;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,11 +22,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.security.cert.X509Certificate;
-import java.util.List;
-
-import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
