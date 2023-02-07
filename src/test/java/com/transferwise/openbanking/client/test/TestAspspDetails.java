@@ -1,20 +1,20 @@
 package com.transferwise.openbanking.client.test;
 
-import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.oauth.ClientAuthenticationMethod;
 import com.transferwise.openbanking.client.oauth.domain.GrantType;
 import com.transferwise.openbanking.client.oauth.domain.ResponseType;
-import lombok.Builder;
-import lombok.Data;
-
+import com.transferwise.openbanking.client.oauth.domain.Scope;
 import java.util.List;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder
 public class TestAspspDetails implements AspspDetails {
+
     private String internalId;
     private String organisationId;
     private String apiBaseUrl;

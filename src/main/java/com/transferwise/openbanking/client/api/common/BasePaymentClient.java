@@ -13,6 +13,7 @@ import org.springframework.web.client.RestOperations;
  * Base class for all payments API clients, containing common functionality, in particular around OAuth functionality.
  */
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
+@SuppressWarnings("checkstyle:membername")
 public class BasePaymentClient {
 
     private static final String PAYMENTS_SCOPE = "payments";

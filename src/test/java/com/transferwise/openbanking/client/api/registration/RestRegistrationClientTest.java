@@ -1,5 +1,8 @@
 package com.transferwise.openbanking.client.api.registration;
 
+import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aTestAspspDetails;
+import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
@@ -11,6 +14,12 @@ import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.oauth.domain.Scope;
 import com.transferwise.openbanking.client.test.factory.AspspDetailsFactory;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,18 +39,13 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
 
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Stream;
-
-import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aTestAspspDetails;
-import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
-
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({"PMD.UnusedPrivateMethod", "PMD.AvoidDuplicateLiterals"}) // PMD considers argumentsForRegisterClientTest unused
+@SuppressWarnings({
+    "PMD.UnusedPrivateMethod",
+    "PMD.AvoidDuplicateLiterals",
+    "checkstyle:membername",
+    "checkstyle:variabledeclarationusagedistance",
+    "checkstyle:methodname"})
 class RestRegistrationClientTest {
 
     private static ObjectMapper objectMapper;
@@ -111,10 +115,10 @@ class RestRegistrationClientTest {
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
             .thenReturn(signedClaims);
 
-        String jsonResponse = "{" +
-            "\"client_id_issued_at\":\"2021-02-10T12:00:51.191+0000\"," +
-            "\"client_secret_expires_at\":\"2022-02-10T12:00:51.191+0000\"" +
-            "}";
+        String jsonResponse = "{"
+            + "\"client_id_issued_at\":\"2021-02-10T12:00:51.191+0000\","
+            + "\"client_secret_expires_at\":\"2022-02-10T12:00:51.191+0000\""
+            + "}";
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl()))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
@@ -161,8 +165,8 @@ class RestRegistrationClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        "payments".equals(request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(mockAccessTokenResponse);
 
@@ -197,7 +201,7 @@ class RestRegistrationClientTest {
     @ParameterizedTest
     @MethodSource("argumentsForContentTypeTest")
     void updateRegistrationSupportsDifferentContentTypes(boolean registrationUsesJoseContentType,
-                                                         String expectedContentType)
+        String expectedContentType)
         throws Exception {
 
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
@@ -236,7 +240,7 @@ class RestRegistrationClientTest {
     @ParameterizedTest
     @MethodSource("argumentsForAuthenticationScopeTest")
     void updateRegistrationSupportsDifferentAuthenticationScopes(Set<Scope> registrationAuthenticationScopes,
-                                                                 String expectedAuthenticationScope)
+        String expectedAuthenticationScope)
         throws Exception {
 
         ClientRegistrationRequest clientRegistrationRequest = aRegistrationClaims();
@@ -249,8 +253,8 @@ class RestRegistrationClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        Objects.equals(expectedAuthenticationScope, request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && Objects.equals(expectedAuthenticationScope, request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(mockAccessTokenResponse);
 
@@ -308,7 +312,7 @@ class RestRegistrationClientTest {
     @ParameterizedTest
     @MethodSource("argumentsForAuthenticationScopeTest")
     void deleteRegistrationSupportsDifferentAuthenticationScopes(Set<Scope> registrationAuthenticationScopes,
-                                                                 String expectedAuthenticationScope) {
+        String expectedAuthenticationScope) {
 
         AspspDetails aspspDetails = aTestAspspDetails(false, registrationAuthenticationScopes);
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
@@ -319,8 +323,8 @@ class RestRegistrationClientTest {
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
-                    "client_credentials".equals(request.getRequestBody().get("grant_type")) &&
-                        Objects.equals(expectedAuthenticationScope, request.getRequestBody().get("scope"))),
+                    "client_credentials".equals(request.getRequestBody().get("grant_type"))
+                        && Objects.equals(expectedAuthenticationScope, request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(mockAccessTokenResponse);
 

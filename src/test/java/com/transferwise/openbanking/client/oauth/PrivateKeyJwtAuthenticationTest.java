@@ -4,6 +4,7 @@ import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import com.transferwise.openbanking.client.test.TestAspspDetails;
+import java.util.List;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jwt.MalformedClaimException;
 import org.junit.jupiter.api.Assertions;
@@ -14,8 +15,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
+@SuppressWarnings("checkstyle:methodname")
 @ExtendWith(MockitoExtension.class)
 class PrivateKeyJwtAuthenticationTest {
 
@@ -42,19 +42,19 @@ class PrivateKeyJwtAuthenticationTest {
 
         String signedPayload = "signed-payload";
         Mockito.when(jwtClaimsSigner.createSignature(
-            Mockito.argThat(jwtClaims -> {
-                try {
-                    return jwtClaims.getIssuer().equals(aspspDetails.getClientId()) &&
-                        jwtClaims.getSubject().equals(aspspDetails.getClientId()) &&
-                        jwtClaims.getAudience().equals(List.of(aspspDetails.getPrivateKeyJwtAuthenticationAudience())) &&
-                        jwtClaims.getIssuedAt() != null &&
-                        jwtClaims.getExpirationTime().isAfter(jwtClaims.getIssuedAt()) &&
-                        jwtClaims.getJwtId() != null;
-                } catch (MalformedClaimException e) {
-                    throw new RuntimeException(e);
-                }
-            }),
-            Mockito.eq(aspspDetails)))
+                Mockito.argThat(jwtClaims -> {
+                    try {
+                        return jwtClaims.getIssuer().equals(aspspDetails.getClientId())
+                            && jwtClaims.getSubject().equals(aspspDetails.getClientId())
+                            && jwtClaims.getAudience().equals(List.of(aspspDetails.getPrivateKeyJwtAuthenticationAudience()))
+                            && jwtClaims.getIssuedAt() != null
+                            && jwtClaims.getExpirationTime().isAfter(jwtClaims.getIssuedAt())
+                            && jwtClaims.getJwtId() != null;
+                    } catch (MalformedClaimException e) {
+                        throw new RuntimeException(e);
+                    }
+                }),
+                Mockito.eq(aspspDetails)))
             .thenReturn(signedPayload);
 
         privateKeyJwtAuthentication.addClientAuthentication(getAccessTokenRequest, aspspDetails);

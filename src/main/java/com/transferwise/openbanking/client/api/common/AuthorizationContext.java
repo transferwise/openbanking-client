@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthorizationContext {
+
     /**
-     * The authorization code returned by the ASPSP, as a result of a successful authorisation, which will be exchanged
-     * for an access token.
+     * The authorization code returned by the ASPSP, as a result of a successful authorisation, which will be exchanged for an access token.
      */
     private String authorizationCode;
     /**

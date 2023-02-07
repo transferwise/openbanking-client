@@ -1,14 +1,13 @@
 package com.transferwise.openbanking.client.oauth.domain;
 
+import java.util.Collections;
+import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
-import java.util.Collections;
-import java.util.UUID;
-
 /**
- * An extension of the Spring {@link org.springframework.http.HttpHeaders} data structure, containing functionality
- * for setting common HTTP headers for FAPI requests.
+ * An extension of the Spring {@link org.springframework.http.HttpHeaders} data structure, containing functionality for setting common HTTP headers
+ * for FAPI requests.
  */
 public class FapiHeaders extends HttpHeaders {
 

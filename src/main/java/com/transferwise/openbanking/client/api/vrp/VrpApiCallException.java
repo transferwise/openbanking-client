@@ -5,8 +5,7 @@ import com.transferwise.openbanking.client.error.ApiCallException;
 import lombok.Getter;
 
 /**
- * Indicates that a HTTP call to an ASPSP failed, the request could not be successfully sent or the ASPSP did not
- * respond in the expected way.
+ * Indicates that a HTTP call to an ASPSP failed, the request could not be successfully sent or the ASPSP did not respond in the expected way.
  */
 @Getter
 public class VrpApiCallException extends ApiCallException {

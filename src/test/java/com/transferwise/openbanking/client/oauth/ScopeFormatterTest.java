@@ -1,14 +1,13 @@
 package com.transferwise.openbanking.client.oauth;
 
 import com.transferwise.openbanking.client.oauth.domain.Scope;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Stream;
 
 @SuppressWarnings({"PMD.UnusedPrivateMethod"}) // PMD considers argumentsForFormatScopesTest unused
 class ScopeFormatterTest {

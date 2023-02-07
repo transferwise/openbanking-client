@@ -1,13 +1,12 @@
 package com.transferwise.openbanking.client.oauth.domain;
 
 import com.transferwise.openbanking.client.oauth.ScopeFormatter;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import org.springframework.http.HttpHeaders;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import org.springframework.http.HttpHeaders;
 
 @EqualsAndHashCode
 @ToString

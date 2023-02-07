@@ -15,22 +15,23 @@ import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 /**
  * An interface specifying the operations for a client supporting version 3.1.9 domestic variable recurring payments.
  */
+@SuppressWarnings("checkstyle:abbreviationaswordinname")
 public interface VrpClient {
 
     /**
-     * Create a domestic VRP consent
+     * Create a domestic VRP consent.
      *
      * @param domesticVRPConsentRequest The details of the VRP consent to setup
      * @param aspspDetails              The details of the ASPSP to send the request to
      * @param softwareStatementDetails  The details of the software statement that the ASPSP registration uses
      * @return OBDomesticVRPConsentResponse
-     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
-     *                                                                   to the ASPSP or the HTTP call to the ASPSP
-     *                                                                   failed
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s) to the ASPSP or the HTTP call
+     *                                                                   to the ASPSP failed
      */
-    OBDomesticVRPConsentResponse createDomesticVrpConsent(OBDomesticVRPConsentRequest domesticVRPConsentRequest,
-                                                          AspspDetails aspspDetails,
-                                                          SoftwareStatementDetails softwareStatementDetails);
+    OBDomesticVRPConsentResponse createDomesticVrpConsent(
+        OBDomesticVRPConsentRequest domesticVRPConsentRequest,
+        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails);
 
     /**
      * Exchange authorization code for access_token.
@@ -51,13 +52,11 @@ public interface VrpClient {
     AccessTokenResponse exchangeRefreshToken(String refreshToken, AspspDetails aspspDetails);
 
     /**
-     * Get confirmation of whether not funds are available for a domestic VRP consent, which has been authorised
-     * but not yet consumed.
-     * <p>
-     * This involves exchanging the provided authorization code for an access token, if the authorization code has
-     * already been exchanged, further attempts to exchange it will be rejected by the ASPSP and a
-     * {@link com.transferwise.openbanking.client.api.vrp.VrpApiCallException} will be thrown. If the implementation caches
-     * or otherwise stores access tokens, then the issue is avoided.
+     * Get confirmation of whether not funds are available for a domestic VRP consent, which has been authorised but not yet consumed.
+     *
+     * <p>This involves exchanging the provided authorization code for an access token, if the authorization code has already been exchanged, further
+     * attempts to exchange it will be rejected by the ASPSP and a {@link com.transferwise.openbanking.client.api.vrp.VrpApiCallException} will be
+     * thrown. If the implementation caches or otherwise stores access tokens, then the issue is avoided.
      *
      * @param consentId                     The ID of the domestic VRP consent to get the details of
      * @param obVRPFundsConfirmationRequest The details of the VRP funds confirmation request
@@ -65,50 +64,47 @@ public interface VrpClient {
      * @param aspspDetails                  The details of the ASPSP to send the request to
      * @param softwareStatementDetails      The details of the software statement that the ASPSP registration uses
      * @return OBVRPFundsConfirmationResponse
-     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
-     *                                                                   to the ASPSP or the HTTP call to the ASPSP
-     *                                                                   failed
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s) to the ASPSP or the HTTP call
+     *                                                                   to the ASPSP failed
      */
-    OBVRPFundsConfirmationResponse getFundsConfirmation(String consentId,
-                                                        OBVRPFundsConfirmationRequest obVRPFundsConfirmationRequest,
-                                                        String accessToken,
-                                                        AspspDetails aspspDetails,
-                                                        SoftwareStatementDetails softwareStatementDetails);
+    OBVRPFundsConfirmationResponse getFundsConfirmation(
+        String consentId,
+        OBVRPFundsConfirmationRequest obVRPFundsConfirmationRequest,
+        String accessToken,
+        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails);
 
     /**
-     * Retrieve a domestic VRP consent
+     * Retrieve a domestic VRP consent.
      *
      * @param consentId    ConsentId
      * @param aspspDetails The details of the ASPSP to send the request to
      * @return OBDomesticVRPConsentResponse
-     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
-     *                                                                   to the ASPSP or the HTTP call to the ASPSP
-     *                                                                   failed
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s) to the ASPSP or the HTTP call
+     *                                                                   to the ASPSP failed
      */
     OBDomesticVRPConsentResponse getDomesticVrpConsent(String consentId, AspspDetails aspspDetails);
 
     /**
-     * Delete a domestic VRP
+     * Delete a domestic VRP.
      *
      * @param consentId    ConsentId
      * @param aspspDetails The details of the ASPSP to send the request to
-     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
-     *                                                                   to the ASPSP or the HTTP call to the ASPSP
-     *                                                                   failed
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s) to the ASPSP or the HTTP call
+     *                                                                   to the ASPSP failed
      */
     void deleteDomesticVrpConsent(String consentId, AspspDetails aspspDetails);
 
     /**
-     * Create a domestic VRP
+     * Create a domestic VRP.
      *
      * @param vrpRequest               The details of the domestic VRP to setup
      * @param accessToken              The access token
      * @param aspspDetails             The details of the ASPSP to send the request to
      * @param softwareStatementDetails The details of the software statement that the ASPSP registration uses
      * @return OBDomesticVRPResponse
-     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
-     *                                                                   to the ASPSP or the HTTP call to the ASPSP
-     *                                                                   failed
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s) to the ASPSP or the HTTP call
+     *                                                                   to the ASPSP failed
      */
     OBDomesticVRPResponse submitDomesticVrp(
         OBDomesticVRPRequest vrpRequest,
@@ -118,26 +114,24 @@ public interface VrpClient {
     );
 
     /**
-     * Retrieve a domestic VRP
+     * Retrieve a domestic VRP.
      *
      * @param domesticVrpId The ID of the domestic VRP to get the details of
      * @param aspspDetails  The details of the ASPSP to send the request to
      * @return OBDomesticVRPResponse
-     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
-     *                                                                   to the ASPSP or the HTTP call to the ASPSP
-     *                                                                   failed
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s) to the ASPSP or the HTTP call
+     *                                                                   to the ASPSP failed
      */
     OBDomesticVRPResponse getDomesticVrp(String domesticVrpId, AspspDetails aspspDetails);
 
     /**
-     * Retrieve a domestic VRP details
+     * Retrieve a domestic VRP details.
      *
      * @param domesticVrpId The ID of the domestic VRP to get the details of
      * @param aspspDetails  The details of the ASPSP to send the request to
      * @return OBDomesticVRPDetails
-     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s)
-     *                                                                   to the ASPSP or the HTTP call to the ASPSP
-     *                                                                   failed
+     * @throws com.transferwise.openbanking.client.error.ClientException if there was a problem building the request(s) to the ASPSP or the HTTP call
+     *                                                                   to the ASPSP failed
      */
     OBDomesticVRPDetails getDomesticVrpDetails(String domesticVrpId, AspspDetails aspspDetails);
 }

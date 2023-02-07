@@ -2,9 +2,8 @@ package com.transferwise.openbanking.client.oauth;
 
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
-import org.springframework.util.Base64Utils;
-
 import java.nio.charset.StandardCharsets;
+import org.springframework.util.Base64Utils;
 
 /**
  * Supports the 'client secret basic' OAuth 2.0 client authentication mechanism.

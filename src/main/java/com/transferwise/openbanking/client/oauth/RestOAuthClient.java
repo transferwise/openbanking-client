@@ -5,6 +5,10 @@ import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.oauth.domain.FapiHeaders;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
@@ -17,11 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
-
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Slf4j

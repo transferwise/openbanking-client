@@ -3,10 +3,9 @@ package com.transferwise.openbanking.client.oauth;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.jose4j.jwt.JwtClaims;
-
-import java.util.UUID;
 
 /**
  * Supports the 'JWT bearer token' OAuth 2.0 client authentication mechanism.

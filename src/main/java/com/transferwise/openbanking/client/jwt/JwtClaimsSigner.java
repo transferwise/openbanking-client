@@ -6,6 +6,8 @@ import com.transferwise.openbanking.client.configuration.SoftwareStatementDetail
 import com.transferwise.openbanking.client.error.ClientException;
 import com.transferwise.openbanking.client.json.JsonConverter;
 import com.transferwise.openbanking.client.security.KeySupplier;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import lombok.RequiredArgsConstructor;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
@@ -13,9 +15,6 @@ import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.NumericDate;
 import org.jose4j.jwx.HeaderParameterNames;
 import org.jose4j.lang.JoseException;
-
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
 
 /**
  * Provides functionality for signing JWT claims, for use in requests to ASPSPs.
@@ -43,9 +42,9 @@ public class JwtClaimsSigner {
 
     /**
      * Sign the given claims to produce a JWS string.
-     * <p>
-     * This method provides full flexibility in the claims that can be signed, the Jackson JSON {@link ObjectMapper}
-     * class will be used to convert the claims to a JSON string prior to signing.
+     *
+     * <p>This method provides full flexibility in the claims that can be signed, the Jackson JSON {@link ObjectMapper} class will be used to
+     * convert the claims to a JSON string prior to signing.
      *
      * @param jwtClaims    The JWT claims to sign
      * @param aspspDetails The details of the ASPSP which the JWS will be sent to
@@ -57,18 +56,20 @@ public class JwtClaimsSigner {
 
     /**
      * Sign the given claims to produce JWS string, with a detached payload (the claims).
-     * <p>
-     * This means the signature is created with the payload present, but the compact serialised JWS does not include
-     * the payload, to allow the payload to be checked for modification in transit using the signature.
+     *
+     * <p>This means the signature is created with the payload present, but the compact serialised JWS does not include the payload, to allow
+     * the payload to be checked for modification in transit using the signature.
      *
      * @param jwtClaims                The JWT claims to sign
      * @param aspspDetails             The details of the ASPSP which the JWS will be sent to
      * @param softwareStatementDetails The details of the software statement that the ASPSP registration uses
      * @return The signed claims as a detached compact and URL friendly string.
      */
-    public String createDetachedSignature(Object jwtClaims,
-                                          AspspDetails aspspDetails,
-                                          SoftwareStatementDetails softwareStatementDetails) {
+    public String createDetachedSignature(
+        Object jwtClaims,
+        AspspDetails aspspDetails,
+        SoftwareStatementDetails softwareStatementDetails
+    ) {
         JsonWebSignature jsonWebSignature = new JsonWebSignature();
         jsonWebSignature.setPayload(jsonConverter.writeValueAsString(jwtClaims));
         jsonWebSignature.setKey(keySupplier.getSigningKey(aspspDetails));
@@ -100,8 +101,8 @@ public class JwtClaimsSigner {
 
     private String generateIssClaim(AspspDetails aspspDetails, SoftwareStatementDetails softwareStatementDetails) {
         if (aspspDetails.detachedSignatureUsesDirectoryIssFormat()) {
-            return softwareStatementDetails.getOrganisationId() + "/" +
-                softwareStatementDetails.getSoftwareStatementId();
+            return softwareStatementDetails.getOrganisationId() + "/"
+                + softwareStatementDetails.getSoftwareStatementId();
         } else {
             Certificate signingCertificate = keySupplier.getSigningCertificate(aspspDetails);
             if (X509_CERTIFICATE_TYPE.equalsIgnoreCase(signingCertificate.getType())) {
