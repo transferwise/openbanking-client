@@ -25,9 +25,8 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
 
     private static final String BASE_ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/%s";
     private static final String EVENT_SUBSCRIPTION_RESOURCE = "event-subscriptions";
-
-    public static final String BASE_ENDPOINT_WITH_EVENT_SUBSCRIPTION_ID_PATH_FORMAT = BASE_ENDPOINT_PATH_FORMAT + "/{eventSubscriptionId}";
-
+    private static final String BASE_ENDPOINT_WITH_EVENT_SUBSCRIPTION_ID_PATH_FORMAT =
+        BASE_ENDPOINT_PATH_FORMAT + "/{eventSubscriptionId}";
     private final JwtClaimsSigner jwtClaimsSigner;
 
     public RestEventClient(
@@ -103,7 +102,9 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
             throw new EventApiCallException("Call to get event resource endpoint failed. Status code " + response.getStatusCode().name());
         }
-        OBEventSubscriptionsResponse1 eventSubscriptionResponse = jsonConverter.readValue(response.getBody(), OBEventSubscriptionsResponse1.class);
+        OBEventSubscriptionsResponse1 eventSubscriptionResponse = jsonConverter.readValue(
+            response.getBody(),
+            OBEventSubscriptionsResponse1.class);
         return eventSubscriptionResponse;
     }
 
@@ -168,7 +169,9 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         }
 
         if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
-            throw new EventApiCallException("Call to delete event subscription endpoint failed. Status code " + response.getStatusCode().name());
+            throw new EventApiCallException(
+                "Call to delete event subscription endpoint failed. Status code "
+                    + response.getStatusCode().name());
         }
     }
 
