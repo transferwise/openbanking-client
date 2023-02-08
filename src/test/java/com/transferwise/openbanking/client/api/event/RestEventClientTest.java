@@ -40,7 +40,6 @@ import org.springframework.web.client.RestTemplate;
 @SuppressWarnings({
     "PMD.AvoidDuplicateLiterals",
     "checkstyle:membername",
-    "checkstyle:variabledeclarationusagedistance",
     "checkstyle:methodname",
     "checkstyle:abbreviationaswordinname"})
 public class RestEventClientTest {
