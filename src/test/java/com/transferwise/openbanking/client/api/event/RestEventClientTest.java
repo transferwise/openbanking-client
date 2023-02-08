@@ -76,16 +76,12 @@ public class RestEventClientTest {
     void init() {
         RestTemplate restTemplate = new RestTemplate();
         mockAspspServer = MockRestServiceServer.createServer(restTemplate);
-
         restEventClient = new RestEventClient(
             restTemplate,
             jsonConverter,
             oAuthClient,
             jwtClaimsSigner);
-
-
         events = List.of("event1");
-
         Mockito
             .when(oAuthClient.getAccessToken(
                 Mockito.argThat(request ->
