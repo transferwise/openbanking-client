@@ -538,7 +538,7 @@ components:
         ErrorCode:
           description: "Low level textual error code, e.g., UK.OBIE.Field.Missing"
           type: "string"
-          x-namespaced-enum:
+          enum:
             - "UK.OBIE.Field.Expected"
             - "UK.OBIE.Field.Invalid"
             - "UK.OBIE.Field.InvalidDate"
