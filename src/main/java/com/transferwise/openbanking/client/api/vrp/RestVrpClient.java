@@ -14,6 +14,7 @@ import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBVRPFundsCo
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.json.JsonConverter;
+import com.transferwise.openbanking.client.json.JsonReadException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
@@ -175,10 +176,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
 
         log.debug("method=getDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
             response.getHeaders());
-        OBDomesticVRPConsentResponse domesticVRPConsentResponse = jsonConverter.readValue(response.getBody(),
-            OBDomesticVRPConsentResponse.class);
+        var domesticVRPConsentResponse = replaceRevokedStatusInDomesticVRPConsent(response.getBody());
         validateResponse(domesticVRPConsentResponse);
-
         return domesticVRPConsentResponse;
     }
 
@@ -330,6 +329,20 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         validateResponse(domesticVrpDetailsResponse);
 
         return domesticVrpDetailsResponse;
+    }
+
+    private OBDomesticVRPConsentResponse replaceRevokedStatusInDomesticVRPConsent(String jsonString) {
+        OBDomesticVRPConsentResponse domesticVRPConsentResponse;
+        try {
+            domesticVRPConsentResponse = jsonConverter.readValue(jsonString, OBDomesticVRPConsentResponse.class);
+        } catch (JsonReadException ex) {
+            if (jsonString == null || !jsonString.contains("\"Status\":\"Revoked\"")) {
+                throw ex;
+            }
+            jsonString = jsonString.replace("\"Status\":\"Revoked\"", "\"Status\":\"Rejected\"");
+            domesticVRPConsentResponse = jsonConverter.readValue(jsonString, OBDomesticVRPConsentResponse.class);
+        }
+        return domesticVRPConsentResponse;
     }
 
     private void validateResponse(OBDomesticVRPConsentResponse response) {
