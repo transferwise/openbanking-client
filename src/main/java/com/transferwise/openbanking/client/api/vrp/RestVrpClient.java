@@ -339,8 +339,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             if (jsonString == null || !jsonString.contains("\"Status\":\"Revoked\"")) {
                 throw ex;
             }
-            jsonString = jsonString.replace("\"Status\":\"Revoked\"", "\"Status\":\"Rejected\"");
-            domesticVRPConsentResponse = jsonConverter.readValue(jsonString, OBDomesticVRPConsentResponse.class);
+            var replacedJsonString = jsonString.replace("\"Status\":\"Revoked\"", "\"Status\":\"Rejected\"");
+            domesticVRPConsentResponse = jsonConverter.readValue(replacedJsonString, OBDomesticVRPConsentResponse.class);
         }
         return domesticVRPConsentResponse;
     }
