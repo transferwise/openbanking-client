@@ -176,7 +176,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
 
         log.debug("method=getDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
             response.getHeaders());
-        var domesticVRPConsentResponse = replaceRevokedStatusInDomesticVRPConsent(response.getBody());
+        OBDomesticVRPConsentResponse domesticVRPConsentResponse = jsonConverter.readValue(response.getBody(),
+            OBDomesticVRPConsentResponse.class);
         validateResponse(domesticVRPConsentResponse);
         return domesticVRPConsentResponse;
     }
@@ -330,21 +331,6 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
 
         return domesticVrpDetailsResponse;
     }
-
-    private OBDomesticVRPConsentResponse replaceRevokedStatusInDomesticVRPConsent(String jsonString) {
-        OBDomesticVRPConsentResponse domesticVRPConsentResponse;
-        try {
-            domesticVRPConsentResponse = jsonConverter.readValue(jsonString, OBDomesticVRPConsentResponse.class);
-        } catch (JsonReadException ex) {
-            if (jsonString == null || !jsonString.contains("\"Status\":\"Revoked\"")) {
-                throw ex;
-            }
-            var replacedJsonString = jsonString.replace("\"Status\":\"Revoked\"", "\"Status\":\"Rejected\"");
-            domesticVRPConsentResponse = jsonConverter.readValue(replacedJsonString, OBDomesticVRPConsentResponse.class);
-        }
-        return domesticVRPConsentResponse;
-    }
-
     private void validateResponse(OBDomesticVRPConsentResponse response) {
         if (response == null
             || response.getData() == null
