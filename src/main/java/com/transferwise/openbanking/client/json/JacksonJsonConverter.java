@@ -22,11 +22,11 @@ public class JacksonJsonConverter implements JsonConverter {
 
     public JacksonJsonConverter() {
         objectMapper = new ObjectMapper();
-        SimpleModule module = new SimpleModule();
-        module.addDeserializer(
+        SimpleModule vrpConsentResponseStatusEnumModule = new SimpleModule();
+        vrpConsentResponseStatusEnumModule.addDeserializer(
             StatusEnum.class,
             new VrpConsentResponseStatusEnumDeserializer());
-        objectMapper.registerModule(module);
+        objectMapper.registerModule(vrpConsentResponseStatusEnumModule);
         objectMapper.registerModule(new Jdk8Module());
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
