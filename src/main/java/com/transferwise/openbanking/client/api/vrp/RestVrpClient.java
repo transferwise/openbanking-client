@@ -14,7 +14,6 @@ import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBVRPFundsCo
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
 import com.transferwise.openbanking.client.json.JsonConverter;
-import com.transferwise.openbanking.client.json.JsonReadException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
