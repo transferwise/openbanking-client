@@ -177,8 +177,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             response.getHeaders());
         OBDomesticVRPConsentResponse domesticVRPConsentResponse = jsonConverter.readValue(response.getBody(),
             OBDomesticVRPConsentResponse.class);
-
         validateResponse(domesticVRPConsentResponse);
+
         return domesticVRPConsentResponse;
     }
 

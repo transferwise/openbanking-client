@@ -7,8 +7,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPConsentResponseData.StatusEnum;
 import java.io.IOException;
 
-public class VrpConsentResponseStatusEnumDeserializer
-    extends StdDeserializer<StatusEnum> {
+public class VrpConsentResponseStatusEnumDeserializer extends StdDeserializer<StatusEnum> {
 
     protected VrpConsentResponseStatusEnumDeserializer() {
         this(null);
@@ -19,8 +18,7 @@ public class VrpConsentResponseStatusEnumDeserializer
     }
 
     @Override
-    public StatusEnum deserialize(JsonParser jp, DeserializationContext ctxt)
-        throws IOException {
+    public StatusEnum deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
         JsonNode node = jp.getCodec().readTree(jp);
         String status = node.asText();
         if ("Revoked".equals(status)) {
@@ -28,5 +26,4 @@ public class VrpConsentResponseStatusEnumDeserializer
         }
         return StatusEnum.fromValue(status);
     }
-
 }

@@ -351,7 +351,7 @@ class RestVrpClientTest {
             consentId,
             aspspDetails);
 
-        Assertions.assertEquals(actualDomesticVrpConsentResponse, expectedDomesticVrpConsentResponse);
+        Assertions.assertEquals(expectedDomesticVrpConsentResponse, actualDomesticVrpConsentResponse);
 
         Mockito.verify(jwtClaimsSigner, Mockito.never())
             .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
