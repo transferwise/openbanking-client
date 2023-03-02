@@ -11,6 +11,7 @@ import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVR
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPConsentRequestData;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPConsentResponse;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPConsentResponseData;
+import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPConsentResponseData.StatusEnum;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPControlParameters;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPControlParametersPeriodicLimits;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBDomesticVRPDetails;
@@ -322,8 +323,11 @@ class RestVrpClientTest {
         mockAspspServer.verify();
     }
 
-    @Test
-    void getDomesticVrpConsent() {
+    @ParameterizedTest
+    @ArgumentsSource(GetDomesticVrpConsentResponseArgumentProvider.class)
+    void getDomesticVrpConsent(
+        String jsonResponse,
+        OBDomesticVRPConsentResponse expectedDomesticVrpConsentResponse) {
         String consentId = "vrp-consent-id";
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
@@ -335,9 +339,6 @@ class RestVrpClientTest {
                         && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
-
-        OBDomesticVRPConsentResponse mockDomesticVrpConsentResponse = aDomesticVrpConsentResponse();
-        String jsonResponse = jsonConverter.writeValueAsString(mockDomesticVrpConsentResponse);
         mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId))
             .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
@@ -346,11 +347,11 @@ class RestVrpClientTest {
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        OBDomesticVRPConsentResponse domesticVrpConsentResponse = restVrpClient.getDomesticVrpConsent(
+        OBDomesticVRPConsentResponse actualDomesticVrpConsentResponse = restVrpClient.getDomesticVrpConsent(
             consentId,
             aspspDetails);
 
-        Assertions.assertEquals(mockDomesticVrpConsentResponse, domesticVrpConsentResponse);
+        Assertions.assertEquals(expectedDomesticVrpConsentResponse, actualDomesticVrpConsentResponse);
 
         Mockito.verify(jwtClaimsSigner, Mockito.never())
             .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
@@ -834,6 +835,39 @@ class RestVrpClientTest {
             .paymentStatus(List.of(status));
         return new OBDomesticVRPDetails()
             .data(data);
+    }
+
+    private static class GetDomesticVrpConsentResponseArgumentProvider implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+            var mockDomesticVrpConsentAcceptResponse = getAcceptedResponse();
+            String jsonResponse = jsonConverter.writeValueAsString(
+                mockDomesticVrpConsentAcceptResponse);
+            return Stream.of(
+                Arguments.of(jsonResponse, mockDomesticVrpConsentAcceptResponse),
+                Arguments.of(
+                    jsonResponse.replace(
+                        "Authorised",
+                        "Revoked"),
+                    getRejectedResponse()));
+        }
+
+        private OBDomesticVRPConsentResponse getAcceptedResponse() {
+            OBDomesticVRPConsentResponseData acceptedData =
+                new OBDomesticVRPConsentResponseData()
+                    .consentId("vrp-consent-id")
+                    .status(StatusEnum.AUTHORISED);
+            return new OBDomesticVRPConsentResponse().data(acceptedData);
+        }
+
+        private OBDomesticVRPConsentResponse getRejectedResponse() {
+            OBDomesticVRPConsentResponseData rejectedData =
+                new OBDomesticVRPConsentResponseData()
+                    .consentId("vrp-consent-id")
+                    .status(StatusEnum.REJECTED);
+            return new OBDomesticVRPConsentResponse().data(rejectedData);
+        }
     }
 
     private static class PartialDomesticVrpConsentResponses implements ArgumentsProvider {

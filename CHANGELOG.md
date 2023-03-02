@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [12.0.1] - 2023-03-01
+## Changes
+- Fixed 'get consent failures when bank send Revoked status enum': OB VRP v3.1.9 specification doesn't specify Revoked state
+  for 'OBDomesticVRPConsentResponseData.StatusEnum' but some ASPSP still sends it. We fixed it by adding
+  VrpConsentResponseStatusEnumDeserializer which replace Revoked with Rejected while JSON deserializing.
+
 ## [12.0.0] - 2023-02-07
 ## Changes
 - Added OpenBanking Event API support: `subscribeToAnEvent`, `getAllEventResources`, `changeAnEventResource`, `deleteAnEventResource`
