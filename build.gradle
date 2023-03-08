@@ -105,6 +105,15 @@ swaggerSources {
             configuration = configurations.openApiGen
         }
     }
+    eventNotifications {
+        inputFile = file('specs/event-notifications-openapi.yaml')
+        code {
+            language = 'java'
+            components = ['models']
+            configFile = file('specs/event-notifications-openapi.json')
+            configuration = configurations.openApiGen
+        }
+    }
 }
 
 compileJava.dependsOn(generateSwaggerCode)
@@ -112,10 +121,15 @@ compileJava.dependsOn(generateSwaggerCode)
 sourceSets.main.java.srcDir "${swaggerSources.paymentInitiation.code.outputDir}/src/main/java"
 sourceSets.main.java.srcDir "${swaggerSources.vrp.code.outputDir}/src/main/java"
 sourceSets.main.java.srcDir "${swaggerSources.event.code.outputDir}/src/main/java"
+sourceSets.main.java.srcDir "${swaggerSources.eventNotifications.code.outputDir}/src/main/java"
 
 spotless {
     java {
-        target layout.files("${swaggerSources.paymentInitiation.code.outputDir}/src/main/java","${swaggerSources.vrp.code.outputDir}/src/main/java", "${swaggerSources.event.code.outputDir}/src/main/java")
+        target layout.files(
+            "${swaggerSources.paymentInitiation.code.outputDir}/src/main/java",
+            "${swaggerSources.vrp.code.outputDir}/src/main/java",
+            "${swaggerSources.event.code.outputDir}/src/main/java",
+            "${swaggerSources.eventNotifications.code.outputDir}/src/main/java")
         replaceRegex 'Remove swagger @ApiModel annotations', '@ApiModel.*$', ''
         replaceRegex 'Remove swagger @ApiModelProperty annotations', '@ApiModelProperty.*$', ''
         replaceRegex 'Remove swagger @Schema annotations', '@Schema.*$', ''
