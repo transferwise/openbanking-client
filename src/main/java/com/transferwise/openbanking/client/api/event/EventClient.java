@@ -24,7 +24,7 @@ public interface EventClient {
      * @return OBEventSubscriptionResponse1 The details of event subscribed.
      * @throws EventApiCallException    If subscribe API call to ASPSP fails
      */
-    OBEventSubscriptionResponse1 subscribeToAnEvent(
+    OBEventSubscriptionResponse1 createEventSubscription(
         OBEventSubscription1 eventSubscriptionRequest,
         AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails);
@@ -36,7 +36,7 @@ public interface EventClient {
      * @return OBEventSubscriptionsResponse1    List of subscribed events.
      * @throws EventApiCallException    If get all events API call to ASPSP fails
      */
-    public OBEventSubscriptionsResponse1 getAllEventResources(AspspDetails aspspDetails);
+    public OBEventSubscriptionsResponse1 getEventSubscriptions(AspspDetails aspspDetails);
 
     /**
      * Change a subscribed event.
@@ -46,7 +46,7 @@ public interface EventClient {
      * @return OBEventSubscriptionResponse1 The details of the changed event resource.
      * @throws EventApiCallException    If change Event API call to ASPSP fails
      */
-    public OBEventSubscriptionResponse1 changeAnEventResource(
+    public OBEventSubscriptionResponse1 changeEventSubscription(
         OBEventSubscriptionResponse1 changedResponse,
         AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails);
@@ -58,5 +58,5 @@ public interface EventClient {
      * @param aspspDetails  The details of the ASPSP.
      * @throws EventApiCallException    If delete event API call to ASPSP fails
      */
-    public void deleteAnEventResource(String eventSubscriptionId, AspspDetails aspspDetails);
+    public void deleteEventSubscription(String eventSubscriptionId, AspspDetails aspspDetails);
 }
