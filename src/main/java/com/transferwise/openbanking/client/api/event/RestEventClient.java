@@ -40,7 +40,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
     }
 
     @Override
-    public OBEventSubscriptionResponse1 subscribeToAnEvent(
+    public OBEventSubscriptionResponse1 createEventSubscription(
         OBEventSubscription1 eventSubscriptionRequest,
         AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails) {
@@ -75,7 +75,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
     }
 
     @Override
-    public OBEventSubscriptionsResponse1 getAllEventResources(AspspDetails aspspDetails)  {
+    public OBEventSubscriptionsResponse1 getEventSubscriptions(AspspDetails aspspDetails)  {
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(
             aspspDetails.getOrganisationId(),
             getClientCredentialsToken(aspspDetails)
@@ -109,7 +109,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
     }
 
     @Override
-    public OBEventSubscriptionResponse1 changeAnEventResource(
+    public OBEventSubscriptionResponse1 changeEventSubscription(
         OBEventSubscriptionResponse1 changedResponse,
         AspspDetails aspspDetails,
         SoftwareStatementDetails softwareStatementDetails) {
@@ -145,7 +145,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
 
 
     @Override
-    public void deleteAnEventResource(String eventSubscriptionId, AspspDetails aspspDetails) {
+    public void deleteEventSubscription(String eventSubscriptionId, AspspDetails aspspDetails) {
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(
             aspspDetails.getOrganisationId(),
             getClientCredentialsToken(aspspDetails)

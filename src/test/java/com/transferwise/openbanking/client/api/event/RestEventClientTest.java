@@ -122,7 +122,7 @@ public class RestEventClientTest {
             .andRespond(
                 MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        var response = restEventClient.subscribeToAnEvent(eventSubscriptionRequest, aspspDetails, softwareStatementDetails);
+        var response = restEventClient.createEventSubscription(eventSubscriptionRequest, aspspDetails, softwareStatementDetails);
         Assertions.assertEquals(mockEventSubscriptionResponse, response);
         mockAspspServer.verify();
     }
@@ -139,7 +139,7 @@ public class RestEventClientTest {
             .andExpect(MockRestRequestMatchers.header(FINANCIAL_ID, aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
-        var response = restEventClient.getAllEventResources(aspspDetails);
+        var response = restEventClient.getEventSubscriptions(aspspDetails);
         Assertions.assertEquals(mockEventSubscriptionsResponse, response);
         mockAspspServer.verify();
     }
@@ -169,7 +169,7 @@ public class RestEventClientTest {
             .andExpect(MockRestRequestMatchers.header(JWS_SIGNATURE, DETACHED_JWS_SIGNATURE))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
-        var response = restEventClient.changeAnEventResource(eventSubscriptionOldResponse, aspspDetails, softwareStatementDetails);
+        var response = restEventClient.changeEventSubscription(eventSubscriptionOldResponse, aspspDetails, softwareStatementDetails);
         Assertions.assertEquals(mockEventSubscriptionResponse, response);
         mockAspspServer.verify();
     }
@@ -186,7 +186,7 @@ public class RestEventClientTest {
             .andExpect(MockRestRequestMatchers.header(FINANCIAL_ID, aspspDetails.getOrganisationId()))
             .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
             .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
-        restEventClient.deleteAnEventResource(EVENT_SUBSCRIPTION_ID, aspspDetails);
+        restEventClient.deleteEventSubscription(EVENT_SUBSCRIPTION_ID, aspspDetails);
         mockAspspServer.verify();
     }
 
