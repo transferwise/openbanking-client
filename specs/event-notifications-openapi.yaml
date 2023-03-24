@@ -61,14 +61,16 @@ components:
                         fundsconfirmations: "Ability to confirm funds"
                         payments: "Generic payment scope"
     schemas:
-        OBEvent1:
+        OBEvent2:
             description: "Events."
             type: "object"
             properties:
-                urn:uk:org:openbanking:events:resource-update:
-                    $ref: "#/components/schemas/OBEventResourceUpdate1"
-            required:
-                - "urn:uk:org:openbanking:events:resource-update"
+                "urn:uk:org:openbanking:events:resource-update":
+                    $ref: "#/components/schemas/OBEventResourceUpdate2"
+                "urn:uk:org:openbanking:events:account-access-consent-linked-account-update":
+                    $ref: "#/components/schemas/OBEventAccountAccessConsentLinkedAccountUpdate1"
+                "urn:uk:org:openbanking:events:consent-authorization-revoked":
+                    $ref: "#/components/schemas/OBEventConsentAuthorizationRevoked1"
             additionalProperties: false
         OBEventLink1:
             description: "Resource links to other available versions of the resource."
@@ -87,7 +89,7 @@ components:
                 - "link"
             additionalProperties: false
             minProperties: 1
-        OBEventNotification1:
+        OBEventNotification2:
             description: "The resource-update event."
             type: "object"
             properties:
@@ -124,7 +126,7 @@ components:
                     format: "int32"
                     minimum: 0
                 events:
-                    $ref: "#/components/schemas/OBEvent1"
+                    $ref: "#/components/schemas/OBEvent2"
             required:
                 - "iss"
                 - "iat"
@@ -135,14 +137,44 @@ components:
                 - "toe"
                 - "events"
             additionalProperties: false
-        OBEventResourceUpdate1:
+        OBEventResourceUpdate2:
             description: "Resource-Update Event."
             type: "object"
             properties:
                 subject:
                     $ref: "#/components/schemas/OBEventSubject1"
+            additionalProperties: false
+        OBEventConsentAuthorizationRevoked1:
+            description: "An event that indicates a consent resource has had its authorisation revoked"
+            type: "object"
+            properties:
+                reason:
+                    $ref: "#/components/schemas/OBExternalEventConsentAuthorizationRevokedReason1Code"
+                subject:
+                    $ref: "#/components/schemas/OBEventSubject1"
+            additionalProperties: false
+        OBExternalEventConsentAuthorizationRevokedReason1Code:
+            description: "Reason for the Account Access Consent Linked Account Update event"
+            type: "string"
+            minLength: 1
+            maxLength: 128
+            additionalProperties: false
+        OBEventAccountAccessConsentLinkedAccountUpdate1:
+            description: "An event that indicates an account linked to a consent has move in/out of scope of the consent"
+            type: "object"
+            properties:
+                reason:
+                    $ref: "#/components/schemas/OBExternalEventAccountAccessConsentLinkedAccountUpdateReason1Code"
+                subject:
+                    $ref: "#/components/schemas/OBEventSubject1"
             required:
                 - "subject"
+            additionalProperties: false
+        OBExternalEventAccountAccessConsentLinkedAccountUpdateReason1Code:
+            description: "Reason for the Account Access Consent Linked Account Update event"
+            type: "string"
+            minLength: 1
+            maxLength: 128
             additionalProperties: false
         OBEventSubject1:
             description: "The resource-update event."
