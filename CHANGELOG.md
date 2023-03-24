@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [14.0.1] - 2023-03-14
+## Changes
+- Updating event-notifications-openapi.yaml spec: [openbanking spec](https://github.com/OpenBankingUK/read-write-api-specs/blob/master/dist/openapi/event-notifications-openapi.yaml)  doesn't contain OBEventConsentAuthorizationRevoked1 and OBEventAccountAccessConsentLinkedAccountUpdate1 schemas.
+- Created our own custom schema for OBEventConsentAuthorizationRevoked1 and OBEventAccountAccessConsentLinkedAccountUpdate1.
+- OBExternalEventConsentAuthorizationRevokedReason1Code and OBExternalEventAccountAccessConsentLinkedAccountUpdateReason1Code is not defined by OBIE till now, I have put string type until they define.
+
 ## [14.0.0] - 2023-03-14
 ## Changes
 - Renaming Event client APIs to reflect the event subscription resource. `subscribeToAnEvent` changed to `createEventSubscription`, 
