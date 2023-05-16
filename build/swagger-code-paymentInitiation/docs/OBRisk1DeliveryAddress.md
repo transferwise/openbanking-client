@@ -9,4 +9,4 @@ Name | Type | Description | Notes
 **postCode** | **String** |  |  [optional]
 **townName** | **String** |  | 
 **countrySubDivision** | **String** |  |  [optional]
-**country** | **String** | Nation with its own government, occupying a particular territory. | 
+**country** | **String** |  | 

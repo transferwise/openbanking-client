@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 **exchangeRateInformation** | [**OBWriteInternationalConsentResponse6DataExchangeRateInformation**](OBWriteInternationalConsentResponse6DataExchangeRateInformation.md) |  |  [optional]
 **initiation** | [**OBWriteInternationalScheduled3DataInitiation**](OBWriteInternationalScheduled3DataInitiation.md) |  | 
 **multiAuthorisation** | [**OBWriteDomesticResponse5DataMultiAuthorisation**](OBWriteDomesticResponse5DataMultiAuthorisation.md) |  |  [optional]
-**debtor** | [**OBDebtorIdentification1**](OBDebtorIdentification1.md) |  |  [optional]
+**debtor** | [**OBCashAccountDebtor4**](OBCashAccountDebtor4.md) |  |  [optional]
 
 <a name="StatusEnum"></a>
 ## Enum: StatusEnum

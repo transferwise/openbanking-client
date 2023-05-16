@@ -14,8 +14,8 @@ Name | Type | Description | Notes
 **charges** | [**List&lt;OBWriteDomesticConsentResponse5DataCharges&gt;**](OBWriteDomesticConsentResponse5DataCharges.md) |  |  [optional]
 **initiation** | [**OBWriteDomestic2DataInitiation**](OBWriteDomestic2DataInitiation.md) |  | 
 **authorisation** | [**OBWriteDomesticConsent4DataAuthorisation**](OBWriteDomesticConsent4DataAuthorisation.md) |  |  [optional]
-**scASupportData** | [**OBWriteDomesticConsent4DataSCASupportData**](OBWriteDomesticConsent4DataSCASupportData.md) |  |  [optional]
-**debtor** | [**OBDebtorIdentification1**](OBDebtorIdentification1.md) |  |  [optional]
+**scASupportData** | [**OBSCASupportData1**](OBSCASupportData1.md) |  |  [optional]
+**debtor** | [**OBCashAccountDebtor4**](OBCashAccountDebtor4.md) |  |  [optional]
 
 <a name="StatusEnum"></a>
 ## Enum: StatusEnum

@@ -11,10 +11,10 @@ Name | Type | Description | Notes
 **readRefundAccount** | [**ReadRefundAccountEnum**](#ReadRefundAccountEnum) | Specifies to share the refund account details with PISP |  [optional]
 **cutOffDateTime** | [**OffsetDateTime**](OffsetDateTime.md) | Specified cut-off date and time for the payment consent.All dates in the JSON payloads are represented in ISO 8601 date-time format.  All date-time fields in responses must include the timezone. An example is below: 2017-04-05T10:43:07+00:00 |  [optional]
 **charges** | [**List&lt;OBWriteDomesticConsentResponse5DataCharges&gt;**](OBWriteDomesticConsentResponse5DataCharges.md) |  |  [optional]
-**initiation** | [**OBWriteInternationalStandingOrder4DataInitiation**](OBWriteInternationalStandingOrder4DataInitiation.md) |  | 
+**initiation** | [**OBWriteInternationalStandingOrderConsentResponse7DataInitiation**](OBWriteInternationalStandingOrderConsentResponse7DataInitiation.md) |  | 
 **authorisation** | [**OBWriteDomesticConsent4DataAuthorisation**](OBWriteDomesticConsent4DataAuthorisation.md) |  |  [optional]
-**scASupportData** | [**OBWriteDomesticConsent4DataSCASupportData**](OBWriteDomesticConsent4DataSCASupportData.md) |  |  [optional]
-**debtor** | [**OBDebtorIdentification1**](OBDebtorIdentification1.md) |  |  [optional]
+**scASupportData** | [**OBSCASupportData1**](OBSCASupportData1.md) |  |  [optional]
+**debtor** | [**OBCashAccountDebtor4**](OBCashAccountDebtor4.md) |  |  [optional]
 
 <a name="StatusEnum"></a>
 ## Enum: StatusEnum

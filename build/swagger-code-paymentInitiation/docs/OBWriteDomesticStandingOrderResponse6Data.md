@@ -10,9 +10,9 @@ Name | Type | Description | Notes
 **statusUpdateDateTime** | [**OffsetDateTime**](OffsetDateTime.md) | Date and time at which the resource status was updated.All dates in the JSON payloads are represented in ISO 8601 date-time format.  All date-time fields in responses must include the timezone. An example is below: 2017-04-05T10:43:07+00:00 | 
 **refund** | [**OBWriteDomesticResponse5DataRefund**](OBWriteDomesticResponse5DataRefund.md) |  |  [optional]
 **charges** | [**List&lt;OBWriteDomesticConsentResponse5DataCharges&gt;**](OBWriteDomesticConsentResponse5DataCharges.md) |  |  [optional]
-**initiation** | [**OBWriteDomesticStandingOrder3DataInitiation**](OBWriteDomesticStandingOrder3DataInitiation.md) |  | 
+**initiation** | [**OBWriteDomesticStandingOrderConsentResponse6DataInitiation**](OBWriteDomesticStandingOrderConsentResponse6DataInitiation.md) |  | 
 **multiAuthorisation** | [**OBWriteDomesticResponse5DataMultiAuthorisation**](OBWriteDomesticResponse5DataMultiAuthorisation.md) |  |  [optional]
-**debtor** | [**OBDebtorIdentification1**](OBDebtorIdentification1.md) |  |  [optional]
+**debtor** | [**OBCashAccountDebtor4**](OBCashAccountDebtor4.md) |  |  [optional]
 
 <a name="StatusEnum"></a>
 ## Enum: StatusEnum

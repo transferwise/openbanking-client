@@ -6,7 +6,7 @@ Name | Type | Description | Notes
 **readRefundAccount** | [**ReadRefundAccountEnum**](#ReadRefundAccountEnum) | Specifies to share the refund account details with PISP |  [optional]
 **initiation** | [**OBWriteInternational3DataInitiation**](OBWriteInternational3DataInitiation.md) |  | 
 **authorisation** | [**OBWriteDomesticConsent4DataAuthorisation**](OBWriteDomesticConsent4DataAuthorisation.md) |  |  [optional]
-**scASupportData** | [**OBWriteDomesticConsent4DataSCASupportData**](OBWriteDomesticConsent4DataSCASupportData.md) |  |  [optional]
+**scASupportData** | [**OBSCASupportData1**](OBSCASupportData1.md) |  |  [optional]
 
 <a name="ReadRefundAccountEnum"></a>
 ## Enum: ReadRefundAccountEnum
