@@ -21,7 +21,7 @@ import java.io.Serializable;
  */
 
 
-public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable{
+public class OBWriteDomesticStandingOrderConsentResponse6DataInitiation implements Serializable{
   private static final long serialVersionUID = 1L;
   @JsonProperty("Frequency")
   private String frequency = null;
@@ -51,7 +51,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
   private OBWriteDomesticStandingOrder3DataInitiationFinalPaymentAmount finalPaymentAmount = null;
 
   @JsonProperty("DebtorAccount")
-  private OBWriteDomesticStandingOrder3DataInitiationDebtorAccount debtorAccount = null;
+  private OBWriteDomestic2DataInitiationDebtorAccount debtorAccount = null;
 
   @JsonProperty("CreditorAccount")
   private OBWriteDomesticStandingOrder3DataInitiationCreditorAccount creditorAccount = null;
@@ -59,7 +59,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
   @JsonProperty("SupplementaryData")
   private OBSupplementaryData1 supplementaryData = null;
 
-  public OBWriteDomesticStandingOrder3DataInitiation frequency(String frequency) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation frequency(String frequency) {
     this.frequency = frequency;
     return this;
   }
@@ -77,7 +77,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
     this.frequency = frequency;
   }
 
-  public OBWriteDomesticStandingOrder3DataInitiation reference(String reference) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation reference(String reference) {
     this.reference = reference;
     return this;
   }
@@ -95,7 +95,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
     this.reference = reference;
   }
 
-  public OBWriteDomesticStandingOrder3DataInitiation numberOfPayments(String numberOfPayments) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation numberOfPayments(String numberOfPayments) {
     this.numberOfPayments = numberOfPayments;
     return this;
   }
@@ -113,7 +113,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
     this.numberOfPayments = numberOfPayments;
   }
 
-  public OBWriteDomesticStandingOrder3DataInitiation firstPaymentDateTime(OffsetDateTime firstPaymentDateTime) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation firstPaymentDateTime(OffsetDateTime firstPaymentDateTime) {
     this.firstPaymentDateTime = firstPaymentDateTime;
     return this;
   }
@@ -131,7 +131,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
     this.firstPaymentDateTime = firstPaymentDateTime;
   }
 
-  public OBWriteDomesticStandingOrder3DataInitiation recurringPaymentDateTime(OffsetDateTime recurringPaymentDateTime) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation recurringPaymentDateTime(OffsetDateTime recurringPaymentDateTime) {
     this.recurringPaymentDateTime = recurringPaymentDateTime;
     return this;
   }
@@ -149,7 +149,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
     this.recurringPaymentDateTime = recurringPaymentDateTime;
   }
 
-  public OBWriteDomesticStandingOrder3DataInitiation finalPaymentDateTime(OffsetDateTime finalPaymentDateTime) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation finalPaymentDateTime(OffsetDateTime finalPaymentDateTime) {
     this.finalPaymentDateTime = finalPaymentDateTime;
     return this;
   }
@@ -167,7 +167,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
     this.finalPaymentDateTime = finalPaymentDateTime;
   }
 
-  public OBWriteDomesticStandingOrder3DataInitiation firstPaymentAmount(OBWriteDomesticStandingOrder3DataInitiationFirstPaymentAmount firstPaymentAmount) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation firstPaymentAmount(OBWriteDomesticStandingOrder3DataInitiationFirstPaymentAmount firstPaymentAmount) {
     this.firstPaymentAmount = firstPaymentAmount;
     return this;
   }
@@ -185,7 +185,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
     this.firstPaymentAmount = firstPaymentAmount;
   }
 
-  public OBWriteDomesticStandingOrder3DataInitiation recurringPaymentAmount(OBWriteDomesticStandingOrder3DataInitiationRecurringPaymentAmount recurringPaymentAmount) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation recurringPaymentAmount(OBWriteDomesticStandingOrder3DataInitiationRecurringPaymentAmount recurringPaymentAmount) {
     this.recurringPaymentAmount = recurringPaymentAmount;
     return this;
   }
@@ -203,7 +203,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
     this.recurringPaymentAmount = recurringPaymentAmount;
   }
 
-  public OBWriteDomesticStandingOrder3DataInitiation finalPaymentAmount(OBWriteDomesticStandingOrder3DataInitiationFinalPaymentAmount finalPaymentAmount) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation finalPaymentAmount(OBWriteDomesticStandingOrder3DataInitiationFinalPaymentAmount finalPaymentAmount) {
     this.finalPaymentAmount = finalPaymentAmount;
     return this;
   }
@@ -221,7 +221,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
     this.finalPaymentAmount = finalPaymentAmount;
   }
 
-  public OBWriteDomesticStandingOrder3DataInitiation debtorAccount(OBWriteDomesticStandingOrder3DataInitiationDebtorAccount debtorAccount) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation debtorAccount(OBWriteDomestic2DataInitiationDebtorAccount debtorAccount) {
     this.debtorAccount = debtorAccount;
     return this;
   }
@@ -231,15 +231,15 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
    * @return debtorAccount
   **/
   
-  public OBWriteDomesticStandingOrder3DataInitiationDebtorAccount getDebtorAccount() {
+  public OBWriteDomestic2DataInitiationDebtorAccount getDebtorAccount() {
     return debtorAccount;
   }
 
-  public void setDebtorAccount(OBWriteDomesticStandingOrder3DataInitiationDebtorAccount debtorAccount) {
+  public void setDebtorAccount(OBWriteDomestic2DataInitiationDebtorAccount debtorAccount) {
     this.debtorAccount = debtorAccount;
   }
 
-  public OBWriteDomesticStandingOrder3DataInitiation creditorAccount(OBWriteDomesticStandingOrder3DataInitiationCreditorAccount creditorAccount) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation creditorAccount(OBWriteDomesticStandingOrder3DataInitiationCreditorAccount creditorAccount) {
     this.creditorAccount = creditorAccount;
     return this;
   }
@@ -257,7 +257,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
     this.creditorAccount = creditorAccount;
   }
 
-  public OBWriteDomesticStandingOrder3DataInitiation supplementaryData(OBSupplementaryData1 supplementaryData) {
+  public OBWriteDomesticStandingOrderConsentResponse6DataInitiation supplementaryData(OBSupplementaryData1 supplementaryData) {
     this.supplementaryData = supplementaryData;
     return this;
   }
@@ -284,19 +284,19 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    OBWriteDomesticStandingOrder3DataInitiation obWriteDomesticStandingOrder3DataInitiation = (OBWriteDomesticStandingOrder3DataInitiation) o;
-    return Objects.equals(this.frequency, obWriteDomesticStandingOrder3DataInitiation.frequency) &&
-        Objects.equals(this.reference, obWriteDomesticStandingOrder3DataInitiation.reference) &&
-        Objects.equals(this.numberOfPayments, obWriteDomesticStandingOrder3DataInitiation.numberOfPayments) &&
-        Objects.equals(this.firstPaymentDateTime, obWriteDomesticStandingOrder3DataInitiation.firstPaymentDateTime) &&
-        Objects.equals(this.recurringPaymentDateTime, obWriteDomesticStandingOrder3DataInitiation.recurringPaymentDateTime) &&
-        Objects.equals(this.finalPaymentDateTime, obWriteDomesticStandingOrder3DataInitiation.finalPaymentDateTime) &&
-        Objects.equals(this.firstPaymentAmount, obWriteDomesticStandingOrder3DataInitiation.firstPaymentAmount) &&
-        Objects.equals(this.recurringPaymentAmount, obWriteDomesticStandingOrder3DataInitiation.recurringPaymentAmount) &&
-        Objects.equals(this.finalPaymentAmount, obWriteDomesticStandingOrder3DataInitiation.finalPaymentAmount) &&
-        Objects.equals(this.debtorAccount, obWriteDomesticStandingOrder3DataInitiation.debtorAccount) &&
-        Objects.equals(this.creditorAccount, obWriteDomesticStandingOrder3DataInitiation.creditorAccount) &&
-        Objects.equals(this.supplementaryData, obWriteDomesticStandingOrder3DataInitiation.supplementaryData);
+    OBWriteDomesticStandingOrderConsentResponse6DataInitiation obWriteDomesticStandingOrderConsentResponse6DataInitiation = (OBWriteDomesticStandingOrderConsentResponse6DataInitiation) o;
+    return Objects.equals(this.frequency, obWriteDomesticStandingOrderConsentResponse6DataInitiation.frequency) &&
+        Objects.equals(this.reference, obWriteDomesticStandingOrderConsentResponse6DataInitiation.reference) &&
+        Objects.equals(this.numberOfPayments, obWriteDomesticStandingOrderConsentResponse6DataInitiation.numberOfPayments) &&
+        Objects.equals(this.firstPaymentDateTime, obWriteDomesticStandingOrderConsentResponse6DataInitiation.firstPaymentDateTime) &&
+        Objects.equals(this.recurringPaymentDateTime, obWriteDomesticStandingOrderConsentResponse6DataInitiation.recurringPaymentDateTime) &&
+        Objects.equals(this.finalPaymentDateTime, obWriteDomesticStandingOrderConsentResponse6DataInitiation.finalPaymentDateTime) &&
+        Objects.equals(this.firstPaymentAmount, obWriteDomesticStandingOrderConsentResponse6DataInitiation.firstPaymentAmount) &&
+        Objects.equals(this.recurringPaymentAmount, obWriteDomesticStandingOrderConsentResponse6DataInitiation.recurringPaymentAmount) &&
+        Objects.equals(this.finalPaymentAmount, obWriteDomesticStandingOrderConsentResponse6DataInitiation.finalPaymentAmount) &&
+        Objects.equals(this.debtorAccount, obWriteDomesticStandingOrderConsentResponse6DataInitiation.debtorAccount) &&
+        Objects.equals(this.creditorAccount, obWriteDomesticStandingOrderConsentResponse6DataInitiation.creditorAccount) &&
+        Objects.equals(this.supplementaryData, obWriteDomesticStandingOrderConsentResponse6DataInitiation.supplementaryData);
   }
 
   @Override
@@ -308,7 +308,7 @@ public class OBWriteDomesticStandingOrder3DataInitiation implements Serializable
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class OBWriteDomesticStandingOrder3DataInitiation {\n");
+    sb.append("class OBWriteDomesticStandingOrderConsentResponse6DataInitiation {\n");
     
     sb.append("    frequency: ").append(toIndentedString(frequency)).append("\n");
     sb.append("    reference: ").append(toIndentedString(reference)).append("\n");

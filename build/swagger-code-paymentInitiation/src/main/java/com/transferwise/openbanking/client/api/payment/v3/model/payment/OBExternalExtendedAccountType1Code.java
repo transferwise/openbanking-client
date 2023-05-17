@@ -16,21 +16,28 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Identifies the nature of the postal address.
+ * Specifies the extended type of account.
  */
-public enum OBAddressTypeCode {
+public enum OBExternalExtendedAccountType1Code {
   BUSINESS("Business"),
-  CORRESPONDENCE("Correspondence"),
-  DELIVERYTO("DeliveryTo"),
-  MAILTO("MailTo"),
-  POBOX("POBox"),
-  POSTAL("Postal"),
-  RESIDENTIAL("Residential"),
-  STATEMENT("Statement");
+  BUSINESSSAVINGSACCOUNT("BusinessSavingsAccount"),
+  CHARITY("Charity"),
+  COLLECTION("Collection"),
+  CORPORATE("Corporate"),
+  EWALLET("Ewallet"),
+  GOVERNMENT("Government"),
+  INVESTMENT("Investment"),
+  ISA("ISA"),
+  JOINTPERSONAL("JointPersonal"),
+  PENSION("Pension"),
+  PERSONAL("Personal"),
+  PERSONALSAVINGSACCOUNT("PersonalSavingsAccount"),
+  PREMIER("Premier"),
+  WEALTH("Wealth");
 
   private String value;
 
-  OBAddressTypeCode(String value) {
+  OBExternalExtendedAccountType1Code(String value) {
     this.value = value;
   }
 
@@ -45,8 +52,8 @@ public enum OBAddressTypeCode {
   }
 
   @JsonCreator
-  public static OBAddressTypeCode fromValue(String input) {
-    for (OBAddressTypeCode b : OBAddressTypeCode.values()) {
+  public static OBExternalExtendedAccountType1Code fromValue(String input) {
+    for (OBExternalExtendedAccountType1Code b : OBExternalExtendedAccountType1Code.values()) {
       if (b.value.equals(input)) {
         return b;
       }

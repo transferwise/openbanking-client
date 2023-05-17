@@ -21,7 +21,7 @@ import java.io.Serializable;
  */
 
 
-public class OBWriteInternationalStandingOrder4DataInitiation implements Serializable{
+public class OBWriteInternationalStandingOrderConsentResponse7DataInitiation implements Serializable{
   private static final long serialVersionUID = 1L;
   @JsonProperty("Frequency")
   private String frequency = null;
@@ -57,7 +57,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
   private OBWriteDomestic2DataInitiationInstructedAmount instructedAmount = null;
 
   @JsonProperty("DebtorAccount")
-  private OBWriteDomesticStandingOrder3DataInitiationDebtorAccount debtorAccount = null;
+  private OBWriteDomestic2DataInitiationDebtorAccount debtorAccount = null;
 
   @JsonProperty("Creditor")
   private OBWriteInternationalScheduledConsentResponse6DataInitiationCreditor creditor = null;
@@ -71,7 +71,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
   @JsonProperty("SupplementaryData")
   private OBSupplementaryData1 supplementaryData = null;
 
-  public OBWriteInternationalStandingOrder4DataInitiation frequency(String frequency) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation frequency(String frequency) {
     this.frequency = frequency;
     return this;
   }
@@ -89,7 +89,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.frequency = frequency;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation reference(String reference) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation reference(String reference) {
     this.reference = reference;
     return this;
   }
@@ -107,7 +107,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.reference = reference;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation numberOfPayments(String numberOfPayments) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation numberOfPayments(String numberOfPayments) {
     this.numberOfPayments = numberOfPayments;
     return this;
   }
@@ -125,7 +125,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.numberOfPayments = numberOfPayments;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation firstPaymentDateTime(OffsetDateTime firstPaymentDateTime) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation firstPaymentDateTime(OffsetDateTime firstPaymentDateTime) {
     this.firstPaymentDateTime = firstPaymentDateTime;
     return this;
   }
@@ -143,7 +143,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.firstPaymentDateTime = firstPaymentDateTime;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation finalPaymentDateTime(OffsetDateTime finalPaymentDateTime) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation finalPaymentDateTime(OffsetDateTime finalPaymentDateTime) {
     this.finalPaymentDateTime = finalPaymentDateTime;
     return this;
   }
@@ -161,7 +161,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.finalPaymentDateTime = finalPaymentDateTime;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation purpose(String purpose) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation purpose(String purpose) {
     this.purpose = purpose;
     return this;
   }
@@ -179,7 +179,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.purpose = purpose;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation extendedPurpose(String extendedPurpose) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation extendedPurpose(String extendedPurpose) {
     this.extendedPurpose = extendedPurpose;
     return this;
   }
@@ -197,7 +197,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.extendedPurpose = extendedPurpose;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation chargeBearer(OBChargeBearerType1Code chargeBearer) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation chargeBearer(OBChargeBearerType1Code chargeBearer) {
     this.chargeBearer = chargeBearer;
     return this;
   }
@@ -215,7 +215,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.chargeBearer = chargeBearer;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation currencyOfTransfer(String currencyOfTransfer) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation currencyOfTransfer(String currencyOfTransfer) {
     this.currencyOfTransfer = currencyOfTransfer;
     return this;
   }
@@ -233,7 +233,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.currencyOfTransfer = currencyOfTransfer;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation destinationCountryCode(String destinationCountryCode) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation destinationCountryCode(String destinationCountryCode) {
     this.destinationCountryCode = destinationCountryCode;
     return this;
   }
@@ -251,7 +251,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.destinationCountryCode = destinationCountryCode;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation instructedAmount(OBWriteDomestic2DataInitiationInstructedAmount instructedAmount) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation instructedAmount(OBWriteDomestic2DataInitiationInstructedAmount instructedAmount) {
     this.instructedAmount = instructedAmount;
     return this;
   }
@@ -269,7 +269,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.instructedAmount = instructedAmount;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation debtorAccount(OBWriteDomesticStandingOrder3DataInitiationDebtorAccount debtorAccount) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation debtorAccount(OBWriteDomestic2DataInitiationDebtorAccount debtorAccount) {
     this.debtorAccount = debtorAccount;
     return this;
   }
@@ -279,15 +279,15 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
    * @return debtorAccount
   **/
   
-  public OBWriteDomesticStandingOrder3DataInitiationDebtorAccount getDebtorAccount() {
+  public OBWriteDomestic2DataInitiationDebtorAccount getDebtorAccount() {
     return debtorAccount;
   }
 
-  public void setDebtorAccount(OBWriteDomesticStandingOrder3DataInitiationDebtorAccount debtorAccount) {
+  public void setDebtorAccount(OBWriteDomestic2DataInitiationDebtorAccount debtorAccount) {
     this.debtorAccount = debtorAccount;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation creditor(OBWriteInternationalScheduledConsentResponse6DataInitiationCreditor creditor) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation creditor(OBWriteInternationalScheduledConsentResponse6DataInitiationCreditor creditor) {
     this.creditor = creditor;
     return this;
   }
@@ -305,7 +305,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.creditor = creditor;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation creditorAgent(OBWriteInternationalStandingOrder4DataInitiationCreditorAgent creditorAgent) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation creditorAgent(OBWriteInternationalStandingOrder4DataInitiationCreditorAgent creditorAgent) {
     this.creditorAgent = creditorAgent;
     return this;
   }
@@ -323,7 +323,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.creditorAgent = creditorAgent;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation creditorAccount(OBWriteInternationalStandingOrder4DataInitiationCreditorAccount creditorAccount) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation creditorAccount(OBWriteInternationalStandingOrder4DataInitiationCreditorAccount creditorAccount) {
     this.creditorAccount = creditorAccount;
     return this;
   }
@@ -341,7 +341,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     this.creditorAccount = creditorAccount;
   }
 
-  public OBWriteInternationalStandingOrder4DataInitiation supplementaryData(OBSupplementaryData1 supplementaryData) {
+  public OBWriteInternationalStandingOrderConsentResponse7DataInitiation supplementaryData(OBSupplementaryData1 supplementaryData) {
     this.supplementaryData = supplementaryData;
     return this;
   }
@@ -368,23 +368,23 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    OBWriteInternationalStandingOrder4DataInitiation obWriteInternationalStandingOrder4DataInitiation = (OBWriteInternationalStandingOrder4DataInitiation) o;
-    return Objects.equals(this.frequency, obWriteInternationalStandingOrder4DataInitiation.frequency) &&
-        Objects.equals(this.reference, obWriteInternationalStandingOrder4DataInitiation.reference) &&
-        Objects.equals(this.numberOfPayments, obWriteInternationalStandingOrder4DataInitiation.numberOfPayments) &&
-        Objects.equals(this.firstPaymentDateTime, obWriteInternationalStandingOrder4DataInitiation.firstPaymentDateTime) &&
-        Objects.equals(this.finalPaymentDateTime, obWriteInternationalStandingOrder4DataInitiation.finalPaymentDateTime) &&
-        Objects.equals(this.purpose, obWriteInternationalStandingOrder4DataInitiation.purpose) &&
-        Objects.equals(this.extendedPurpose, obWriteInternationalStandingOrder4DataInitiation.extendedPurpose) &&
-        Objects.equals(this.chargeBearer, obWriteInternationalStandingOrder4DataInitiation.chargeBearer) &&
-        Objects.equals(this.currencyOfTransfer, obWriteInternationalStandingOrder4DataInitiation.currencyOfTransfer) &&
-        Objects.equals(this.destinationCountryCode, obWriteInternationalStandingOrder4DataInitiation.destinationCountryCode) &&
-        Objects.equals(this.instructedAmount, obWriteInternationalStandingOrder4DataInitiation.instructedAmount) &&
-        Objects.equals(this.debtorAccount, obWriteInternationalStandingOrder4DataInitiation.debtorAccount) &&
-        Objects.equals(this.creditor, obWriteInternationalStandingOrder4DataInitiation.creditor) &&
-        Objects.equals(this.creditorAgent, obWriteInternationalStandingOrder4DataInitiation.creditorAgent) &&
-        Objects.equals(this.creditorAccount, obWriteInternationalStandingOrder4DataInitiation.creditorAccount) &&
-        Objects.equals(this.supplementaryData, obWriteInternationalStandingOrder4DataInitiation.supplementaryData);
+    OBWriteInternationalStandingOrderConsentResponse7DataInitiation obWriteInternationalStandingOrderConsentResponse7DataInitiation = (OBWriteInternationalStandingOrderConsentResponse7DataInitiation) o;
+    return Objects.equals(this.frequency, obWriteInternationalStandingOrderConsentResponse7DataInitiation.frequency) &&
+        Objects.equals(this.reference, obWriteInternationalStandingOrderConsentResponse7DataInitiation.reference) &&
+        Objects.equals(this.numberOfPayments, obWriteInternationalStandingOrderConsentResponse7DataInitiation.numberOfPayments) &&
+        Objects.equals(this.firstPaymentDateTime, obWriteInternationalStandingOrderConsentResponse7DataInitiation.firstPaymentDateTime) &&
+        Objects.equals(this.finalPaymentDateTime, obWriteInternationalStandingOrderConsentResponse7DataInitiation.finalPaymentDateTime) &&
+        Objects.equals(this.purpose, obWriteInternationalStandingOrderConsentResponse7DataInitiation.purpose) &&
+        Objects.equals(this.extendedPurpose, obWriteInternationalStandingOrderConsentResponse7DataInitiation.extendedPurpose) &&
+        Objects.equals(this.chargeBearer, obWriteInternationalStandingOrderConsentResponse7DataInitiation.chargeBearer) &&
+        Objects.equals(this.currencyOfTransfer, obWriteInternationalStandingOrderConsentResponse7DataInitiation.currencyOfTransfer) &&
+        Objects.equals(this.destinationCountryCode, obWriteInternationalStandingOrderConsentResponse7DataInitiation.destinationCountryCode) &&
+        Objects.equals(this.instructedAmount, obWriteInternationalStandingOrderConsentResponse7DataInitiation.instructedAmount) &&
+        Objects.equals(this.debtorAccount, obWriteInternationalStandingOrderConsentResponse7DataInitiation.debtorAccount) &&
+        Objects.equals(this.creditor, obWriteInternationalStandingOrderConsentResponse7DataInitiation.creditor) &&
+        Objects.equals(this.creditorAgent, obWriteInternationalStandingOrderConsentResponse7DataInitiation.creditorAgent) &&
+        Objects.equals(this.creditorAccount, obWriteInternationalStandingOrderConsentResponse7DataInitiation.creditorAccount) &&
+        Objects.equals(this.supplementaryData, obWriteInternationalStandingOrderConsentResponse7DataInitiation.supplementaryData);
   }
 
   @Override
@@ -396,7 +396,7 @@ public class OBWriteInternationalStandingOrder4DataInitiation implements Seriali
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class OBWriteInternationalStandingOrder4DataInitiation {\n");
+    sb.append("class OBWriteInternationalStandingOrderConsentResponse7DataInitiation {\n");
     
     sb.append("    frequency: ").append(toIndentedString(frequency)).append("\n");
     sb.append("    reference: ").append(toIndentedString(reference)).append("\n");

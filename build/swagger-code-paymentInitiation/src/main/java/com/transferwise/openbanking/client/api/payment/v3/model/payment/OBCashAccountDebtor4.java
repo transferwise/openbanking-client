@@ -16,14 +16,14 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 /**
- * Unambiguous identification of the account of the debtor to which a debit entry will be made as a result of the transaction.
+ * ^ Only incuded in the response if &#x60;Data. ReadRefundAccount&#x60; is set to &#x60;Yes&#x60; in the consent.
  */
 
 
-public class OBWriteDomestic2DataInitiationDebtorAccount implements Serializable{
+public class OBCashAccountDebtor4 implements Serializable{
   private static final long serialVersionUID = 1L;
   @JsonProperty("SchemeName")
-  private OBExternalAccountIdentification4Code schemeName = null;
+  private String schemeName = null;
 
   @JsonProperty("Identification")
   private String identification = null;
@@ -34,31 +34,31 @@ public class OBWriteDomestic2DataInitiationDebtorAccount implements Serializable
   @JsonProperty("SecondaryIdentification")
   private String secondaryIdentification = null;
 
-  public OBWriteDomestic2DataInitiationDebtorAccount schemeName(OBExternalAccountIdentification4Code schemeName) {
+  public OBCashAccountDebtor4 schemeName(String schemeName) {
     this.schemeName = schemeName;
     return this;
   }
 
    /**
-   * Get schemeName
+   * ^ Name of the identification scheme, in a coded form as published in an external list. | Namespaced Enumeration OBExternalAccountIdentification4Code
    * @return schemeName
   **/
   
-  public OBExternalAccountIdentification4Code getSchemeName() {
+  public String getSchemeName() {
     return schemeName;
   }
 
-  public void setSchemeName(OBExternalAccountIdentification4Code schemeName) {
+  public void setSchemeName(String schemeName) {
     this.schemeName = schemeName;
   }
 
-  public OBWriteDomestic2DataInitiationDebtorAccount identification(String identification) {
+  public OBCashAccountDebtor4 identification(String identification) {
     this.identification = identification;
     return this;
   }
 
    /**
-   * Get identification
+   * ^ Identification assigned by an institution to identify an account. This identification is known by the account owner. | Max256Text
    * @return identification
   **/
   
@@ -70,13 +70,13 @@ public class OBWriteDomestic2DataInitiationDebtorAccount implements Serializable
     this.identification = identification;
   }
 
-  public OBWriteDomestic2DataInitiationDebtorAccount name(String name) {
+  public OBCashAccountDebtor4 name(String name) {
     this.name = name;
     return this;
   }
 
    /**
-   * The account name is the name or names of the account owner(s) represented at an account level, as displayed by the ASPSP&#x27;s online channels. Note, the account name is not the product name or the nickname of the account.
+   * ^ Name of the account, as assigned by the account servicing institution.  Usage The account name is the name or names of the account owner(s) represented at an account level. The account name is not the product name or the nickname of the account.
    * @return name
   **/
   
@@ -88,13 +88,13 @@ public class OBWriteDomestic2DataInitiationDebtorAccount implements Serializable
     this.name = name;
   }
 
-  public OBWriteDomestic2DataInitiationDebtorAccount secondaryIdentification(String secondaryIdentification) {
+  public OBCashAccountDebtor4 secondaryIdentification(String secondaryIdentification) {
     this.secondaryIdentification = secondaryIdentification;
     return this;
   }
 
    /**
-   * Get secondaryIdentification
+   * ^ This is secondary identification of the account, as assigned by the account servicing institution.  This can be used by building societies to additionally identify accounts with a roll number (in addition to a sort code and account number combination) | Max34Text
    * @return secondaryIdentification
   **/
   
@@ -115,11 +115,11 @@ public class OBWriteDomestic2DataInitiationDebtorAccount implements Serializable
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    OBWriteDomestic2DataInitiationDebtorAccount obWriteDomestic2DataInitiationDebtorAccount = (OBWriteDomestic2DataInitiationDebtorAccount) o;
-    return Objects.equals(this.schemeName, obWriteDomestic2DataInitiationDebtorAccount.schemeName) &&
-        Objects.equals(this.identification, obWriteDomestic2DataInitiationDebtorAccount.identification) &&
-        Objects.equals(this.name, obWriteDomestic2DataInitiationDebtorAccount.name) &&
-        Objects.equals(this.secondaryIdentification, obWriteDomestic2DataInitiationDebtorAccount.secondaryIdentification);
+    OBCashAccountDebtor4 obCashAccountDebtor4 = (OBCashAccountDebtor4) o;
+    return Objects.equals(this.schemeName, obCashAccountDebtor4.schemeName) &&
+        Objects.equals(this.identification, obCashAccountDebtor4.identification) &&
+        Objects.equals(this.name, obCashAccountDebtor4.name) &&
+        Objects.equals(this.secondaryIdentification, obCashAccountDebtor4.secondaryIdentification);
   }
 
   @Override
@@ -131,7 +131,7 @@ public class OBWriteDomestic2DataInitiationDebtorAccount implements Serializable
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class OBWriteDomestic2DataInitiationDebtorAccount {\n");
+    sb.append("class OBCashAccountDebtor4 {\n");
     
     sb.append("    schemeName: ").append(toIndentedString(schemeName)).append("\n");
     sb.append("    identification: ").append(toIndentedString(identification)).append("\n");
