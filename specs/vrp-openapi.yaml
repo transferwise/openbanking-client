@@ -6,7 +6,7 @@ servers:
 info:
   title: OBIE VRP Profile
   description: VRP OpenAPI Specification
-  version: 3.1.9
+  version: 3.1.10
   termsOfService: "https://www.openbanking.org.uk/terms"
   contact:
     name: "Service Desk"
@@ -49,6 +49,8 @@ paths:
           $ref: "#/components/responses/405Error"
         '406':
           $ref: "#/components/responses/406Error"
+        '409':
+          $ref: "#/components/responses/409Error"
         '415':
           $ref: "#/components/responses/415Error"
         '429':
@@ -172,6 +174,8 @@ paths:
         - $ref: "#/components/parameters/x-customer-user-agent"
 
       responses:
+        '200':
+          $ref: "#/components/responses/201OBDomesticVRPFundsConfirmationResponse"
         '201':
           $ref: "#/components/responses/201OBDomesticVRPFundsConfirmationResponse"
         '400':
@@ -237,6 +241,8 @@ paths:
           $ref: "#/components/responses/405Error"
         '406':
           $ref: "#/components/responses/406Error"
+        '409':
+          $ref: "#/components/responses/409Error"
         '415':
           $ref: "#/components/responses/415Error"
         '429':
@@ -420,6 +426,29 @@ components:
           required: true
           schema:
             type: "string"
+    409Error:
+      description: "Conflict"
+      headers:
+        x-fapi-interaction-id:
+          description: "An RFC4122 UID used as a correlation id."
+          required: true
+          schema:
+            type: "string"
+        x-jws-signature:
+          description: "Header containing a detached JWS signature of the body of the payload."
+          required: true
+          schema:
+            type: "string"
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: "#/components/schemas/OBErrorResponse1"
+        application/json:
+          schema:
+            $ref: "#/components/schemas/OBErrorResponse1"
+        application/jose+jwe:
+          schema:
+            $ref: "#/components/schemas/OBErrorResponse1"
     415Error:
       description: "Unsupported Media Type"
       headers:
@@ -668,6 +697,7 @@ components:
             - "UK.OBIE.Unsupported.Frequency"
             - "UK.OBIE.Unsupported.LocalInstrument"
             - "UK.OBIE.Unsupported.Scheme"
+            - "UK.OBIE.Rules.ResourceAlreadyExists"
         Message:
           description: "A description of the error that occurred. e.g., 'A mandatory field isn't supplied' or 'RequestedExecutionDateTime must be in future'\nOBIE doesn't standardise this field"
           type: "string"
