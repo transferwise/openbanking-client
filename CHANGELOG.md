@@ -3,6 +3,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.0] - 2023-05-26
+## Changes
+- VRP spec is updated to 3.1.10
+- Reference https://github.com/OpenBankingUK/read-write-api-specs/blob/master/dist/openapi/vrp-openapi.yaml.
+
 ## [16.0.0] - 2023-05-19
 ## Changes
 - Payment initiation spec is updated to 3.1.10
