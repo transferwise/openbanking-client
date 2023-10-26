@@ -19,8 +19,8 @@ apply from: 'build.publishing.gradle'
 
 group = 'com.transferwise'
 
-sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 ext {
     libs = [
@@ -197,7 +197,7 @@ tasks.withType(Pmd) {
 }
 
 wrapper {
-    gradleVersion = '7.0'
+    gradleVersion = '7.6'
 }
 
 test {
