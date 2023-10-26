@@ -42,7 +42,7 @@ import org.springframework.web.client.RestTemplate;
     "checkstyle:membername",
     "checkstyle:methodname",
     "checkstyle:abbreviationaswordinname"})
-public class RestEventClientTest {
+class RestEventClientTest {
 
     private static final String EVENT_SUBSCRIPTION_URL = "https://aspsp.co.uk/open-banking/v3.1/event-subscriptions";
     private static final String CALLBACK_URL = "callback-url";
