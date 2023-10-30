@@ -376,10 +376,10 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         }
         if (response.getStatusCode().is4xxClientError()
             || response.getStatusCode().is5xxServerError()) {
-            throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + response.getStatusCode().name());
+            throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + response.getStatusCode().value());
         }
         log.info("Call to delete VRP consent endpoint failed with unexpected status code {}", response.getStatusCode().value());
-        throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + response.getStatusCode().name());
+        throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + response.getStatusCode().value());
     }
 
     private OBErrorResponse1 mapBodyToObErrorResponse(String responseBodyAsString) {
