@@ -100,7 +100,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         }
 
         if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
-            throw new EventApiCallException("Call to get event resource endpoint failed. Status code " + response.getStatusCode().name());
+            throw new EventApiCallException("Call to get event resource endpoint failed. Status code " + response.getStatusCode().value());
         }
         OBEventSubscriptionsResponse1 eventSubscriptionResponse = jsonConverter.readValue(
             response.getBody(),
@@ -171,7 +171,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
             throw new EventApiCallException(
                 "Call to delete event subscription endpoint failed. Status code "
-                    + response.getStatusCode().name());
+                    + response.getStatusCode().value());
         }
     }
 

@@ -24,8 +24,8 @@ targetCompatibility = JavaVersion.VERSION_17
 
 ext {
     libs = [
-        'spring': '5.3.6',
-        'jackson': '2.12.3',
+        'spring': '6.0.13',
+        'jackson': '2.15.2',
         'lombok': '1.18.20',
         'junit': '5.7.1',
         'mockito': '3.9.0'
@@ -61,19 +61,14 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:${libs.lombok}")
     testAnnotationProcessor("org.projectlombok:lombok:${libs.lombok}")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:${libs.junit}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${libs.junit}")
-
+    testImplementation("org.junit.jupiter:junit-jupiter:${libs.junit}")
     testImplementation("org.mockito:mockito-core:${libs.mockito}")
     testImplementation("org.mockito:mockito-junit-jupiter:${libs.mockito}")
-
     testImplementation("org.hamcrest:hamcrest:2.2")
     testImplementation("org.skyscreamer:jsonassert:1.5.1")
-
     testImplementation("org.springframework:spring-test:${libs.spring}")
-
     testImplementation("org.bouncycastle:bcpkix-jdk15on:1.70")
-
     testImplementation("ch.qos.logback:logback-classic:1.4.5")
 }
 
