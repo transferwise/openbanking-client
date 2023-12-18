@@ -174,8 +174,6 @@ paths:
         - $ref: "#/components/parameters/x-customer-user-agent"
 
       responses:
-        '200':
-          $ref: "#/components/responses/201OBDomesticVRPFundsConfirmationResponse"
         '201':
           $ref: "#/components/responses/201OBDomesticVRPFundsConfirmationResponse"
         '400':
