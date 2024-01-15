@@ -6,7 +6,7 @@ servers:
 info:
   title: OBIE VRP Profile
   description: VRP OpenAPI Specification
-  version: 3.1.10
+  version: 3.1.11
   termsOfService: "https://www.openbanking.org.uk/terms"
   contact:
     name: "Service Desk"
@@ -174,8 +174,6 @@ paths:
         - $ref: "#/components/parameters/x-customer-user-agent"
 
       responses:
-        '200':
-          $ref: "#/components/responses/201OBDomesticVRPFundsConfirmationResponse"
         '201':
           $ref: "#/components/responses/201OBDomesticVRPFundsConfirmationResponse"
         '400':
@@ -1034,6 +1032,7 @@ components:
           required:
             - ConsentId
             - PSUAuthenticationMethod
+            - VRPType
             - Initiation
             - Instruction
           properties:
@@ -1051,6 +1050,8 @@ components:
               allOf:
                 - $ref: '#/components/schemas/OBVRPInteractionTypes'
                 - description: The interaction style used.
+            VRPType:
+                $ref: '#/components/schemas/OBVRPConsentType'
             Initiation:
               $ref: '#/components/schemas/OBDomesticVRPInitiation'
             Instruction:
@@ -1076,6 +1077,7 @@ components:
             - StatusUpdateDateTime
             - Initiation
             - Instruction
+            - DebtorAccount
           properties:
             DomesticVRPId:
               type: string
@@ -1435,6 +1437,7 @@ components:
         - UK.OBIE.PAN
         - UK.OBIE.Paym
         - UK.OBIE.SortCodeAccountNumber
+        - UK.OBIE.Wallet
 
     OBExternalFinancialInstitutionIdentification4Code:
       description: |-
