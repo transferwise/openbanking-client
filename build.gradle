@@ -44,7 +44,7 @@ configurations {
 
 dependencies {
     openApiGen("org.openapitools:openapi-generator-cli:3.3.4")
-    swaggerCodegenV3("io.swagger.codegen.v3:swagger-codegen-cli:3.0.52")
+    swaggerCodegenV3("io.swagger.codegen.v3:swagger-codegen-cli:3.0.53")
     api("org.springframework:spring-web:${libs.spring}")
 
     implementation('org.apache.httpcomponents:httpclient:4.5.14')
@@ -69,7 +69,7 @@ dependencies {
     testImplementation("org.skyscreamer:jsonassert:1.5.1")
     testImplementation("org.springframework:spring-test:${libs.spring}")
     testImplementation("org.bouncycastle:bcpkix-jdk15on:1.70")
-    testImplementation("ch.qos.logback:logback-classic:1.4.14")
+    testImplementation("ch.qos.logback:logback-classic:1.5.2")
 }
 
 swaggerSources {
