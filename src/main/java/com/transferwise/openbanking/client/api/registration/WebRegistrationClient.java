@@ -58,20 +58,24 @@ public class WebRegistrationClient implements RegistrationClient {
             request.getHeaders(),
             request.getBody());
 
-        try {
-            var prefixLog = "Received registration response";
-            return webClient.post()
-                .uri(aspspDetails.getRegistrationUrl())
-                .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
-                .bodyValue(Validate.notNull(request.getBody()))
-                .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixLog, ClientRegistrationResponse.class))
-                .block();
-        } catch (WebClientResponseException e) {
-            throw new ApiCallException("Call to register client endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
-        } catch (WebClientException e) {
-            throw new ApiCallException("Call to register client endpoint failed, and no response body returned", e);
-        }
+        var prefixLog = "Received registration response";
+        return webClient.post()
+            .uri(aspspDetails.getRegistrationUrl())
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixLog, ClientRegistrationResponse.class))
+            .onErrorResume(WebClientResponseException.class, e -> {
+                log.error("Call to register client endpoint failed, body returned '{}'", e.getResponseBodyAsString(), e);
+                return Mono.error(
+                    new ApiCallException("Call to register client endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e)
+                );
+            })
+            .onErrorResume(WebClientException.class, e -> {
+                log.error("Call to register client endpoint failed, and no response body returned", e);
+                return Mono.error(
+                    new ApiCallException("Call to register client endpoint failed, and no response body returned", e)
+                );
+            }).block();
     }
 
     @Override
@@ -100,20 +104,25 @@ public class WebRegistrationClient implements RegistrationClient {
             request.getHeaders(),
             request.getBody());
 
-        try {
-            var prefixLog = "Received update registration response";
-            return webClient.put()
-                .uri(aspspDetails.getRegistrationUrl() + "/{clientId}", aspspDetails.getClientId())
-                .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
-                .bodyValue(Validate.notNull(request.getBody()))
-                .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixLog, ClientRegistrationResponse.class))
-                .block();
-        } catch (WebClientResponseException e) {
-            throw new ApiCallException("Call to update registration endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
-        } catch (WebClientException e) {
-            throw new ApiCallException("Call to update registration endpoint failed, and no response body returned", e);
-        }
+        var prefixLog = "Received update registration response";
+        return webClient.put()
+            .uri(aspspDetails.getRegistrationUrl() + "/{clientId}", aspspDetails.getClientId())
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixLog, ClientRegistrationResponse.class))
+            .onErrorResume(WebClientResponseException.class, e -> {
+                log.error("Call to update registration endpoint failed, body returned '{}'", e.getResponseBodyAsString());
+                return Mono.error(
+                    new ApiCallException("Call to update registration endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e)
+                );
+            })
+            .onErrorResume(WebClientException.class, e -> {
+                log.error("Call to update registration endpoint failed, and no response body returned", e);
+                return Mono.error(
+                    new ApiCallException("Call to update registration endpoint failed, and no response body returned", e)
+                );
+            })
+            .block();
     }
 
     @Override
@@ -128,20 +137,23 @@ public class WebRegistrationClient implements RegistrationClient {
             aspspDetails.getClientId(),
             request.getHeaders());
 
-        try {
-            var prefixLog = "Received delete registration response";
-            webClient.delete()
-                .uri(aspspDetails.getRegistrationUrl() + "/{clientId}", aspspDetails.getClientId())
-                .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
-                .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixLog, String.class))
-                .block();
-            return;
-        } catch (WebClientResponseException e) {
-            throw new ApiCallException("Call to delete registration endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
-        } catch (WebClientException e) {
-            throw new ApiCallException("Call to delete registration endpoint failed, and no response body returned", e);
-        }
+        var prefixLog = "Received delete registration response";
+        webClient.delete()
+            .uri(aspspDetails.getRegistrationUrl() + "/{clientId}", aspspDetails.getClientId())
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixLog, String.class))
+            .onErrorResume(WebClientResponseException.class, e -> {
+                log.error("Call to delete registration endpoint failed, body returned '{}'", e.getResponseBodyAsString(), e);
+                return Mono.error(
+                    new ApiCallException("Call to delete registration endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e)
+                );
+            })
+            .onErrorResume(WebClientResponseException.class, e -> {
+                log.error("Call to delete registration endpoint failed, and no response body returned", e);
+                return Mono.error(
+                    new ApiCallException("Call to delete registration endpoint failed, and no response body returned", e)
+                );
+            }).block();
     }
 
     private String getClientCredentialsToken(

@@ -17,8 +17,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 import wiremock.org.apache.commons.lang3.Validate;
 
 @RequiredArgsConstructor
@@ -49,25 +49,26 @@ public class WebOAuthClient implements OAuthClient {
             requestBody.get("grant_type"),
             requestHeaders.getInteractionId());
 
-        AccessTokenResponse accessTokenResponse;
-        try {
-            accessTokenResponse = webClient.post()
-                .uri(aspspDetails.getTokenUrl())
-                .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
-                .bodyValue(Validate.notNull(request.getBody()))
-                .retrieve()
-                .bodyToMono(AccessTokenResponse.class)
-                .block();
-        } catch (WebClientResponseException e) {
-            throw new ApiCallException("Call to token endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
-        } catch (WebClientException e) {
-            throw new ApiCallException("Call to token endpoint failed, and no response body returned", e);
-        }
-
-        validateResponse(accessTokenResponse);
-
-        return accessTokenResponse;
+        return webClient.post()
+            .uri(aspspDetails.getTokenUrl())
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .retrieve()
+            .bodyToMono(AccessTokenResponse.class)
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class, e -> {
+                log.error("Call to token endpoint failed, body returned '{}'", e.getResponseBodyAsString(), e);
+                return Mono.error(
+                    new ApiCallException("Call to token endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e)
+                );
+            })
+            .onErrorResume(WebClientResponseException.class, e -> {
+                log.error("Call to token endpoint failed, and no response body returned", e);
+                return Mono.error(
+                    new ApiCallException("Call to token endpoint failed, and no response body returned", e)
+                );
+            })
+            .block();
     }
 
     private String encodeForm(Map<String, String> form) {
