@@ -12,7 +12,6 @@ import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import com.transferwise.openbanking.client.oauth.domain.Scope;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +23,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+import wiremock.org.apache.commons.lang3.Validate;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -63,7 +63,7 @@ public class RestRegistrationClient implements RegistrationClient {
             return webClient.post()
                 .uri(aspspDetails.getRegistrationUrl())
                 .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
-                .bodyValue(Objects.requireNonNull(request.getBody()))
+                .bodyValue(Validate.notNull(request.getBody()))
                 .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixLog, ClientRegistrationResponse.class))
                 .block();
         } catch (WebClientResponseException e) {
@@ -105,7 +105,7 @@ public class RestRegistrationClient implements RegistrationClient {
             return webClient.put()
                 .uri(aspspDetails.getRegistrationUrl() + "/{clientId}", aspspDetails.getClientId())
                 .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
-                .bodyValue(Objects.requireNonNull(request.getBody()))
+                .bodyValue(Validate.notNull(request.getBody()))
                 .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixLog, ClientRegistrationResponse.class))
                 .block();
         } catch (WebClientResponseException e) {
