@@ -1,6 +1,5 @@
 package com.transferwise.openbanking.client.oauth;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
@@ -88,7 +87,6 @@ class WebOAuthClientTest {
             .withHeader(HttpHeaders.CONTENT_TYPE, equalTo(MediaType.APPLICATION_FORM_URLENCODED_VALUE))
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .withHeader("x-fapi-interaction-id", matching(".+"))
-            .withRequestBody(containing("grant_type=%s".formatted(getAccessTokenRequest.getGrantType())))
             .withRequestBody(equalTo(expectedBody))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
