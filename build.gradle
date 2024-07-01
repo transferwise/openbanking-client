@@ -60,15 +60,8 @@ dependencies {
 
     api('org.bitbucket.b_c:jose4j:0.9.6')
 
-    implementation('org.springframework.boot:spring-boot-starter-webflux:3.3.0') // WebClient
-    implementation('com.github.tomakehurst:wiremock-jre8-standalone:2.35.1') // WireMock
-
-    /*
-       Getting Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider
-       adding io.netty:netty-resolver-dns-native-macos resolve the error
-       https://github.com/netty/netty/issues/11020#issuecomment-1006120770
-    */
-    implementation('io.netty:netty-resolver-dns-native-macos:4.1.72.Final:osx-aarch_64')
+    implementation('org.springframework.boot:spring-boot-starter-webflux:3.3.0')
+    implementation('com.github.tomakehurst:wiremock-jre8-standalone:2.35.1')
 
     compileOnly("org.projectlombok:lombok:${libs.lombok}")
     testCompileOnly("org.projectlombok:lombok:${libs.lombok}")
