@@ -12,17 +12,18 @@ import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import com.transferwise.openbanking.client.oauth.domain.Scope;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.client.RestOperations;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -31,7 +32,7 @@ public class RestRegistrationClient implements RegistrationClient {
 
     private final JwtClaimsSigner jwtClaimsSigner;
     private final OAuthClient oAuthClient;
-    private final RestOperations restTemplate;
+    private final WebClient webClient;
 
     @Override
     public ClientRegistrationResponse registerClient(
@@ -58,21 +59,17 @@ public class RestRegistrationClient implements RegistrationClient {
             request.getBody());
 
         try {
-            ResponseEntity<ClientRegistrationResponse> response = restTemplate.exchange(
-                aspspDetails.getRegistrationUrl(),
-                HttpMethod.POST,
-                request,
-                ClientRegistrationResponse.class);
-
-            log.debug("Received registration response with headers '{}' and body '{}'",
-                response.getHeaders(),
-                response.getBody());
-
-            return response.getBody();
-        } catch (RestClientResponseException e) {
+            var prefixLog = "Received registration response";
+            return webClient.post()
+                .uri(aspspDetails.getRegistrationUrl())
+                .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+                .bodyValue(Objects.requireNonNull(request.getBody()))
+                .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixLog, ClientRegistrationResponse.class))
+                .block();
+        } catch (WebClientResponseException e) {
             throw new ApiCallException("Call to register client endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
-        } catch (RestClientException e) {
+        } catch (WebClientException e) {
             throw new ApiCallException("Call to register client endpoint failed, and no response body returned", e);
         }
     }
@@ -104,22 +101,17 @@ public class RestRegistrationClient implements RegistrationClient {
             request.getBody());
 
         try {
-            ResponseEntity<ClientRegistrationResponse> response = restTemplate.exchange(
-                aspspDetails.getRegistrationUrl() + "/{clientId}",
-                HttpMethod.PUT,
-                request,
-                ClientRegistrationResponse.class,
-                aspspDetails.getClientId());
-
-            log.debug("Received update registration response with headers '{}' and body '{}'",
-                response.getHeaders(),
-                response.getBody());
-
-            return response.getBody();
-        } catch (RestClientResponseException e) {
+            var prefixLog = "Received update registration response";
+            return webClient.put()
+                .uri(aspspDetails.getRegistrationUrl() + "/{clientId}", aspspDetails.getClientId())
+                .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+                .bodyValue(Objects.requireNonNull(request.getBody()))
+                .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixLog, ClientRegistrationResponse.class))
+                .block();
+        } catch (WebClientResponseException e) {
             throw new ApiCallException("Call to update registration endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
-        } catch (RestClientException e) {
+        } catch (WebClientException e) {
             throw new ApiCallException("Call to update registration endpoint failed, and no response body returned", e);
         }
     }
@@ -137,20 +129,17 @@ public class RestRegistrationClient implements RegistrationClient {
             request.getHeaders());
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                aspspDetails.getRegistrationUrl() + "/{clientId}",
-                HttpMethod.DELETE,
-                request,
-                String.class,
-                aspspDetails.getClientId());
-
-            log.debug("Received delete registration response with headers '{}' and body '{}'",
-                response.getHeaders(),
-                response.getBody());
-        } catch (RestClientResponseException e) {
+            var prefixLog = "Received delete registration response";
+            webClient.delete()
+                .uri(aspspDetails.getRegistrationUrl() + "/{clientId}", aspspDetails.getClientId())
+                .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+                .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixLog, String.class))
+                .block();
+            return;
+        } catch (WebClientResponseException e) {
             throw new ApiCallException("Call to delete registration endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
                 e);
-        } catch (RestClientException e) {
+        } catch (WebClientException e) {
             throw new ApiCallException("Call to delete registration endpoint failed, and no response body returned", e);
         }
     }
@@ -170,5 +159,18 @@ public class RestRegistrationClient implements RegistrationClient {
             .stream()
             .map(Scope::getValue)
             .collect(Collectors.joining(" "));
+    }
+
+    private <T> Mono<T> exchangeToMonoWithLog(ClientResponse clientResponse, String prefixLog, Class<T> clazz) {
+        if (clientResponse.statusCode().isError()) {
+            return clientResponse.createException().flatMap(Mono::error);
+        }
+        var responseHeaders = clientResponse.headers().asHttpHeaders();
+        return clientResponse.bodyToMono(clazz)
+            .doFinally(body -> log.debug("{} '{}' and body '{}'",
+                prefixLog,
+                responseHeaders,
+                body)
+            );
     }
 }

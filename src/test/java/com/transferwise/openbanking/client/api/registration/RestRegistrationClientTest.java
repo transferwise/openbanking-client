@@ -1,9 +1,25 @@
 package com.transferwise.openbanking.client.api.registration;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.delete;
+import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
+import static com.github.tomakehurst.wiremock.client.WireMock.okForContentType;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.put;
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
+import static com.github.tomakehurst.wiremock.client.WireMock.status;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.transferwise.openbanking.client.test.factory.AspspDetailsFactory.aTestAspspDetails;
 import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
@@ -20,6 +36,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,12 +49,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.test.web.client.match.MockRestRequestMatchers;
-import org.springframework.test.web.client.response.MockRestResponseCreators;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({
@@ -56,9 +69,9 @@ class RestRegistrationClientTest {
     @Mock
     private OAuthClient oAuthClient;
 
-    private MockRestServiceServer mockAspspServer;
-
     private RestRegistrationClient restRegistrationClient;
+
+    private WireMockServer wireMockServer;
 
     @BeforeAll
     static void initAll() {
@@ -67,10 +80,18 @@ class RestRegistrationClientTest {
 
     @BeforeEach
     void init() {
-        RestTemplate restTemplate = new RestTemplate();
-        mockAspspServer = MockRestServiceServer.createServer(restTemplate);
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
+        wireMockServer.start();
+        WireMock.configureFor("localhost", wireMockServer.port());
 
-        restRegistrationClient = new RestRegistrationClient(jwtClaimsSigner, oAuthClient, restTemplate);
+        WebClient webClient = WebClient.create("http://localhost:" + wireMockServer.port());
+
+        restRegistrationClient = new RestRegistrationClient(jwtClaimsSigner, oAuthClient, webClient);
+    }
+
+    @AfterEach
+    void tearDown() {
+        wireMockServer.stop();
     }
 
     @ParameterizedTest
@@ -88,22 +109,19 @@ class RestRegistrationClientTest {
             .clientIdIssuedAt("100")
             .build();
         String jsonResponse = objectMapper.writeValueAsString(mockResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl()))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, expectedContentType))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT_CHARSET,
-                StandardCharsets.UTF_8.name().toLowerCase()))
-            .andExpect(MockRestRequestMatchers.content().string(signedClaims))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(post(urlEqualTo(aspspDetails.getRegistrationUrl()))
+            .withHeader(HttpHeaders.CONTENT_TYPE, equalTo(expectedContentType))
+            .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .withHeader(HttpHeaders.ACCEPT_CHARSET, equalTo(StandardCharsets.UTF_8.name().toLowerCase()))
+            .withRequestBody(equalTo(signedClaims))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         ClientRegistrationResponse registrationResponse = restRegistrationClient.registerClient(
             clientRegistrationRequest,
             aspspDetails);
 
         Assertions.assertEquals(mockResponse, registrationResponse);
-
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl())));
     }
 
     @Test
@@ -119,9 +137,8 @@ class RestRegistrationClientTest {
             + "\"client_id_issued_at\":\"2021-02-10T12:00:51.191+0000\","
             + "\"client_secret_expires_at\":\"2022-02-10T12:00:51.191+0000\""
             + "}";
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl()))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(post(urlEqualTo(aspspDetails.getRegistrationUrl()))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         ClientRegistrationResponse registrationResponse = restRegistrationClient.registerClient(
             clientRegistrationRequest,
@@ -131,7 +148,7 @@ class RestRegistrationClientTest {
         Assertions.assertEquals("2022-02-10T12:00:51.191+0000",
             registrationResponse.getClientSecretExpiresAt());
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl())));
     }
 
     @Test
@@ -143,14 +160,12 @@ class RestRegistrationClientTest {
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
             .thenReturn(signedClaims);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl()))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withServerError());
+        WireMock.stubFor(post(urlEqualTo(aspspDetails.getRegistrationUrl())).willReturn(serverError()));
 
         Assertions.assertThrows(ApiCallException.class,
             () -> restRegistrationClient.registerClient(clientRegistrationRequest, aspspDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl())));
     }
 
     @Test
@@ -178,15 +193,13 @@ class RestRegistrationClientTest {
             .clientId("client-id")
             .build();
         String jsonResponse = objectMapper.writeValueAsString(mockResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, "application/jwt"))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT_CHARSET,
-                StandardCharsets.UTF_8.name().toLowerCase()))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer access-token"))
-            .andExpect(MockRestRequestMatchers.content().string(signedClaims))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(put(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id"))
+            .withHeader(HttpHeaders.CONTENT_TYPE, equalTo("application/jwt"))
+            .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .withHeader(HttpHeaders.ACCEPT_CHARSET, equalTo(StandardCharsets.UTF_8.name().toLowerCase()))
+            .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer access-token"))
+            .withRequestBody(equalTo(signedClaims))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         ClientRegistrationResponse registrationResponse = restRegistrationClient.updateRegistration(
             clientRegistrationRequest,
@@ -195,7 +208,7 @@ class RestRegistrationClientTest {
 
         Assertions.assertEquals(mockResponse, registrationResponse);
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), putRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id")));
     }
 
     @ParameterizedTest
@@ -222,10 +235,9 @@ class RestRegistrationClientTest {
             .clientId("client-id")
             .build();
         String jsonResponse = objectMapper.writeValueAsString(mockResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, expectedContentType))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(put(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id"))
+            .withHeader(HttpHeaders.CONTENT_TYPE, equalTo(expectedContentType))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         ClientRegistrationResponse registrationResponse = restRegistrationClient.updateRegistration(
             clientRegistrationRequest,
@@ -234,7 +246,7 @@ class RestRegistrationClientTest {
 
         Assertions.assertEquals(mockResponse, registrationResponse);
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), putRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id")));
     }
 
     @ParameterizedTest
@@ -266,9 +278,8 @@ class RestRegistrationClientTest {
             .clientId("client-id")
             .build();
         String jsonResponse = objectMapper.writeValueAsString(mockResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(put(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id"))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         ClientRegistrationResponse registrationResponse = restRegistrationClient.updateRegistration(
             clientRegistrationRequest,
@@ -277,7 +288,7 @@ class RestRegistrationClientTest {
 
         Assertions.assertEquals(mockResponse, registrationResponse);
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), putRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id")));
     }
 
     @Test
@@ -296,9 +307,7 @@ class RestRegistrationClientTest {
         Mockito.when(jwtClaimsSigner.createSignature(clientRegistrationRequest, aspspDetails))
             .thenReturn(signedClaims);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.PUT))
-            .andRespond(MockRestResponseCreators.withServerError());
+        WireMock.stubFor(put(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id")).willReturn(serverError()));
 
         Assertions.assertThrows(ApiCallException.class,
             () -> restRegistrationClient.updateRegistration(
@@ -306,7 +315,7 @@ class RestRegistrationClientTest {
                 aspspDetails,
                 softwareStatementDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), putRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id")));
     }
 
     @ParameterizedTest
@@ -328,14 +337,13 @@ class RestRegistrationClientTest {
                 Mockito.eq(aspspDetails)))
             .thenReturn(mockAccessTokenResponse);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer access-token"))
-            .andRespond(MockRestResponseCreators.withSuccess());
+        WireMock.stubFor(delete(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id"))
+            .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer access-token"))
+            .willReturn(status(200)));
 
         restRegistrationClient.deleteRegistration(aspspDetails, softwareStatementDetails);
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), deleteRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id")));
     }
 
     @Test
@@ -349,14 +357,13 @@ class RestRegistrationClientTest {
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(mockAccessTokenResponse);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getRegistrationUrl() + "/client-id"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
-            .andRespond(MockRestResponseCreators.withServerError());
+        WireMock.stubFor(delete(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id"))
+            .willReturn(serverError()));
 
         Assertions.assertThrows(ApiCallException.class,
             () -> restRegistrationClient.deleteRegistration(aspspDetails, softwareStatementDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), deleteRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id")));
     }
 
     private static ClientRegistrationRequest aRegistrationClaims() {
