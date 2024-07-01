@@ -41,14 +41,14 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @ExtendWith(MockitoExtension.class)
-class RestOAuthClientTest {
+class WebOAuthClientTest {
 
     private static ObjectMapper objectMapper;
 
     @Mock
     private ClientAuthentication clientAuthentication;
 
-    private RestOAuthClient restOAuthClient;
+    private WebOAuthClient webOAuthClient;
 
     private WireMockServer wireMockServer;
 
@@ -64,7 +64,7 @@ class RestOAuthClientTest {
         WireMock.configureFor("localhost", wireMockServer.port());
         WebClient webClient = WebClient.create("http://localhost:" + wireMockServer.port());
 
-        restOAuthClient = new RestOAuthClient(clientAuthentication, webClient);
+        webOAuthClient = new WebOAuthClient(clientAuthentication, webClient);
     }
 
     @AfterEach
@@ -92,7 +92,7 @@ class RestOAuthClientTest {
             .withRequestBody(equalTo(expectedBody))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        AccessTokenResponse accessTokenResponse = restOAuthClient.getAccessToken(getAccessTokenRequest,
+        AccessTokenResponse accessTokenResponse = webOAuthClient.getAccessToken(getAccessTokenRequest,
             aspspDetails);
 
         Assertions.assertEquals(mockAccessTokenResponse, accessTokenResponse);
@@ -110,7 +110,7 @@ class RestOAuthClientTest {
         WireMock.stubFor(post(urlEqualTo(aspspDetails.getTokenUrl())).willReturn(serverError()));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
+            () -> webOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
 
         WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getTokenUrl())));
     }
@@ -129,7 +129,7 @@ class RestOAuthClientTest {
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
+            () -> webOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
 
         WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getTokenUrl())));
     }

@@ -28,7 +28,7 @@ import wiremock.org.apache.commons.lang3.Validate;
 @RequiredArgsConstructor
 @Slf4j
 @SuppressWarnings("checkstyle:membername")
-public class RestRegistrationClient implements RegistrationClient {
+public class WebRegistrationClient implements RegistrationClient {
 
     private final JwtClaimsSigner jwtClaimsSigner;
     private final OAuthClient oAuthClient;
