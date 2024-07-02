@@ -24,7 +24,9 @@ import wiremock.org.apache.commons.lang3.Validate;
 
 @RequiredArgsConstructor
 @Slf4j
-public class WebOAuthClient implements OAuthClient {
+public class AsyncOAuthClient implements OAuthClient {
+
+    private static final String ON_ERROR_TOKEN_LOG = "Call to token endpoint failed";
 
     private final ClientAuthentication clientAuthentication;
     private final WebClient webClient;
@@ -50,7 +52,6 @@ public class WebOAuthClient implements OAuthClient {
             requestBody.get("grant_type"),
             requestHeaders.getInteractionId());
 
-        var prefixErrorLog = "Call to token endpoint failed";
         return webClient.post()
             .uri(aspspDetails.getTokenUrl())
             .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
@@ -60,9 +61,9 @@ public class WebOAuthClient implements OAuthClient {
             .doOnSuccess(this::validateResponse)
             .onErrorResume(
                 WebClientResponseException.class,
-                e -> ExceptionUtils.handleWebClientResponseException(e, prefixErrorLog)
+                e -> ExceptionUtils.handleWebClientResponseException(e, ON_ERROR_TOKEN_LOG)
             )
-            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, prefixErrorLog))
+            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, ON_ERROR_TOKEN_LOG))
             .block();
     }
 

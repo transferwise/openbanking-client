@@ -28,7 +28,15 @@ import wiremock.org.apache.commons.lang3.Validate;
 @RequiredArgsConstructor
 @Slf4j
 @SuppressWarnings("checkstyle:membername")
-public class WebRegistrationClient implements RegistrationClient {
+public class AsyncRegistrationClient implements RegistrationClient {
+
+    private static final String ON_RECEIVE_REGISTER_LOG = "Received registration response";
+    private static final String ON_RECEIVE_UPDATE_LOG = "Received update registration response";
+    private static final String ON_RECEIVE_DELETE_LOG = "Received delete registration response";
+
+    private static final String ON_ERROR_REGISTER_LOG = "Call to register client endpoint failed";
+    private static final String ON_ERROR_UPDATE_LOG = "Call to update registration endpoint failed";
+    private static final String ON_ERROR_DELETE_LOG = "Call to delete registration endpoint failed";
 
     private final JwtClaimsSigner jwtClaimsSigner;
     private final OAuthClient oAuthClient;
@@ -58,18 +66,16 @@ public class WebRegistrationClient implements RegistrationClient {
             request.getHeaders(),
             request.getBody());
 
-        var prefixDebugLog = "Received registration response";
-        var prefixErrorLog = "Call to register client endpoint failed";
         return webClient.post()
             .uri(aspspDetails.getRegistrationUrl())
             .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
             .bodyValue(Validate.notNull(request.getBody()))
-            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixDebugLog, ClientRegistrationResponse.class))
+            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, ON_RECEIVE_REGISTER_LOG, ClientRegistrationResponse.class))
             .onErrorResume(
                 WebClientResponseException.class,
-                e -> ExceptionUtils.handleWebClientResponseException(e, prefixErrorLog)
+                e -> ExceptionUtils.handleWebClientResponseException(e, ON_ERROR_REGISTER_LOG)
             )
-            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, prefixErrorLog))
+            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, ON_ERROR_REGISTER_LOG))
             .block();
     }
 
@@ -99,18 +105,16 @@ public class WebRegistrationClient implements RegistrationClient {
             request.getHeaders(),
             request.getBody());
 
-        var prefixDebugLog = "Received update registration response";
-        var prefixErrorLog = "Call to update registration endpoint failed";
         return webClient.put()
             .uri(aspspDetails.getRegistrationUrl() + "/{clientId}", aspspDetails.getClientId())
             .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
             .bodyValue(Validate.notNull(request.getBody()))
-            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixDebugLog, ClientRegistrationResponse.class))
+            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, ON_RECEIVE_UPDATE_LOG, ClientRegistrationResponse.class))
             .onErrorResume(
                 WebClientResponseException.class,
-                e -> ExceptionUtils.handleWebClientResponseException(e, prefixErrorLog)
+                e -> ExceptionUtils.handleWebClientResponseException(e, ON_ERROR_UPDATE_LOG)
             )
-            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, prefixErrorLog))
+            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, ON_ERROR_UPDATE_LOG))
             .block();
     }
 
@@ -126,17 +130,15 @@ public class WebRegistrationClient implements RegistrationClient {
             aspspDetails.getClientId(),
             request.getHeaders());
 
-        var prefixDebugLog = "Received delete registration response";
-        var prefixErrorLog = "Call to delete registration endpoint failed";
         webClient.delete()
             .uri(aspspDetails.getRegistrationUrl() + "/{clientId}", aspspDetails.getClientId())
             .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
-            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, prefixDebugLog, String.class))
+            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, ON_RECEIVE_DELETE_LOG, String.class))
             .onErrorResume(
                 WebClientResponseException.class,
-                e -> ExceptionUtils.handleWebClientResponseException(e, prefixErrorLog)
+                e -> ExceptionUtils.handleWebClientResponseException(e, ON_ERROR_DELETE_LOG)
             )
-            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, prefixErrorLog))
+            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, ON_ERROR_DELETE_LOG))
             .block();
     }
 

@@ -40,14 +40,14 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @ExtendWith(MockitoExtension.class)
-class WebOAuthClientTest {
+class AsyncOAuthClientTest {
 
     private static ObjectMapper objectMapper;
 
     @Mock
     private ClientAuthentication clientAuthentication;
 
-    private WebOAuthClient webOAuthClient;
+    private AsyncOAuthClient asyncOAuthClient;
 
     private WireMockServer wireMockServer;
 
@@ -63,7 +63,7 @@ class WebOAuthClientTest {
         WireMock.configureFor("localhost", wireMockServer.port());
         WebClient webClient = WebClient.create("http://localhost:" + wireMockServer.port());
 
-        webOAuthClient = new WebOAuthClient(clientAuthentication, webClient);
+        asyncOAuthClient = new AsyncOAuthClient(clientAuthentication, webClient);
     }
 
     @AfterEach
@@ -90,7 +90,7 @@ class WebOAuthClientTest {
             .withRequestBody(equalTo(expectedBody))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        AccessTokenResponse accessTokenResponse = webOAuthClient.getAccessToken(getAccessTokenRequest,
+        AccessTokenResponse accessTokenResponse = asyncOAuthClient.getAccessToken(getAccessTokenRequest,
             aspspDetails);
 
         Assertions.assertEquals(mockAccessTokenResponse, accessTokenResponse);
@@ -108,7 +108,7 @@ class WebOAuthClientTest {
         WireMock.stubFor(post(urlEqualTo(aspspDetails.getTokenUrl())).willReturn(serverError()));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> webOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
+            () -> asyncOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
 
         WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getTokenUrl())));
     }
@@ -127,7 +127,7 @@ class WebOAuthClientTest {
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> webOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
+            () -> asyncOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
 
         WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getTokenUrl())));
     }
