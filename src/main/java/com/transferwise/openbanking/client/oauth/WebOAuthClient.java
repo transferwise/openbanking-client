@@ -1,5 +1,6 @@
 package com.transferwise.openbanking.client.oauth;
 
+import com.transferwise.openbanking.client.api.common.ExceptionUtils;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
@@ -17,8 +18,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 import wiremock.org.apache.commons.lang3.Validate;
 
 @RequiredArgsConstructor
@@ -49,6 +50,7 @@ public class WebOAuthClient implements OAuthClient {
             requestBody.get("grant_type"),
             requestHeaders.getInteractionId());
 
+        var prefixErrorLog = "Call to token endpoint failed";
         return webClient.post()
             .uri(aspspDetails.getTokenUrl())
             .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
@@ -56,18 +58,11 @@ public class WebOAuthClient implements OAuthClient {
             .retrieve()
             .bodyToMono(AccessTokenResponse.class)
             .doOnSuccess(this::validateResponse)
-            .onErrorResume(WebClientResponseException.class, e -> {
-                log.error("Call to token endpoint failed, body returned '{}'", e.getResponseBodyAsString(), e);
-                return Mono.error(
-                    new ApiCallException("Call to token endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e)
-                );
-            })
-            .onErrorResume(WebClientResponseException.class, e -> {
-                log.error("Call to token endpoint failed, and no response body returned", e);
-                return Mono.error(
-                    new ApiCallException("Call to token endpoint failed, and no response body returned", e)
-                );
-            })
+            .onErrorResume(
+                WebClientResponseException.class,
+                e -> ExceptionUtils.handleWebClientResponseException(e, prefixErrorLog)
+            )
+            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, prefixErrorLog))
             .block();
     }
 
