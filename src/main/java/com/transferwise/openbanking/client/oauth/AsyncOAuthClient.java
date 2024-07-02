@@ -1,5 +1,6 @@
 package com.transferwise.openbanking.client.oauth;
 
+import com.transferwise.openbanking.client.api.common.ExceptionUtils;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
@@ -15,19 +16,20 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.client.RestOperations;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import wiremock.org.apache.commons.lang3.Validate;
 
 @RequiredArgsConstructor
 @Slf4j
-public class RestOAuthClient implements OAuthClient {
+public class AsyncOAuthClient implements OAuthClient {
+
+    private static final String ON_ERROR_TOKEN_LOG = "Call to token endpoint failed";
 
     private final ClientAuthentication clientAuthentication;
-    private final RestOperations restTemplate;
+    private final WebClient webClient;
 
     @Override
     public AccessTokenResponse getAccessToken(GetAccessTokenRequest getAccessTokenRequest, AspspDetails aspspDetails) {
@@ -50,23 +52,19 @@ public class RestOAuthClient implements OAuthClient {
             requestBody.get("grant_type"),
             requestHeaders.getInteractionId());
 
-        AccessTokenResponse accessTokenResponse;
-        try {
-            ResponseEntity<AccessTokenResponse> response = restTemplate.exchange(aspspDetails.getTokenUrl(),
-                HttpMethod.POST,
-                request,
-                AccessTokenResponse.class);
-            accessTokenResponse = response.getBody();
-        } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to token endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
-        } catch (RestClientException e) {
-            throw new ApiCallException("Call to token endpoint failed, and no response body returned", e);
-        }
-
-        validateResponse(accessTokenResponse);
-
-        return accessTokenResponse;
+        return webClient.post()
+            .uri(aspspDetails.getTokenUrl())
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .retrieve()
+            .bodyToMono(AccessTokenResponse.class)
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(
+                WebClientResponseException.class,
+                e -> ExceptionUtils.handleWebClientResponseException(e, ON_ERROR_TOKEN_LOG)
+            )
+            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, ON_ERROR_TOKEN_LOG))
+            .block();
     }
 
     private String encodeForm(Map<String, String> form) {

@@ -1,15 +1,27 @@
 package com.transferwise.openbanking.client.oauth;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.okForContentType;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import com.transferwise.openbanking.client.test.factory.AspspDetailsFactory;
 import java.util.stream.Stream;
-import org.hamcrest.CoreMatchers;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,26 +36,20 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.test.web.client.match.MockRestRequestMatchers;
-import org.springframework.test.web.client.response.MockRestResponseCreators;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @ExtendWith(MockitoExtension.class)
-class RestOAuthClientTest {
+class AsyncOAuthClientTest {
 
     private static ObjectMapper objectMapper;
 
     @Mock
     private ClientAuthentication clientAuthentication;
 
-    private MockRestServiceServer mockAspspServer;
+    private AsyncOAuthClient asyncOAuthClient;
 
-    private RestOAuthClient restOAuthClient;
+    private WireMockServer wireMockServer;
 
     @BeforeAll
     static void setupAll() {
@@ -52,10 +58,17 @@ class RestOAuthClientTest {
 
     @BeforeEach
     void init() {
-        RestTemplate restTemplate = new RestTemplate();
-        mockAspspServer = MockRestServiceServer.createServer(restTemplate);
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
+        wireMockServer.start();
+        WireMock.configureFor("localhost", wireMockServer.port());
+        WebClient webClient = WebClient.create("http://localhost:" + wireMockServer.port());
 
-        restOAuthClient = new RestOAuthClient(clientAuthentication, restTemplate);
+        asyncOAuthClient = new AsyncOAuthClient(clientAuthentication, webClient);
+    }
+
+    @AfterEach
+    void tearDown() {
+        wireMockServer.stop();
     }
 
     @Test
@@ -63,28 +76,28 @@ class RestOAuthClientTest {
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
-        MultiValueMap<String, String> expectedBody = new LinkedMultiValueMap<>();
-        getAccessTokenRequest.getRequestBody().forEach(expectedBody::add);
+        var expectedBody = getAccessTokenRequest.getRequestBody().entrySet().stream()
+            .map(entry -> entry.getKey() + "=" + entry.getValue())
+            .reduce((s1, s2) -> s1 + "&" + s2).orElse("");
 
         AccessTokenResponse mockAccessTokenResponse = aAccessTokenResponse();
         String jsonResponse = objectMapper.writeValueAsString(mockAccessTokenResponse);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getTokenUrl()))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(MockRestRequestMatchers.content().formData(expectedBody))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(post(urlEqualTo(aspspDetails.getTokenUrl()))
+            .withHeader(HttpHeaders.CONTENT_TYPE, equalTo(MediaType.APPLICATION_FORM_URLENCODED_VALUE))
+            .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .withHeader("x-fapi-interaction-id", matching(".+"))
+            .withRequestBody(equalTo(expectedBody))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        AccessTokenResponse accessTokenResponse = restOAuthClient.getAccessToken(getAccessTokenRequest,
+        AccessTokenResponse accessTokenResponse = asyncOAuthClient.getAccessToken(getAccessTokenRequest,
             aspspDetails);
 
         Assertions.assertEquals(mockAccessTokenResponse, accessTokenResponse);
 
         Mockito.verify(clientAuthentication).addClientAuthentication(getAccessTokenRequest, aspspDetails);
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getTokenUrl())));
     }
 
     @Test
@@ -92,14 +105,12 @@ class RestOAuthClientTest {
         GetAccessTokenRequest getAccessTokenRequest = GetAccessTokenRequest.clientCredentialsRequest("payments");
         AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getTokenUrl()))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withServerError());
+        WireMock.stubFor(post(urlEqualTo(aspspDetails.getTokenUrl())).willReturn(serverError()));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
+            () -> asyncOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getTokenUrl())));
     }
 
     @ParameterizedTest
@@ -112,14 +123,13 @@ class RestOAuthClientTest {
 
         String jsonResponse = objectMapper.writeValueAsString(response);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(aspspDetails.getTokenUrl()))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(post(urlEqualTo(aspspDetails.getTokenUrl()))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> restOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
+            () -> asyncOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getTokenUrl())));
     }
 
     private static class PartialAccessTokenResponses implements ArgumentsProvider {

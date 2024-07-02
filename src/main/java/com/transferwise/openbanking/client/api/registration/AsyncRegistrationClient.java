@@ -1,10 +1,10 @@
 package com.transferwise.openbanking.client.api.registration;
 
+import com.transferwise.openbanking.client.api.common.ExceptionUtils;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.configuration.SoftwareStatementDetails;
-import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
@@ -17,21 +17,30 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.client.RestOperations;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
+import wiremock.org.apache.commons.lang3.Validate;
 
 @RequiredArgsConstructor
 @Slf4j
 @SuppressWarnings("checkstyle:membername")
-public class RestRegistrationClient implements RegistrationClient {
+public class AsyncRegistrationClient implements RegistrationClient {
+
+    private static final String ON_RECEIVE_REGISTER_LOG = "Received registration response";
+    private static final String ON_RECEIVE_UPDATE_LOG = "Received update registration response";
+    private static final String ON_RECEIVE_DELETE_LOG = "Received delete registration response";
+
+    private static final String ON_ERROR_REGISTER_LOG = "Call to register client endpoint failed";
+    private static final String ON_ERROR_UPDATE_LOG = "Call to update registration endpoint failed";
+    private static final String ON_ERROR_DELETE_LOG = "Call to delete registration endpoint failed";
 
     private final JwtClaimsSigner jwtClaimsSigner;
     private final OAuthClient oAuthClient;
-    private final RestOperations restTemplate;
+    private final WebClient webClient;
 
     @Override
     public ClientRegistrationResponse registerClient(
@@ -57,24 +66,17 @@ public class RestRegistrationClient implements RegistrationClient {
             request.getHeaders(),
             request.getBody());
 
-        try {
-            ResponseEntity<ClientRegistrationResponse> response = restTemplate.exchange(
-                aspspDetails.getRegistrationUrl(),
-                HttpMethod.POST,
-                request,
-                ClientRegistrationResponse.class);
-
-            log.debug("Received registration response with headers '{}' and body '{}'",
-                response.getHeaders(),
-                response.getBody());
-
-            return response.getBody();
-        } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to register client endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
-        } catch (RestClientException e) {
-            throw new ApiCallException("Call to register client endpoint failed, and no response body returned", e);
-        }
+        return webClient.post()
+            .uri(aspspDetails.getRegistrationUrl())
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, ON_RECEIVE_REGISTER_LOG, ClientRegistrationResponse.class))
+            .onErrorResume(
+                WebClientResponseException.class,
+                e -> ExceptionUtils.handleWebClientResponseException(e, ON_ERROR_REGISTER_LOG)
+            )
+            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, ON_ERROR_REGISTER_LOG))
+            .block();
     }
 
     @Override
@@ -103,25 +105,17 @@ public class RestRegistrationClient implements RegistrationClient {
             request.getHeaders(),
             request.getBody());
 
-        try {
-            ResponseEntity<ClientRegistrationResponse> response = restTemplate.exchange(
-                aspspDetails.getRegistrationUrl() + "/{clientId}",
-                HttpMethod.PUT,
-                request,
-                ClientRegistrationResponse.class,
-                aspspDetails.getClientId());
-
-            log.debug("Received update registration response with headers '{}' and body '{}'",
-                response.getHeaders(),
-                response.getBody());
-
-            return response.getBody();
-        } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to update registration endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
-        } catch (RestClientException e) {
-            throw new ApiCallException("Call to update registration endpoint failed, and no response body returned", e);
-        }
+        return webClient.put()
+            .uri(aspspDetails.getRegistrationUrl() + "/{clientId}", aspspDetails.getClientId())
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, ON_RECEIVE_UPDATE_LOG, ClientRegistrationResponse.class))
+            .onErrorResume(
+                WebClientResponseException.class,
+                e -> ExceptionUtils.handleWebClientResponseException(e, ON_ERROR_UPDATE_LOG)
+            )
+            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, ON_ERROR_UPDATE_LOG))
+            .block();
     }
 
     @Override
@@ -136,23 +130,16 @@ public class RestRegistrationClient implements RegistrationClient {
             aspspDetails.getClientId(),
             request.getHeaders());
 
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                aspspDetails.getRegistrationUrl() + "/{clientId}",
-                HttpMethod.DELETE,
-                request,
-                String.class,
-                aspspDetails.getClientId());
-
-            log.debug("Received delete registration response with headers '{}' and body '{}'",
-                response.getHeaders(),
-                response.getBody());
-        } catch (RestClientResponseException e) {
-            throw new ApiCallException("Call to delete registration endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e);
-        } catch (RestClientException e) {
-            throw new ApiCallException("Call to delete registration endpoint failed, and no response body returned", e);
-        }
+        webClient.delete()
+            .uri(aspspDetails.getRegistrationUrl() + "/{clientId}", aspspDetails.getClientId())
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .exchangeToMono(clientResponse -> exchangeToMonoWithLog(clientResponse, ON_RECEIVE_DELETE_LOG, String.class))
+            .onErrorResume(
+                WebClientResponseException.class,
+                e -> ExceptionUtils.handleWebClientResponseException(e, ON_ERROR_DELETE_LOG)
+            )
+            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, ON_ERROR_DELETE_LOG))
+            .block();
     }
 
     private String getClientCredentialsToken(
@@ -170,5 +157,15 @@ public class RestRegistrationClient implements RegistrationClient {
             .stream()
             .map(Scope::getValue)
             .collect(Collectors.joining(" "));
+    }
+
+    private <T> Mono<T> exchangeToMonoWithLog(ClientResponse clientResponse, String prefixLog, Class<T> clazz) {
+        if (clientResponse.statusCode().isError()) {
+            return clientResponse.createException().flatMap(Mono::error);
+        }
+        var responseHeaders = clientResponse.headers().asHttpHeaders();
+        return clientResponse
+            .bodyToMono(clazz)
+            .doFinally(body -> log.debug("{} '{}' and body '{}'", prefixLog, responseHeaders, body));
     }
 }

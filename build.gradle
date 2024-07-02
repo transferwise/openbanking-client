@@ -24,11 +24,11 @@ targetCompatibility = JavaVersion.VERSION_17
 
 ext {
     libs = [
-        'spring': '6.0.13',
-        'jackson': '2.15.2',
-        'lombok': '1.18.20',
-        'junit': '5.7.1',
-        'mockito': '3.9.0'
+        'spring' : '6.0.19',
+        'jackson': '2.15.4',
+        'lombok' : '1.18.30',
+        'junit'  : '5.9.3',
+        'mockito': '5.3.1'
     ]
 }
 
@@ -40,6 +40,10 @@ repositories {
 configurations {
     openApiGen
     swaggerCodegenV3
+    // Getting Standard Commons Logging alert. Needs to ignore 'commons-logging'
+    configureEach {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
 }
 
 dependencies {
@@ -55,6 +59,9 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${libs.jackson}")
 
     api('org.bitbucket.b_c:jose4j:0.9.6')
+
+    implementation('org.springframework.boot:spring-boot-starter-webflux:3.3.0')
+    implementation('com.github.tomakehurst:wiremock-jre8-standalone:2.35.1')
 
     compileOnly("org.projectlombok:lombok:${libs.lombok}")
     testCompileOnly("org.projectlombok:lombok:${libs.lombok}")
