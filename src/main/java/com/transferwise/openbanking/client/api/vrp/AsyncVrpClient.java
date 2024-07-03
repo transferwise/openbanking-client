@@ -28,7 +28,7 @@ import wiremock.org.apache.commons.lang3.Validate;
 
 @Slf4j
 @SuppressWarnings({"checkstyle:abbreviationaswordinname", "checkstyle:parametername"})
-public class RestVrpClient extends BasePaymentClient implements VrpClient {
+public class AsyncVrpClient extends BasePaymentClient implements VrpClient {
 
     private static final String BASE_ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/%s/%s";
 
@@ -49,7 +49,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
     private final IdempotencyKeyGenerator<OBDomesticVRPConsentRequest, OBDomesticVRPRequest> idempotencyKeyGenerator;
     private final JwtClaimsSigner jwtClaimsSigner;
 
-    public RestVrpClient(
+    public AsyncVrpClient(
         WebClient webClient,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,

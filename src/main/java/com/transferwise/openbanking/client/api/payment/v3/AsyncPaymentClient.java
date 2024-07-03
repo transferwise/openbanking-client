@@ -25,7 +25,7 @@ import wiremock.org.apache.commons.lang3.Validate;
 
 @Slf4j
 @SuppressWarnings("checkstyle:parametername")
-public class RestPaymentClient extends BasePaymentClient implements PaymentClient {
+public class AsyncPaymentClient extends BasePaymentClient implements PaymentClient {
 
     private static final String ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/pisp/%s";
 
@@ -40,7 +40,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     private final IdempotencyKeyGenerator<OBWriteDomesticConsent4, OBWriteDomestic2> idempotencyKeyGenerator;
     private final JwtClaimsSigner jwtClaimsSigner;
 
-    public RestPaymentClient(
+    public AsyncPaymentClient(
         WebClient webClient,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,

@@ -21,7 +21,7 @@ import wiremock.org.apache.commons.lang3.Validate;
 
 @Slf4j
 @SuppressWarnings({"checkstyle:abbreviationaswordinname", "checkstyle:parametername"})
-public class RestEventClient extends BasePaymentClient implements EventClient {
+public class AsyncEventClient extends BasePaymentClient implements EventClient {
 
     private static final String BASE_ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/%s";
     private static final String EVENT_SUBSCRIPTION_RESOURCE = "event-subscriptions";
@@ -29,7 +29,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         BASE_ENDPOINT_PATH_FORMAT + "/{eventSubscriptionId}";
     private final JwtClaimsSigner jwtClaimsSigner;
 
-    public RestEventClient(
+    public AsyncEventClient(
         WebClient webClient,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,
