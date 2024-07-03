@@ -29,6 +29,23 @@ public class AspspDetailsFactory {
             .registrationAuthenticationScopes(registrationAuthenticationScopes)
             .clientId("client-id")
             .clientSecret("client-secret")
+            .organisationId("organisation-id")
+            .build();
+    }
+
+    public static AspspDetails aTestAspspDetails(
+        String apiBaseUrl
+    ) {
+        return TestAspspDetails.builder()
+            .apiBaseUrl(apiBaseUrl)
+            .registrationUrl("/registration-url")
+            .tokenUrl("/token-url")
+            .paymentApiMinorVersion("1")
+            .registrationUsesJoseContentType(false)
+            .registrationAuthenticationScopes(Set.of(Scope.PAYMENTS))
+            .clientId("client-id")
+            .clientSecret("client-secret")
+            .organisationId("organisation-id")
             .build();
     }
 }

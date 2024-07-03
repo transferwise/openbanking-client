@@ -8,6 +8,7 @@ import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.client.RestOperations;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Base class for all payments API clients, containing common functionality, in particular around OAuth functionality.
@@ -21,6 +22,7 @@ public class BasePaymentClient {
 
     protected final RestOperations restOperations;
     protected final JsonConverter jsonConverter;
+    protected final WebClient webClient;
 
     private final OAuthClient oAuthClient;
 

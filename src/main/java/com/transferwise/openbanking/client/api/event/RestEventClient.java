@@ -13,11 +13,12 @@ import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
+import wiremock.org.apache.commons.lang3.Validate;
 
 @Slf4j
 @SuppressWarnings({"checkstyle:abbreviationaswordinname", "checkstyle:parametername"})
@@ -31,11 +32,12 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
 
     public RestEventClient(
         RestOperations restOperations,
+        WebClient webClient,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,
         JwtClaimsSigner jwtClaimsSigner
     ) {
-        super(restOperations, jsonConverter, oAuthClient);
+        super(restOperations, jsonConverter, webClient, oAuthClient);
         this.jwtClaimsSigner = jwtClaimsSigner;
     }
 
@@ -55,57 +57,44 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
 
         String body = jsonConverter.writeValueAsString(eventSubscriptionRequest);
         HttpEntity<String> request = new HttpEntity<>(body, headers);
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateEventApiUrl(BASE_ENDPOINT_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails),
-                HttpMethod.POST,
-                request,
-                String.class
-            );
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new EventApiCallException(
-                "Call to subscribe event endpoint failed, body returned '"
-                    + e.getResponseBodyAsString() + "'", e, errorResponse);
-        } catch (RestClientException e) {
-            throw new EventApiCallException("Call to subscribe event endpoint failed, and no response body returned", e);
-        }
-        return jsonConverter.readValue(response.getBody(), OBEventSubscriptionResponse1.class);
+        var response = webClient.post()
+            .uri(generateEventApiUrl(BASE_ENDPOINT_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails))
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .retrieve()
+            .bodyToMono(String.class)
+            .onErrorResume(WebClientResponseException.class, e -> {
+                OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
+                var errorMessage = "Call to subscribe event endpoint failed, body returned '%s'".formatted(e.getResponseBodyAsString());
+                log.error(errorMessage, e, errorResponse);
+                return Mono.error(new EventApiCallException(errorMessage, e, errorResponse));
+            })
+            .onErrorResume(WebClientException.class, e -> {
+                var errorMessage = "Call to subscribe event endpoint failed, and no response body returned";
+                log.error(errorMessage, e);
+                return Mono.error(new EventApiCallException(errorMessage, e));
+            })
+            .block();
+        return jsonConverter.readValue(response, OBEventSubscriptionResponse1.class);
     }
 
     @Override
-    public OBEventSubscriptionsResponse1 getEventSubscriptions(AspspDetails aspspDetails)  {
+    public OBEventSubscriptionsResponse1 getEventSubscriptions(AspspDetails aspspDetails) {
         OpenBankingHeaders headers = OpenBankingHeaders.defaultHeaders(
             aspspDetails.getOrganisationId(),
             getClientCredentialsToken(aspspDetails)
         );
 
         HttpEntity<?> request = new HttpEntity<>(headers);
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateEventApiUrl(BASE_ENDPOINT_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails),
-                HttpMethod.GET,
-                request,
-                String.class
-            );
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new EventApiCallException(
-                "Call to get event resource endpoint failed, body returned '"
-                    + e.getResponseBodyAsString() + "'", e, errorResponse);
-        } catch (RestClientException e) {
-            throw new EventApiCallException("Call to get event resource endpoint failed, and no response body returned", e);
-        }
-
-        if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
-            throw new EventApiCallException("Call to get event resource endpoint failed. Status code " + response.getStatusCode().value());
-        }
-        OBEventSubscriptionsResponse1 eventSubscriptionResponse = jsonConverter.readValue(
-            response.getBody(),
-            OBEventSubscriptionsResponse1.class);
-        return eventSubscriptionResponse;
+        var prefixErrorLog = "Call to get event resource endpoint failed";
+        return webClient.get()
+            .uri(generateEventApiUrl(BASE_ENDPOINT_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails))
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .retrieve()
+            .bodyToMono(OBEventSubscriptionsResponse1.class)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, prefixErrorLog))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, prefixErrorLog))
+            .block();
     }
 
     @Override
@@ -123,24 +112,19 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
             ));
         String body = jsonConverter.writeValueAsString(changedResponse);
         HttpEntity<String> request = new HttpEntity<>(body, headers);
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
+        var prefixErrorLog = "Call to change event resource endpoint failed";
+        return webClient.put()
+            .uri(
                 generateEventApiUrl(BASE_ENDPOINT_WITH_EVENT_SUBSCRIPTION_ID_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails),
-                HttpMethod.PUT,
-                request,
-                String.class,
                 changedResponse.getData().getEventSubscriptionId()
-            );
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new EventApiCallException(
-                "Call to change event resource endpoint failed, body returned '"
-                    + e.getResponseBodyAsString() + "'", e, errorResponse);
-        } catch (RestClientException e) {
-            throw new EventApiCallException("Call to change event resource failed, and no response body returned", e);
-        }
-        return jsonConverter.readValue(response.getBody(), OBEventSubscriptionResponse1.class);
+            )
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .retrieve()
+            .bodyToMono(OBEventSubscriptionResponse1.class)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, prefixErrorLog))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, prefixErrorLog))
+            .block();
     }
 
 
@@ -151,28 +135,18 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
             getClientCredentialsToken(aspspDetails)
         );
         HttpEntity<?> request = new HttpEntity<>(headers);
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
+        var prefixErrorLog = "Call to delete event endpoint failed";
+        webClient.delete()
+            .uri(
                 generateEventApiUrl(BASE_ENDPOINT_WITH_EVENT_SUBSCRIPTION_ID_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails),
-                HttpMethod.DELETE,
-                request,
-                String.class,
                 eventSubscriptionId
-            );
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new EventApiCallException("Call to delete event endpoint failed, body returned '"
-                + e.getResponseBodyAsString() + "'", e, errorResponse);
-        } catch (RestClientException e) {
-            throw new EventApiCallException("Call to delete event endpoint failed, and no response body returned", e);
-        }
-
-        if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
-            throw new EventApiCallException(
-                "Call to delete event subscription endpoint failed. Status code "
-                    + response.getStatusCode().value());
-        }
+            )
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .retrieve()
+            .bodyToMono(String.class)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, prefixErrorLog))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, prefixErrorLog))
+            .block();
     }
 
 
@@ -184,4 +158,15 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         }
     }
 
+    public static <T> Mono<T> handleWebClientResponseException(WebClientResponseException e, String prefixLog) {
+        var errorMessage = "%s, response status code %s, body returned '%s'".formatted(prefixLog, e.getStatusCode(), e.getResponseBodyAsString());
+        log.error(errorMessage, e);
+        return Mono.error(new EventApiCallException(errorMessage, e));
+    }
+
+    public static <T> Mono<T> handleWebClientException(WebClientException e, String prefixLog) {
+        var errorMessage = "%s, and no response body returned".formatted(prefixLog);
+        log.error(errorMessage, e);
+        return Mono.error(new EventApiCallException(errorMessage, e));
+    }
 }
