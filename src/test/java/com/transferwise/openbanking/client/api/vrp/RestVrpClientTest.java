@@ -90,7 +90,7 @@ import org.springframework.web.reactive.function.client.WebClient;
     "checkstyle:variabledeclarationusagedistance",
     "checkstyle:methodname",
     "checkstyle:abbreviationaswordinname"})
-class AsyncVrpClientTest {
+class RestVrpClientTest {
 
     private static final String IDEMPOTENCY_KEY = "idempotency-key";
     private static final String DETACHED_JWS_SIGNATURE = "detached-jws-signature";
@@ -110,7 +110,7 @@ class AsyncVrpClientTest {
 
     private WireMockServer wireMockServer;
 
-    private AsyncVrpClient asyncVrpClient;
+    private RestVrpClient restVrpClient;
 
     @BeforeAll
     static void initAll() {
@@ -125,7 +125,7 @@ class AsyncVrpClientTest {
         WebClient webClient = WebClient.create("http://localhost:" + wireMockServer.port());
         aspspDetails = AspspDetailsFactory.aTestAspspDetails("http://localhost:" + wireMockServer.port());
 
-        asyncVrpClient = new AsyncVrpClient(
+        restVrpClient = new RestVrpClient(
             webClient,
             jsonConverter,
             oAuthClient,
@@ -171,7 +171,7 @@ class AsyncVrpClientTest {
             .withRequestBody(equalTo(jsonConverter.writeValueAsString(domesticVRPConsentRequest)))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        OBDomesticVRPConsentResponse domesticVrpConsentResponse = asyncVrpClient.createDomesticVrpConsent(
+        OBDomesticVRPConsentResponse domesticVrpConsentResponse = restVrpClient.createDomesticVrpConsent(
             domesticVRPConsentRequest,
             aspspDetails,
             softwareStatementDetails);
@@ -196,7 +196,7 @@ class AsyncVrpClientTest {
         WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL)).willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.createDomesticVrpConsent(
+            () -> restVrpClient.createDomesticVrpConsent(
                 domesticVRPConsentRequest,
                 aspspDetails,
                 softwareStatementDetails));
@@ -222,7 +222,7 @@ class AsyncVrpClientTest {
         WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL)).willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.createDomesticVrpConsent(
+            () -> restVrpClient.createDomesticVrpConsent(
                 domesticVRPConsentRequest,
                 aspspDetails,
                 softwareStatementDetails));
@@ -255,7 +255,7 @@ class AsyncVrpClientTest {
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        OBVRPFundsConfirmationResponse fundsConfirmationResponse = asyncVrpClient.getFundsConfirmation(
+        OBVRPFundsConfirmationResponse fundsConfirmationResponse = restVrpClient.getFundsConfirmation(
             consentId,
             fundsConfirmationRequest,
             accessToken,
@@ -284,7 +284,7 @@ class AsyncVrpClientTest {
         WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation")).willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.getFundsConfirmation(
+            () -> restVrpClient.getFundsConfirmation(
                 consentId,
                 fundsConfirmationRequest,
                 accessToken,
@@ -315,7 +315,7 @@ class AsyncVrpClientTest {
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.getFundsConfirmation(
+            () -> restVrpClient.getFundsConfirmation(
                 consentId,
                 fundsConfirmationRequest,
                 accessToken,
@@ -348,7 +348,7 @@ class AsyncVrpClientTest {
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        OBDomesticVRPConsentResponse actualDomesticVrpConsentResponse = asyncVrpClient.getDomesticVrpConsent(
+        OBDomesticVRPConsentResponse actualDomesticVrpConsentResponse = restVrpClient.getDomesticVrpConsent(
             consentId,
             aspspDetails);
 
@@ -372,7 +372,7 @@ class AsyncVrpClientTest {
             .willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.getDomesticVrpConsent(consentId, aspspDetails));
+            () -> restVrpClient.getDomesticVrpConsent(consentId, aspspDetails));
 
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)));
     }
@@ -391,7 +391,7 @@ class AsyncVrpClientTest {
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.getDomesticVrpConsent(consentId, aspspDetails));
+            () -> restVrpClient.getDomesticVrpConsent(consentId, aspspDetails));
 
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)));
     }
@@ -419,7 +419,7 @@ class AsyncVrpClientTest {
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        asyncVrpClient.deleteDomesticVrpConsent(
+        restVrpClient.deleteDomesticVrpConsent(
             consentId,
             aspspDetails);
 
@@ -440,7 +440,7 @@ class AsyncVrpClientTest {
         WireMock.stubFor(delete(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)).willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.deleteDomesticVrpConsent(consentId, aspspDetails));
+            () -> restVrpClient.deleteDomesticVrpConsent(consentId, aspspDetails));
 
         WireMock.verify(exactly(1), deleteRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)));
     }
@@ -457,7 +457,7 @@ class AsyncVrpClientTest {
         WireMock.stubFor(delete(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)).willReturn(response));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.deleteDomesticVrpConsent(consentId, aspspDetails));
+            () -> restVrpClient.deleteDomesticVrpConsent(consentId, aspspDetails));
 
         WireMock.verify(exactly(1), deleteRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)));
     }
@@ -490,7 +490,7 @@ class AsyncVrpClientTest {
             .withRequestBody(equalTo(jsonConverter.writeValueAsString(domesticVrpRequest)))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        OBDomesticVRPResponse domesticPaymentResponse = asyncVrpClient.submitDomesticVrp(
+        OBDomesticVRPResponse domesticPaymentResponse = restVrpClient.submitDomesticVrp(
             domesticVrpRequest,
             accessToken,
             aspspDetails,
@@ -514,7 +514,7 @@ class AsyncVrpClientTest {
         WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_URL)).willReturn(badRequest()));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.submitDomesticVrp(
+            () -> restVrpClient.submitDomesticVrp(
                 domesticVrpRequest,
                 accessToken,
                 aspspDetails,
@@ -524,7 +524,7 @@ class AsyncVrpClientTest {
     }
 
     @ParameterizedTest
-    @ArgumentsSource(AsyncVrpClientTest.PartialDomesticVrpResponses.class)
+    @ArgumentsSource(RestVrpClientTest.PartialDomesticVrpResponses.class)
     void submitDomesticVrpThrowsVrpApiCallExceptionOnPartialResponse(OBDomesticVRPResponse response) {
 
         OBDomesticVRPRequest domesticVrpRequest = aDomesticVrpRequest();
@@ -538,7 +538,7 @@ class AsyncVrpClientTest {
         WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_URL)).willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.submitDomesticVrp(
+            () -> restVrpClient.submitDomesticVrp(
                 domesticVrpRequest,
                 accessToken,
                 aspspDetails,
@@ -569,7 +569,7 @@ class AsyncVrpClientTest {
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        OBDomesticVRPResponse domesticVrpResponse = asyncVrpClient.getDomesticVrp(vrpId, aspspDetails);
+        OBDomesticVRPResponse domesticVrpResponse = restVrpClient.getDomesticVrp(vrpId, aspspDetails);
 
         Assertions.assertEquals(mockDomesticVrpResponse, domesticVrpResponse);
 
@@ -590,13 +590,13 @@ class AsyncVrpClientTest {
         WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId)).willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.getDomesticVrp(vrpId, aspspDetails));
+            () -> restVrpClient.getDomesticVrp(vrpId, aspspDetails));
 
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId)));
     }
 
     @ParameterizedTest
-    @ArgumentsSource(AsyncVrpClientTest.PartialDomesticVrpResponses.class)
+    @ArgumentsSource(RestVrpClientTest.PartialDomesticVrpResponses.class)
     void getDomesticVrpThrowsVrpApiCallExceptionPartialResponse(OBDomesticVRPResponse response) {
         String vrpId = "vrp-id";
 
@@ -608,7 +608,7 @@ class AsyncVrpClientTest {
         WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId)).willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.getDomesticVrp(vrpId, aspspDetails));
+            () -> restVrpClient.getDomesticVrp(vrpId, aspspDetails));
 
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId)));
     }
@@ -635,7 +635,7 @@ class AsyncVrpClientTest {
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        OBDomesticVRPDetails domesticVrpDetailsResponse = asyncVrpClient.getDomesticVrpDetails(vrpId, aspspDetails);
+        OBDomesticVRPDetails domesticVrpDetailsResponse = restVrpClient.getDomesticVrpDetails(vrpId, aspspDetails);
 
         Assertions.assertEquals(mockDomesticVrpDetailsResponse, domesticVrpDetailsResponse);
 
@@ -656,13 +656,13 @@ class AsyncVrpClientTest {
         WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details")).willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.getDomesticVrpDetails(vrpId, aspspDetails));
+            () -> restVrpClient.getDomesticVrpDetails(vrpId, aspspDetails));
 
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details")));
     }
 
     @ParameterizedTest
-    @ArgumentsSource(AsyncVrpClientTest.PartialDomesticVrpDetailsResponses.class)
+    @ArgumentsSource(RestVrpClientTest.PartialDomesticVrpDetailsResponses.class)
     void getDomesticVrpDetailsThrowsVrpApiCallExceptionPartialResponse(OBDomesticVRPDetails response) {
         String vrpId = "vrp-id";
 
@@ -675,7 +675,7 @@ class AsyncVrpClientTest {
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
-            () -> asyncVrpClient.getDomesticVrpDetails(vrpId, aspspDetails));
+            () -> restVrpClient.getDomesticVrpDetails(vrpId, aspspDetails));
 
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details")));
     }

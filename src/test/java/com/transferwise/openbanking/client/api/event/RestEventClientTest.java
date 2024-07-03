@@ -56,7 +56,7 @@ import org.springframework.web.reactive.function.client.WebClient;
     "checkstyle:membername",
     "checkstyle:methodname",
     "checkstyle:abbreviationaswordinname"})
-class AsyncEventClientTest {
+class RestEventClientTest {
 
     private static final String EVENT_SUBSCRIPTION_URL = "/open-banking/v3.1/event-subscriptions";
     private static final String CALLBACK_URL = "callback-url";
@@ -70,7 +70,7 @@ class AsyncEventClientTest {
     private static AccessTokenResponse accessTokenResponse;
     private static SoftwareStatementDetails softwareStatementDetails;
     private WireMockServer wireMockServer;
-    private AsyncEventClient asyncEventClient;
+    private RestEventClient restEventClient;
     @Mock
     private OAuthClient oAuthClient;
     @Mock
@@ -93,7 +93,7 @@ class AsyncEventClientTest {
         WebClient webClient = WebClient.create("http://localhost:" + wireMockServer.port());
         aspspDetails = AspspDetailsFactory.aTestAspspDetails("http://localhost:" + wireMockServer.port());
 
-        asyncEventClient = new AsyncEventClient(
+        restEventClient = new RestEventClient(
             webClient,
             jsonConverter,
             oAuthClient,
@@ -136,7 +136,7 @@ class AsyncEventClientTest {
             .withRequestBody(equalTo(jsonConverter.writeValueAsString(eventSubscriptionRequest)))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        var response = asyncEventClient.createEventSubscription(eventSubscriptionRequest, aspspDetails, softwareStatementDetails);
+        var response = restEventClient.createEventSubscription(eventSubscriptionRequest, aspspDetails, softwareStatementDetails);
         Assertions.assertEquals(mockEventSubscriptionResponse, response);
         WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(EVENT_SUBSCRIPTION_URL)));
     }
@@ -151,7 +151,7 @@ class AsyncEventClientTest {
             .withHeader(FINANCIAL_ID, equalTo(aspspDetails.getOrganisationId()))
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
-        var response = asyncEventClient.getEventSubscriptions(aspspDetails);
+        var response = restEventClient.getEventSubscriptions(aspspDetails);
         Assertions.assertEquals(mockEventSubscriptionsResponse, response);
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(EVENT_SUBSCRIPTION_URL)));
     }
@@ -159,7 +159,7 @@ class AsyncEventClientTest {
     @Test
     void getAllEventSubscriptionsThrowException() {
         WireMock.stubFor(get(urlEqualTo(EVENT_SUBSCRIPTION_URL)).willReturn(serverError()));
-        Assertions.assertThrows(EventApiCallException.class, () -> asyncEventClient.getEventSubscriptions(aspspDetails));
+        Assertions.assertThrows(EventApiCallException.class, () -> restEventClient.getEventSubscriptions(aspspDetails));
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(EVENT_SUBSCRIPTION_URL)));
     }
 
@@ -186,7 +186,7 @@ class AsyncEventClientTest {
             .withHeader(JWS_SIGNATURE, equalTo(DETACHED_JWS_SIGNATURE))
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
-        var response = asyncEventClient.changeEventSubscription(eventSubscriptionOldResponse, aspspDetails, softwareStatementDetails);
+        var response = restEventClient.changeEventSubscription(eventSubscriptionOldResponse, aspspDetails, softwareStatementDetails);
         Assertions.assertEquals(mockEventSubscriptionResponse, response);
         WireMock.verify(exactly(1), putRequestedFor(urlEqualTo(EVENT_SUBSCRIPTION_URL + "/" + EVENT_SUBSCRIPTION_ID)));
     }
@@ -201,7 +201,7 @@ class AsyncEventClientTest {
             .withHeader(FINANCIAL_ID, equalTo(aspspDetails.getOrganisationId()))
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
-        asyncEventClient.deleteEventSubscription(EVENT_SUBSCRIPTION_ID, aspspDetails);
+        restEventClient.deleteEventSubscription(EVENT_SUBSCRIPTION_ID, aspspDetails);
         WireMock.verify(exactly(1), deleteRequestedFor(urlEqualTo(EVENT_SUBSCRIPTION_URL + "/" + EVENT_SUBSCRIPTION_ID)));
     }
 

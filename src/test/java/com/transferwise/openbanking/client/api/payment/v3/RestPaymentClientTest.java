@@ -68,7 +68,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", "checkstyle:membername", "checkstyle:variabledeclarationusagedistance", "checkstyle:methodname"})
-class AsyncPaymentClientTest {
+class RestPaymentClientTest {
 
     private static final String IDEMPOTENCY_KEY = "idempotency-key";
 
@@ -87,7 +87,7 @@ class AsyncPaymentClientTest {
 
     private WireMockServer wireMockServer;
 
-    private AsyncPaymentClient asyncPaymentClient;
+    private RestPaymentClient restPaymentClient;
 
     private AspspDetails aspspDetails;
 
@@ -104,7 +104,7 @@ class AsyncPaymentClientTest {
         WebClient webClient = WebClient.create("http://localhost:" + wireMockServer.port());
         aspspDetails = AspspDetailsFactory.aTestAspspDetails("http://localhost:" + wireMockServer.port());
 
-        asyncPaymentClient = new AsyncPaymentClient(
+        restPaymentClient = new RestPaymentClient(
             webClient,
             jsonConverter,
             oAuthClient,
@@ -148,7 +148,7 @@ class AsyncPaymentClientTest {
             .withRequestBody(equalTo(jsonConverter.writeValueAsString(domesticPaymentConsentRequest)))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        OBWriteDomesticConsentResponse5 paymentConsentResponse = asyncPaymentClient.createDomesticPaymentConsent(
+        OBWriteDomesticConsentResponse5 paymentConsentResponse = restPaymentClient.createDomesticPaymentConsent(
             domesticPaymentConsentRequest,
             aspspDetails,
             softwareStatementDetails);
@@ -173,7 +173,7 @@ class AsyncPaymentClientTest {
         WireMock.stubFor(post(urlEqualTo("/open-banking/v3.1/pisp/domestic-payment-consents")).willReturn(serverError()));
 
         Assertions.assertThrows(PaymentApiCallException.class,
-            () -> asyncPaymentClient.createDomesticPaymentConsent(
+            () -> restPaymentClient.createDomesticPaymentConsent(
                 domesticPaymentConsentRequest,
                 aspspDetails,
                 softwareStatementDetails));
@@ -196,7 +196,7 @@ class AsyncPaymentClientTest {
         WireMock.stubFor(post(urlEqualTo("/open-banking/v3.1/pisp/domestic-payment-consents")).willReturn(noContent()));
 
         Assertions.assertThrows(PaymentApiCallException.class,
-            () -> asyncPaymentClient.createDomesticPaymentConsent(
+            () -> restPaymentClient.createDomesticPaymentConsent(
                 domesticPaymentConsentRequest,
                 aspspDetails,
                 softwareStatementDetails));
@@ -223,7 +223,7 @@ class AsyncPaymentClientTest {
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(PaymentApiCallException.class,
-            () -> asyncPaymentClient.createDomesticPaymentConsent(
+            () -> restPaymentClient.createDomesticPaymentConsent(
                 domesticPaymentConsentRequest,
                 aspspDetails,
                 softwareStatementDetails));
@@ -270,7 +270,7 @@ class AsyncPaymentClientTest {
             .withRequestBody(equalTo(jsonConverter.writeValueAsString(domesticPaymentRequest)))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        OBWriteDomesticResponse5 domesticPaymentResponse = asyncPaymentClient.submitDomesticPayment(domesticPaymentRequest,
+        OBWriteDomesticResponse5 domesticPaymentResponse = restPaymentClient.submitDomesticPayment(domesticPaymentRequest,
             authorizationContext,
             aspspDetails,
             softwareStatementDetails);
@@ -296,7 +296,7 @@ class AsyncPaymentClientTest {
         WireMock.stubFor(post(urlEqualTo("/open-banking/v3.1/pisp/domestic-payments")).willReturn(badRequest()));
 
         Assertions.assertThrows(PaymentApiCallException.class,
-            () -> asyncPaymentClient.submitDomesticPayment(
+            () -> restPaymentClient.submitDomesticPayment(
                 domesticPaymentRequest,
                 authorizationContext,
                 aspspDetails,
@@ -325,7 +325,7 @@ class AsyncPaymentClientTest {
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(PaymentApiCallException.class,
-            () -> asyncPaymentClient.submitDomesticPayment(
+            () -> restPaymentClient.submitDomesticPayment(
                 domesticPaymentRequest,
                 authorizationContext,
                 aspspDetails,
@@ -356,7 +356,7 @@ class AsyncPaymentClientTest {
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = asyncPaymentClient.getDomesticPaymentConsent(
+        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = restPaymentClient.getDomesticPaymentConsent(
             consentId,
             aspspDetails);
 
@@ -379,7 +379,7 @@ class AsyncPaymentClientTest {
         WireMock.stubFor(get(urlEqualTo("/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId)).willReturn(serverError()));
 
         Assertions.assertThrows(PaymentApiCallException.class,
-            () -> asyncPaymentClient.getDomesticPaymentConsent(consentId, aspspDetails));
+            () -> restPaymentClient.getDomesticPaymentConsent(consentId, aspspDetails));
 
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo("/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId)));
     }
@@ -398,7 +398,7 @@ class AsyncPaymentClientTest {
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(PaymentApiCallException.class,
-            () -> asyncPaymentClient.getDomesticPaymentConsent(consentId, aspspDetails));
+            () -> restPaymentClient.getDomesticPaymentConsent(consentId, aspspDetails));
 
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo("/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId)));
     }
@@ -425,7 +425,7 @@ class AsyncPaymentClientTest {
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        OBWriteDomesticResponse5 domesticPaymentResponse = asyncPaymentClient.getDomesticPayment(domesticPaymentId,
+        OBWriteDomesticResponse5 domesticPaymentResponse = restPaymentClient.getDomesticPayment(domesticPaymentId,
             aspspDetails);
 
         Assertions.assertEquals(mockDomesticPaymentResponse, domesticPaymentResponse);
@@ -447,7 +447,7 @@ class AsyncPaymentClientTest {
         WireMock.stubFor(get(urlEqualTo("/open-banking/v3.1/pisp/domestic-payments/" + domesticPaymentId)).willReturn(serverError()));
 
         Assertions.assertThrows(PaymentApiCallException.class,
-            () -> asyncPaymentClient.getDomesticPayment(domesticPaymentId, aspspDetails));
+            () -> restPaymentClient.getDomesticPayment(domesticPaymentId, aspspDetails));
 
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo("/open-banking/v3.1/pisp/domestic-payments/" + domesticPaymentId)));
     }
@@ -466,7 +466,7 @@ class AsyncPaymentClientTest {
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(PaymentApiCallException.class,
-            () -> asyncPaymentClient.getDomesticPayment(domesticPaymentId, aspspDetails));
+            () -> restPaymentClient.getDomesticPayment(domesticPaymentId, aspspDetails));
 
         WireMock.verify(exactly(1), getRequestedFor(urlEqualTo("/open-banking/v3.1/pisp/domestic-payments/" + domesticPaymentId)));
     }
@@ -495,7 +495,7 @@ class AsyncPaymentClientTest {
             .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        OBWriteFundsConfirmationResponse1 fundsConfirmationResponse = asyncPaymentClient.getFundsConfirmation(consentId,
+        OBWriteFundsConfirmationResponse1 fundsConfirmationResponse = restPaymentClient.getFundsConfirmation(consentId,
             authorizationContext,
             aspspDetails);
 
@@ -521,7 +521,7 @@ class AsyncPaymentClientTest {
             .willReturn(serverError()));
 
         Assertions.assertThrows(PaymentApiCallException.class,
-            () -> asyncPaymentClient.getFundsConfirmation(consentId, authorizationContext, aspspDetails));
+            () -> restPaymentClient.getFundsConfirmation(consentId, authorizationContext, aspspDetails));
 
         WireMock.verify(exactly(1),
             getRequestedFor(urlEqualTo("/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation")));
@@ -542,7 +542,7 @@ class AsyncPaymentClientTest {
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(PaymentApiCallException.class,
-            () -> asyncPaymentClient.getFundsConfirmation(consentId, authorizationContext, aspspDetails));
+            () -> restPaymentClient.getFundsConfirmation(consentId, authorizationContext, aspspDetails));
 
         WireMock.verify(exactly(1),
             getRequestedFor(urlEqualTo("/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation")));
