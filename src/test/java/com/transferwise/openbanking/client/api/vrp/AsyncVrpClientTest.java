@@ -97,7 +97,7 @@ class AsyncVrpClientTest {
     public static final String DOMESTIC_VRP_CONSENTS_URL = "/open-banking/v3.1/pisp/domestic-vrp-consents";
     public static final String DOMESTIC_VRP_URL = "/open-banking/v3.1/pisp/domestic-vrps";
     private static JsonConverter jsonConverter;
-    private static AspspDetails aspspDetails;
+    private AspspDetails aspspDetails;
 
     @Mock
     private OAuthClient oAuthClient;

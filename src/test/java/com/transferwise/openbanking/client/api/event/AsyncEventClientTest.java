@@ -68,7 +68,6 @@ class AsyncEventClientTest {
     private static final String JWS_SIGNATURE = "x-jws-signature";
     private static JsonConverter jsonConverter;
     private static AccessTokenResponse accessTokenResponse;
-    private static AspspDetails aspspDetails;
     private static SoftwareStatementDetails softwareStatementDetails;
     private WireMockServer wireMockServer;
     private AsyncEventClient asyncEventClient;
@@ -77,6 +76,7 @@ class AsyncEventClientTest {
     @Mock
     private JwtClaimsSigner jwtClaimsSigner;
     private List<String> events;
+    private AspspDetails aspspDetails;
 
     @BeforeAll
     static void initAll() {

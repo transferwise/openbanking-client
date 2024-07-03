@@ -76,8 +76,6 @@ class AsyncPaymentClientTest {
 
     private static JsonConverter jsonConverter;
 
-    private static AspspDetails aspspDetails;
-
     @Mock
     private OAuthClient oAuthClient;
 
@@ -90,6 +88,8 @@ class AsyncPaymentClientTest {
     private WireMockServer wireMockServer;
 
     private AsyncPaymentClient asyncPaymentClient;
+
+    private AspspDetails aspspDetails;
 
     @BeforeAll
     static void initAll() {
