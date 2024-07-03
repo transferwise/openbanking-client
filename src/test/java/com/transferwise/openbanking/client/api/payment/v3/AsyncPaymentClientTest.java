@@ -542,7 +542,7 @@ class AsyncPaymentClientTest {
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
         WireMock.stubFor(get(urlEqualTo("/open-banking/v3.1/pisp/domestic-payment-consents/" + consentId + "/funds-confirmation"))
-            .willReturn(serverError()));
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(PaymentApiCallException.class,
             () -> asyncPaymentClient.getFundsConfirmation(consentId, authorizationContext, aspspDetails));
