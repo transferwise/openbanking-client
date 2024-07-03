@@ -206,8 +206,7 @@ class AsyncPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentConsentResponses.class)
-    void createDomesticPaymentConsentThrowsPaymentApiCallExceptionOnPartialResponse(OBWriteDomesticConsentResponse5 response)
-        throws Exception {
+    void createDomesticPaymentConsentThrowsPaymentApiCallExceptionOnPartialResponse(OBWriteDomesticConsentResponse5 response) {
 
         OBWriteDomesticConsent4 domesticPaymentConsentRequest = aDomesticPaymentConsentRequest();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
@@ -233,7 +232,7 @@ class AsyncPaymentClientTest {
     }
 
     @Test
-    void submitDomesticPayment() throws Exception {
+    void submitDomesticPayment() {
         OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         AuthorizationContext authorizationContext = aAuthorizationContext();
@@ -308,8 +307,7 @@ class AsyncPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentResponses.class)
-    void submitDomesticPaymentThrowsPaymentApiCallExceptionOnPartialResponse(OBWriteDomesticResponse5 response)
-        throws Exception {
+    void submitDomesticPaymentThrowsPaymentApiCallExceptionOnPartialResponse(OBWriteDomesticResponse5 response) {
 
         OBWriteDomestic2 domesticPaymentRequest = aDomesticPaymentRequest();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
@@ -406,7 +404,7 @@ class AsyncPaymentClientTest {
     }
 
     @Test
-    void getDomesticPayment() throws Exception {
+    void getDomesticPayment() {
         String domesticPaymentId = "domestic-payment-id";
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -456,7 +454,7 @@ class AsyncPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticPaymentResponses.class)
-    void getDomesticPaymentThrowsPaymentApiCallExceptionPartialResponse(OBWriteDomesticResponse5 response) throws Exception {
+    void getDomesticPaymentThrowsPaymentApiCallExceptionPartialResponse(OBWriteDomesticResponse5 response) {
         String domesticPaymentId = "domestic-payment-id";
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -474,7 +472,7 @@ class AsyncPaymentClientTest {
     }
 
     @Test
-    void getFundsConfirmation() throws Exception {
+    void getFundsConfirmation() {
         String consentId = "consent-id";
         AuthorizationContext authorizationContext = aAuthorizationContext();
 
@@ -531,8 +529,7 @@ class AsyncPaymentClientTest {
 
     @ParameterizedTest
     @ArgumentsSource(PartialFundsConfirmationResponses.class)
-    void getFundsConfirmationThrowsPaymentApiCallExceptionPartialResponse(OBWriteFundsConfirmationResponse1 response)
-        throws Exception {
+    void getFundsConfirmationThrowsPaymentApiCallExceptionPartialResponse(OBWriteFundsConfirmationResponse1 response) {
         String consentId = "consent-id";
         AuthorizationContext authorizationContext = aAuthorizationContext();
 
@@ -642,7 +639,7 @@ class AsyncPaymentClientTest {
     private static class PartialDomesticPaymentConsentResponses implements ArgumentsProvider {
 
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
                 Arguments.of(nullData()),
                 Arguments.of(ofData(null, OBWriteDomesticConsentResponse5Data.StatusEnum.CONSUMED)),
@@ -669,7 +666,7 @@ class AsyncPaymentClientTest {
     private static class PartialDomesticPaymentResponses implements ArgumentsProvider {
 
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
                 Arguments.of(nullData()),
                 Arguments.of(ofData(null, OBWriteDomesticResponse5Data.StatusEnum.PENDING)),
@@ -696,7 +693,7 @@ class AsyncPaymentClientTest {
     private static class PartialFundsConfirmationResponses implements ArgumentsProvider {
 
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
                 Arguments.of(nullData())
             );

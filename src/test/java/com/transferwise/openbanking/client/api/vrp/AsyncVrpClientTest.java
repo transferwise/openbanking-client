@@ -840,7 +840,7 @@ class AsyncVrpClientTest {
 
 
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
                 Arguments.of(nullData()),
                 Arguments.of(ofData("123", null)),
@@ -870,7 +870,7 @@ class AsyncVrpClientTest {
 
 
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
                 Arguments.of(nullData())
             );
