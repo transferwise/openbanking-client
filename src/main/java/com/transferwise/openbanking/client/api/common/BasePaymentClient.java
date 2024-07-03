@@ -7,7 +7,6 @@ import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
 import com.transferwise.openbanking.client.oauth.domain.GetAccessTokenRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.client.RestOperations;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -20,9 +19,8 @@ public class BasePaymentClient {
     private static final String BASE_API_MAJOR_VERSION = "3";
     private static final String PAYMENTS_SCOPE = "payments";
 
-    protected final RestOperations restOperations;
-    protected final JsonConverter jsonConverter;
     protected final WebClient webClient;
+    protected final JsonConverter jsonConverter;
 
     private final OAuthClient oAuthClient;
 

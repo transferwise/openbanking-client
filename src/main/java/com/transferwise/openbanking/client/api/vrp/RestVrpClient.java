@@ -19,7 +19,6 @@ import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.web.client.RestOperations;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
@@ -51,14 +50,13 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
     private final JwtClaimsSigner jwtClaimsSigner;
 
     public RestVrpClient(
-        RestOperations restOperations,
         WebClient webClient,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,
         IdempotencyKeyGenerator<OBDomesticVRPConsentRequest, OBDomesticVRPRequest> idempotencyKeyGenerator,
         JwtClaimsSigner jwtClaimsSigner
     ) {
-        super(restOperations, jsonConverter, webClient, oAuthClient);
+        super(webClient, jsonConverter, oAuthClient);
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
         this.jwtClaimsSigner = jwtClaimsSigner;
     }

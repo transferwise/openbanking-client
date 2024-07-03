@@ -48,7 +48,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @ExtendWith(MockitoExtension.class)
@@ -88,8 +87,6 @@ class RestEventClientTest {
 
     @BeforeEach
     void init() {
-        RestTemplate restTemplate = new RestTemplate();
-
         wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
         wireMockServer.start();
         WireMock.configureFor("localhost", wireMockServer.port());
@@ -97,7 +94,6 @@ class RestEventClientTest {
         aspspDetails = AspspDetailsFactory.aTestAspspDetails("http://localhost:" + wireMockServer.port());
 
         restEventClient = new RestEventClient(
-            restTemplate,
             webClient,
             jsonConverter,
             oAuthClient,

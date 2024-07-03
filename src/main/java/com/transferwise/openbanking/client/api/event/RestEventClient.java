@@ -13,7 +13,6 @@ import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
-import org.springframework.web.client.RestOperations;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -31,13 +30,12 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
     private final JwtClaimsSigner jwtClaimsSigner;
 
     public RestEventClient(
-        RestOperations restOperations,
         WebClient webClient,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,
         JwtClaimsSigner jwtClaimsSigner
     ) {
-        super(restOperations, jsonConverter, webClient, oAuthClient);
+        super(webClient, jsonConverter, oAuthClient);
         this.jwtClaimsSigner = jwtClaimsSigner;
     }
 

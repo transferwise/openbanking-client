@@ -17,7 +17,6 @@ import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
-import org.springframework.web.client.RestOperations;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -42,14 +41,13 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     private final JwtClaimsSigner jwtClaimsSigner;
 
     public RestPaymentClient(
-        RestOperations restOperations,
         WebClient webClient,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,
         IdempotencyKeyGenerator<OBWriteDomesticConsent4, OBWriteDomestic2> idempotencyKeyGenerator,
         JwtClaimsSigner jwtClaimsSigner
     ) {
-        super(restOperations, jsonConverter, webClient, oAuthClient);
+        super(webClient, jsonConverter, oAuthClient);
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
         this.jwtClaimsSigner = jwtClaimsSigner;
     }
