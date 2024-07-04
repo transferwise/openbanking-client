@@ -1,8 +1,28 @@
 package com.transferwise.openbanking.client.api.vrp;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.absent;
+import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
+import static com.github.tomakehurst.wiremock.client.WireMock.delete;
+import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.okForContentType;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
+import static com.github.tomakehurst.wiremock.client.WireMock.unauthorized;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.transferwise.openbanking.client.test.factory.AccessTokenResponseFactory.aAccessTokenResponse;
 import static com.transferwise.openbanking.client.test.factory.SoftwareStatementDetailsFactory.aSoftwareStatementDetails;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBActiveOrHistoricCurrencyAndAmount;
 import com.transferwise.openbanking.client.api.payment.v3.model.vrp.OBCashAccountCreditor3;
@@ -46,7 +66,6 @@ import com.transferwise.openbanking.client.test.factory.AspspDetailsFactory;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Stream;
-import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,13 +80,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.test.web.client.match.MockRestRequestMatchers;
-import org.springframework.test.web.client.response.DefaultResponseCreator;
-import org.springframework.test.web.client.response.MockRestResponseCreators;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({
@@ -80,10 +94,10 @@ class RestVrpClientTest {
 
     private static final String IDEMPOTENCY_KEY = "idempotency-key";
     private static final String DETACHED_JWS_SIGNATURE = "detached-jws-signature";
-    public static final String DOMESTIC_VRP_CONSENTS_URL = "https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-vrp-consents";
-    public static final String DOMESTIC_VRP_URL = "https://aspsp.co.uk/open-banking/v3.1/pisp/domestic-vrps";
-
+    public static final String DOMESTIC_VRP_CONSENTS_URL = "/open-banking/v3.1/pisp/domestic-vrp-consents";
+    public static final String DOMESTIC_VRP_URL = "/open-banking/v3.1/pisp/domestic-vrps";
     private static JsonConverter jsonConverter;
+    private AspspDetails aspspDetails;
 
     @Mock
     private OAuthClient oAuthClient;
@@ -94,7 +108,7 @@ class RestVrpClientTest {
     @Mock
     private JwtClaimsSigner jwtClaimsSigner;
 
-    private MockRestServiceServer mockAspspServer;
+    private WireMockServer wireMockServer;
 
     private RestVrpClient restVrpClient;
 
@@ -105,21 +119,24 @@ class RestVrpClientTest {
 
     @BeforeEach
     void init() {
-        RestTemplate restTemplate = new RestTemplate();
-        mockAspspServer = MockRestServiceServer.createServer(restTemplate);
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
+        wireMockServer.start();
+        WireMock.configureFor("localhost", wireMockServer.port());
+        WebClient webClient = WebClient.create("http://localhost:" + wireMockServer.port());
+        aspspDetails = AspspDetailsFactory.aTestAspspDetails("http://localhost:" + wireMockServer.port());
 
         restVrpClient = new RestVrpClient(
-            restTemplate,
+            webClient,
             jsonConverter,
             oAuthClient,
             idempotencyKeyGenerator,
             jwtClaimsSigner);
+
     }
 
     @Test
     void createDomesticVrpConsent() {
         OBDomesticVRPConsentRequest domesticVRPConsentRequest = aDomesticVrpConsentRequest();
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -143,17 +160,16 @@ class RestVrpClientTest {
 
         OBDomesticVRPConsentResponse mockDomesticVrpConsentResponse = aDomesticVrpConsentResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockDomesticVrpConsentResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
-            .andExpect(MockRestRequestMatchers.header("x-idempotency-key", IDEMPOTENCY_KEY))
-            .andExpect(MockRestRequestMatchers.header("x-jws-signature", DETACHED_JWS_SIGNATURE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(MockRestRequestMatchers.content().json(jsonConverter.writeValueAsString(domesticVRPConsentRequest)))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL))
+            .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + accessTokenResponse.getAccessToken()))
+            .withHeader("x-fapi-interaction-id", matching(".+"))
+            .withHeader("x-fapi-financial-id", equalTo(aspspDetails.getOrganisationId()))
+            .withHeader("x-idempotency-key", equalTo(IDEMPOTENCY_KEY))
+            .withHeader("x-jws-signature", equalTo(DETACHED_JWS_SIGNATURE))
+            .withHeader(HttpHeaders.CONTENT_TYPE, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .withRequestBody(equalTo(jsonConverter.writeValueAsString(domesticVRPConsentRequest)))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         OBDomesticVRPConsentResponse domesticVrpConsentResponse = restVrpClient.createDomesticVrpConsent(
             domesticVRPConsentRequest,
@@ -162,13 +178,12 @@ class RestVrpClientTest {
 
         Assertions.assertEquals(mockDomesticVrpConsentResponse, domesticVrpConsentResponse);
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL)));
     }
 
     @Test
     void createDomesticVrpConsentThrowsVrpApiCallExceptionOnApiCallFailure() {
         OBDomesticVRPConsentRequest domesticVRPConsentRequest = aDomesticVrpConsentRequest();
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -178,9 +193,7 @@ class RestVrpClientTest {
         Mockito.when(idempotencyKeyGenerator.generateKeyForSetup(Mockito.any(OBDomesticVRPConsentRequest.class)))
             .thenReturn(IDEMPOTENCY_KEY);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withServerError());
+        WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL)).willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.createDomesticVrpConsent(
@@ -188,7 +201,7 @@ class RestVrpClientTest {
                 aspspDetails,
                 softwareStatementDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL)));
     }
 
 
@@ -196,7 +209,6 @@ class RestVrpClientTest {
     @ArgumentsSource(PartialDomesticVrpConsentResponses.class)
     void createDomesticVrpConsentThrowsVrpApiCallExceptionOnPartialResponse(OBDomesticVRPConsentResponse response) {
         OBDomesticVRPConsentRequest domesticVRPConsentRequest = aDomesticVrpConsentRequest();
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
@@ -207,9 +219,7 @@ class RestVrpClientTest {
             .thenReturn(IDEMPOTENCY_KEY);
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL)).willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.createDomesticVrpConsent(
@@ -217,7 +227,7 @@ class RestVrpClientTest {
                 aspspDetails,
                 softwareStatementDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL)));
     }
 
     @Test
@@ -225,7 +235,6 @@ class RestVrpClientTest {
         String consentId = "vrp-consent-id";
         String accessToken = "access-token";
         OBVRPFundsConfirmationRequest fundsConfirmationRequest = aVrpFundsConfirmationRequest();
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         Mockito.when(
@@ -237,15 +246,14 @@ class RestVrpClientTest {
 
         OBVRPFundsConfirmationResponse mockFundsConfirmationResponse = aFundsConfirmationResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockFundsConfirmationResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
-            .andExpect(MockRestRequestMatchers.headerDoesNotExist("x-idempotency-key"))
-            .andExpect(MockRestRequestMatchers.header("x-jws-signature", DETACHED_JWS_SIGNATURE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation"))
+            .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + accessToken))
+            .withHeader("x-fapi-interaction-id", matching(".+"))
+            .withHeader("x-fapi-financial-id", equalTo(aspspDetails.getOrganisationId()))
+            .withHeader("x-idempotency-key", absent())
+            .withHeader("x-jws-signature", equalTo(DETACHED_JWS_SIGNATURE))
+            .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         OBVRPFundsConfirmationResponse fundsConfirmationResponse = restVrpClient.getFundsConfirmation(
             consentId,
@@ -256,7 +264,7 @@ class RestVrpClientTest {
 
         Assertions.assertEquals(mockFundsConfirmationResponse, fundsConfirmationResponse);
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation")));
     }
 
     @Test
@@ -264,7 +272,6 @@ class RestVrpClientTest {
         String consentId = "vrp-consent-id";
         String accessToken = "access-token";
         OBVRPFundsConfirmationRequest fundsConfirmationRequest = aVrpFundsConfirmationRequest();
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         Mockito.when(
@@ -274,9 +281,7 @@ class RestVrpClientTest {
                     softwareStatementDetails))
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withServerError());
+        WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation")).willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getFundsConfirmation(
@@ -287,7 +292,7 @@ class RestVrpClientTest {
                 softwareStatementDetails
             ));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation")));
     }
 
     @ParameterizedTest
@@ -296,7 +301,6 @@ class RestVrpClientTest {
         String consentId = "vrp-consent-id";
         String accessToken = "access-token";
         OBVRPFundsConfirmationRequest fundsConfirmationRequest = aVrpFundsConfirmationRequest();
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         Mockito.when(
@@ -307,9 +311,8 @@ class RestVrpClientTest {
             .thenReturn(DETACHED_JWS_SIGNATURE);
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation"))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getFundsConfirmation(
@@ -320,7 +323,7 @@ class RestVrpClientTest {
                 softwareStatementDetails
             ));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId + "/funds-confirmation")));
     }
 
     @ParameterizedTest
@@ -329,7 +332,6 @@ class RestVrpClientTest {
         String jsonResponse,
         OBDomesticVRPConsentResponse expectedDomesticVrpConsentResponse) {
         String consentId = "vrp-consent-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
@@ -339,13 +341,12 @@ class RestVrpClientTest {
                         && "payments".equals(request.getRequestBody().get("scope"))),
                 Mockito.eq(aspspDetails)))
             .thenReturn(accessTokenResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId))
+            .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + accessTokenResponse.getAccessToken()))
+            .withHeader("x-fapi-interaction-id", matching(".+"))
+            .withHeader("x-fapi-financial-id", equalTo(aspspDetails.getOrganisationId()))
+            .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         OBDomesticVRPConsentResponse actualDomesticVrpConsentResponse = restVrpClient.getDomesticVrpConsent(
             consentId,
@@ -356,54 +357,49 @@ class RestVrpClientTest {
         Mockito.verify(jwtClaimsSigner, Mockito.never())
             .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)));
     }
 
     @Test
     void getDomesticVrpConsentThrowsVrpApiCallExceptionOnApiCallFailure() {
         String consentId = "vrp-consent-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andRespond(MockRestResponseCreators.withServerError());
+        WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId))
+            .willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrpConsent(consentId, aspspDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)));
     }
 
     @ParameterizedTest
     @ArgumentsSource(PartialDomesticVrpConsentResponses.class)
     void getDomesticVrpConsentThrowsVrpApiCallExceptionPartialResponse(OBDomesticVRPConsentResponse response) {
         String consentId = "vrp-consent-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrpConsent(consentId, aspspDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)));
     }
 
 
     @Test
     void deleteDomesticVrpConsent() {
         final String consentId = "vrp-consent-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
@@ -416,13 +412,12 @@ class RestVrpClientTest {
 
         OBDomesticVRPConsentResponse mockDomesticVrpConsentResponse = aDomesticVrpConsentResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockDomesticVrpConsentResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(delete(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId))
+            .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + accessTokenResponse.getAccessToken()))
+            .withHeader("x-fapi-interaction-id", matching(".+"))
+            .withHeader("x-fapi-financial-id", equalTo(aspspDetails.getOrganisationId()))
+            .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         restVrpClient.deleteDomesticVrpConsent(
             consentId,
@@ -431,52 +426,45 @@ class RestVrpClientTest {
         Mockito.verify(jwtClaimsSigner, Mockito.never())
             .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), deleteRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)));
     }
 
     @Test
     void deleteDomesticVrpConsentThrowsVrpApiCallExceptionOnApiCallFailure() {
         String consentId = "vrp-consent-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
-            .andRespond(MockRestResponseCreators.withServerError());
+        WireMock.stubFor(delete(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)).willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.deleteDomesticVrpConsent(consentId, aspspDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), deleteRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)));
     }
 
     @ParameterizedTest
     @ArgumentsSource(DeleteVrpConsentResponses.class)
-    void deleteDomesticVrpConsentThrowsVrpApiCallExceptionPartialResponse(DefaultResponseCreator response) {
+    void deleteDomesticVrpConsentThrowsVrpApiCallExceptionPartialResponse(ResponseDefinitionBuilder response) {
         String consentId = "vrp-consent-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.DELETE))
-            .andRespond(response);
+        WireMock.stubFor(delete(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)).willReturn(response));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.deleteDomesticVrpConsent(consentId, aspspDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), deleteRequestedFor(urlEqualTo(DOMESTIC_VRP_CONSENTS_URL + "/" + consentId)));
     }
 
     @Test
     void submitDomesticVrp() {
         OBDomesticVRPRequest domesticVrpRequest = aDomesticVrpRequest();
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
         String accessToken = "access-token";
         Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(domesticVrpRequest))
@@ -491,17 +479,16 @@ class RestVrpClientTest {
 
         OBDomesticVRPResponse mockDomesticPaymentResponse = aDomesticVrpResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockDomesticPaymentResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_URL))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
-            .andExpect(MockRestRequestMatchers.header("x-idempotency-key", IDEMPOTENCY_KEY))
-            .andExpect(MockRestRequestMatchers.header("x-jws-signature", DETACHED_JWS_SIGNATURE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(MockRestRequestMatchers.content().json(jsonConverter.writeValueAsString(domesticVrpRequest)))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_URL))
+            .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + accessToken))
+            .withHeader("x-fapi-interaction-id", matching(".+"))
+            .withHeader("x-fapi-financial-id", equalTo(aspspDetails.getOrganisationId()))
+            .withHeader("x-idempotency-key", equalTo(IDEMPOTENCY_KEY))
+            .withHeader("x-jws-signature", equalTo(DETACHED_JWS_SIGNATURE))
+            .withHeader(HttpHeaders.CONTENT_TYPE, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .withRequestBody(equalTo(jsonConverter.writeValueAsString(domesticVrpRequest)))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         OBDomesticVRPResponse domesticPaymentResponse = restVrpClient.submitDomesticVrp(
             domesticVrpRequest,
@@ -511,13 +498,12 @@ class RestVrpClientTest {
 
         Assertions.assertEquals(mockDomesticPaymentResponse, domesticPaymentResponse);
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(DOMESTIC_VRP_URL)));
     }
 
     @Test
     void submitDomesticVrpThrowsVrpApiCallExceptionOnApiCallFailure() {
         OBDomesticVRPRequest domesticVrpRequest = aDomesticVrpRequest();
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         String accessToken = "access-token";
@@ -525,9 +511,7 @@ class RestVrpClientTest {
         Mockito.when(idempotencyKeyGenerator.generateKeyForSubmission(Mockito.any(OBDomesticVRPRequest.class)))
             .thenReturn(IDEMPOTENCY_KEY);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_URL))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withBadRequest());
+        WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_URL)).willReturn(badRequest()));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.submitDomesticVrp(
@@ -536,7 +520,7 @@ class RestVrpClientTest {
                 aspspDetails,
                 softwareStatementDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(DOMESTIC_VRP_URL)));
     }
 
     @ParameterizedTest
@@ -544,7 +528,6 @@ class RestVrpClientTest {
     void submitDomesticVrpThrowsVrpApiCallExceptionOnPartialResponse(OBDomesticVRPResponse response) {
 
         OBDomesticVRPRequest domesticVrpRequest = aDomesticVrpRequest();
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
         SoftwareStatementDetails softwareStatementDetails = aSoftwareStatementDetails();
 
         String accessToken = "access-token";
@@ -552,9 +535,7 @@ class RestVrpClientTest {
             .thenReturn(IDEMPOTENCY_KEY);
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_URL))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(post(urlEqualTo(DOMESTIC_VRP_URL)).willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.submitDomesticVrp(
@@ -563,13 +544,12 @@ class RestVrpClientTest {
                 aspspDetails,
                 softwareStatementDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(DOMESTIC_VRP_URL)));
     }
 
     @Test
     void getDomesticVrp() {
         String vrpId = "vrp-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
@@ -582,13 +562,12 @@ class RestVrpClientTest {
 
         OBDomesticVRPResponse mockDomesticVrpResponse = aDomesticVrpResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockDomesticVrpResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_URL + "/" + vrpId))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId))
+            .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + accessTokenResponse.getAccessToken()))
+            .withHeader("x-fapi-interaction-id", matching(".+"))
+            .withHeader("x-fapi-financial-id", equalTo(aspspDetails.getOrganisationId()))
+            .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         OBDomesticVRPResponse domesticVrpResponse = restVrpClient.getDomesticVrp(vrpId, aspspDetails);
 
@@ -597,53 +576,46 @@ class RestVrpClientTest {
         Mockito.verify(jwtClaimsSigner, Mockito.never())
             .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId)));
     }
 
     @Test
     void getDomesticVrpThrowsVrpApiCallExceptionOnApiCallFailure() {
         String vrpId = "vrp-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_URL + "/" + vrpId))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andRespond(MockRestResponseCreators.withServerError());
+        WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId)).willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrp(vrpId, aspspDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId)));
     }
 
     @ParameterizedTest
     @ArgumentsSource(RestVrpClientTest.PartialDomesticVrpResponses.class)
     void getDomesticVrpThrowsVrpApiCallExceptionPartialResponse(OBDomesticVRPResponse response) {
         String vrpId = "vrp-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_URL + "/" + vrpId))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId)).willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrp(vrpId, aspspDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId)));
     }
 
     @Test
     void getDomesticVrpDetails() {
         String vrpId = "vrp-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito
@@ -656,13 +628,12 @@ class RestVrpClientTest {
 
         OBDomesticVRPDetails mockDomesticVrpDetailsResponse = aDomesticVrpDetailsResponse();
         String jsonResponse = jsonConverter.writeValueAsString(mockDomesticVrpDetailsResponse);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenResponse.getAccessToken()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-interaction-id", CoreMatchers.notNullValue()))
-            .andExpect(MockRestRequestMatchers.header("x-fapi-financial-id", aspspDetails.getOrganisationId()))
-            .andExpect(MockRestRequestMatchers.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details"))
+            .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + accessTokenResponse.getAccessToken()))
+            .withHeader("x-fapi-interaction-id", matching(".+"))
+            .withHeader("x-fapi-financial-id", equalTo(aspspDetails.getOrganisationId()))
+            .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         OBDomesticVRPDetails domesticVrpDetailsResponse = restVrpClient.getDomesticVrpDetails(vrpId, aspspDetails);
 
@@ -671,47 +642,42 @@ class RestVrpClientTest {
         Mockito.verify(jwtClaimsSigner, Mockito.never())
             .createDetachedSignature(Mockito.any(), Mockito.any(), Mockito.any());
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details")));
     }
 
     @Test
     void getDomesticVrpDetailsThrowsVrpApiCallExceptionOnApiCallFailure() {
         String vrpId = "vrp-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andRespond(MockRestResponseCreators.withServerError());
+        WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details")).willReturn(serverError()));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrpDetails(vrpId, aspspDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details")));
     }
 
     @ParameterizedTest
     @ArgumentsSource(RestVrpClientTest.PartialDomesticVrpDetailsResponses.class)
     void getDomesticVrpDetailsThrowsVrpApiCallExceptionPartialResponse(OBDomesticVRPDetails response) {
         String vrpId = "vrp-id";
-        AspspDetails aspspDetails = AspspDetailsFactory.aTestAspspDetails();
 
         AccessTokenResponse accessTokenResponse = aAccessTokenResponse();
         Mockito.when(oAuthClient.getAccessToken(Mockito.any(), Mockito.any()))
             .thenReturn(accessTokenResponse);
 
         String jsonResponse = jsonConverter.writeValueAsString(response);
-        mockAspspServer.expect(MockRestRequestMatchers.requestTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details"))
-            .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-            .andRespond(MockRestResponseCreators.withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+        WireMock.stubFor(get(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details"))
+            .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(VrpApiCallException.class,
             () -> restVrpClient.getDomesticVrpDetails(vrpId, aspspDetails));
 
-        mockAspspServer.verify();
+        WireMock.verify(exactly(1), getRequestedFor(urlEqualTo(DOMESTIC_VRP_URL + "/" + vrpId + "/payment-details")));
     }
 
     private OBDomesticVRPConsentRequest aDomesticVrpConsentRequest() {
@@ -849,7 +815,7 @@ class RestVrpClientTest {
                 Arguments.of(
                     jsonResponse.replace(
                         "Authorised",
-                        "Revoked"),
+                        "Rejected"),
                     getRejectedResponse()));
         }
 
@@ -874,7 +840,7 @@ class RestVrpClientTest {
 
 
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
                 Arguments.of(nullData()),
                 Arguments.of(ofData("123", null)),
@@ -904,7 +870,7 @@ class RestVrpClientTest {
 
 
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
                 Arguments.of(nullData())
             );
@@ -918,11 +884,11 @@ class RestVrpClientTest {
     private static class DeleteVrpConsentResponses implements ArgumentsProvider {
 
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                Arguments.of(MockRestResponseCreators.withServerError()),
-                Arguments.of(MockRestResponseCreators.withBadRequest()),
-                Arguments.of(MockRestResponseCreators.withUnauthorizedRequest())
+                Arguments.of(serverError()),
+                Arguments.of(badRequest()),
+                Arguments.of(unauthorized())
             );
         }
     }

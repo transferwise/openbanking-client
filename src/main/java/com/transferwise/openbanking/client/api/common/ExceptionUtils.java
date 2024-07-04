@@ -1,6 +1,7 @@
 package com.transferwise.openbanking.client.api.common;
 
 import com.transferwise.openbanking.client.error.ApiCallException;
+import java.lang.reflect.InvocationTargetException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.WebClientException;
@@ -17,9 +18,17 @@ public class ExceptionUtils {
         return Mono.error(new ApiCallException(errorMessage, e));
     }
 
-    public static <T> Mono<T> handleWebClientException(WebClientException e, String prefixLog) {
+    public static <T, E extends Exception> Mono<T> handleWebClientException(
+        WebClientException e,
+        String prefixLog,
+        Class<E> exceptionClass
+    ) {
         var errorMessage = "%s, and no response body returned".formatted(prefixLog);
         log.error(errorMessage, e);
-        return Mono.error(new ApiCallException(errorMessage, e));
+        try {
+            return Mono.error(exceptionClass.getConstructor(String.class, Throwable.class).newInstance(errorMessage, e));
+        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException ex) {
+            return Mono.error(new ApiCallException(errorMessage, e));
+        }
     }
 }

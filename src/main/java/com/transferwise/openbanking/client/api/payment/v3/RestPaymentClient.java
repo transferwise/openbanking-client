@@ -1,5 +1,12 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_CREATE_PAYMENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_COF_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_PAYMENT_CONSENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_PAYMENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_SUBMIT_PAYMENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ExceptionUtils.handleWebClientException;
+
 import com.transferwise.openbanking.client.api.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.common.BasePaymentClient;
 import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
@@ -17,18 +24,17 @@ import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.client.RestOperations;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
+import wiremock.org.apache.commons.lang3.Validate;
 
 @Slf4j
 @SuppressWarnings("checkstyle:parametername")
 public class RestPaymentClient extends BasePaymentClient implements PaymentClient {
 
     private static final String ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/pisp/%s";
-
     private static final String PAYMENT_CONSENT_RESOURCE = "domestic-payment-consents";
     private static final String PAYMENT_RESOURCE = "domestic-payments";
 
@@ -36,13 +42,13 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
     private final JwtClaimsSigner jwtClaimsSigner;
 
     public RestPaymentClient(
-        RestOperations restOperations,
+        WebClient webClient,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,
         IdempotencyKeyGenerator<OBWriteDomesticConsent4, OBWriteDomestic2> idempotencyKeyGenerator,
         JwtClaimsSigner jwtClaimsSigner
     ) {
-        super(restOperations, jsonConverter, oAuthClient);
+        super(webClient, jsonConverter, oAuthClient);
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
         this.jwtClaimsSigner = jwtClaimsSigner;
     }
@@ -67,26 +73,17 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling create payment consent API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_CONSENT_RESOURCE, aspspDetails),
-                HttpMethod.POST,
-                request,
-                String.class);
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new PaymentApiCallException("Call to create payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e,
-                errorResponse);
-        } catch (RestClientException e) {
-            throw new PaymentApiCallException("Call to create payment consent endpoint failed, and no response body returned", e);
-        }
-
-        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = response.getBody() != null ? jsonConverter.readValue(response.getBody(),
-            OBWriteDomesticConsentResponse5.class) : null;
-        validateResponse(domesticPaymentConsentResponse);
-
-        return domesticPaymentConsentResponse;
+        return webClient.post()
+            .uri(generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_CONSENT_RESOURCE, aspspDetails))
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .retrieve()
+            .bodyToMono(OBWriteDomesticConsentResponse5.class)
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class,
+                e -> handleWebClientResponseException(e, ON_ERROR_CREATE_PAYMENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_CREATE_PAYMENT_LOG, PaymentApiCallException.class))
+            .block();
     }
 
     @Override
@@ -108,27 +105,16 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling submit payment API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_RESOURCE, aspspDetails),
-                HttpMethod.POST,
-                request,
-                String.class);
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new PaymentApiCallException("Call to submit payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e,
-                errorResponse);
-        } catch (RestClientException e) {
-            throw new PaymentApiCallException("Call to submit payment endpoint failed, and no response body returned", e);
-        }
-
-        OBWriteDomesticResponse5 domesticPaymentResponse = jsonConverter.readValue(response.getBody(),
-            OBWriteDomesticResponse5.class);
-        validateResponse(domesticPaymentResponse);
-
-        return domesticPaymentResponse;
+        return webClient.post()
+            .uri(generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_RESOURCE, aspspDetails))
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .retrieve()
+            .bodyToMono(OBWriteDomesticResponse5.class)
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_SUBMIT_PAYMENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_SUBMIT_PAYMENT_LOG, PaymentApiCallException.class))
+            .block();
     }
 
     @Override
@@ -141,28 +127,16 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling get payment consent API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_CONSENT_RESOURCE, aspspDetails) + "/{consentId}",
-                HttpMethod.GET,
-                request,
-                String.class,
-                consentId);
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new PaymentApiCallException("Call to get payment consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e,
-                errorResponse);
-        } catch (RestClientException e) {
-            throw new PaymentApiCallException("Call to get payment consent endpoint failed, and no response body returned", e);
-        }
-
-        OBWriteDomesticConsentResponse5 domesticPaymentConsentResponse = jsonConverter.readValue(response.getBody(),
-            OBWriteDomesticConsentResponse5.class);
-        validateResponse(domesticPaymentConsentResponse);
-
-        return domesticPaymentConsentResponse;
+        return webClient.get()
+            .uri(generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_CONSENT_RESOURCE, aspspDetails) + "/{consentId}", consentId)
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .retrieve()
+            .bodyToMono(OBWriteDomesticConsentResponse5.class)
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_PAYMENT_CONSENT_LOG))
+            .onErrorResume(WebClientException.class,
+                e -> handleWebClientException(e, ON_ERROR_GET_PAYMENT_CONSENT_LOG, PaymentApiCallException.class))
+            .block();
     }
 
     @Override
@@ -175,28 +149,15 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling get payment API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_RESOURCE, aspspDetails) + "/{domesticPaymentId}",
-                HttpMethod.GET,
-                request,
-                String.class,
-                domesticPaymentId);
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new PaymentApiCallException("Call to get payment endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e,
-                errorResponse);
-        } catch (RestClientException e) {
-            throw new PaymentApiCallException("Call to get payment endpoint failed, and no response body returned", e);
-        }
-
-        OBWriteDomesticResponse5 domesticPaymentResponse = jsonConverter.readValue(response.getBody(),
-            OBWriteDomesticResponse5.class);
-        validateResponse(domesticPaymentResponse);
-
-        return domesticPaymentResponse;
+        return webClient.get()
+            .uri(generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_RESOURCE, aspspDetails) + "/{domesticPaymentId}", domesticPaymentId)
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .retrieve()
+            .bodyToMono(OBWriteDomesticResponse5.class)
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_PAYMENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_PAYMENT_LOG, PaymentApiCallException.class))
+            .block();
     }
 
     @Override
@@ -214,30 +175,15 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
 
         log.info("Calling get confirmation of funds API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_CONSENT_RESOURCE, aspspDetails) + "/{consentId}/funds-confirmation",
-                HttpMethod.GET,
-                request,
-                String.class,
-                consentId);
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new PaymentApiCallException(
-                "Call to get confirmation of funds endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e,
-                errorResponse);
-        } catch (RestClientException e) {
-            throw new PaymentApiCallException("Call to get confirmation of funds endpoint failed, and no response body returned",
-                e);
-        }
-
-        OBWriteFundsConfirmationResponse1 fundsConfirmationResponse = jsonConverter.readValue(response.getBody(),
-            OBWriteFundsConfirmationResponse1.class);
-        validateResponse(fundsConfirmationResponse);
-
-        return fundsConfirmationResponse;
+        return webClient.get()
+            .uri(generateApiUrl(ENDPOINT_PATH_FORMAT, PAYMENT_CONSENT_RESOURCE, aspspDetails) + "/{consentId}/funds-confirmation", consentId)
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .retrieve()
+            .bodyToMono(OBWriteFundsConfirmationResponse1.class)
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_COF_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_COF_LOG, PaymentApiCallException.class))
+            .block();
     }
 
     private void validateResponse(OBWriteDomesticConsentResponse5 response) {
@@ -272,5 +218,11 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         } catch (Exception ex) {
             return null;
         }
+    }
+
+    private <T> Mono<T> handleWebClientResponseException(WebClientResponseException e, String prefixLog) {
+        var errorMessage = "%s, response status code %s, body returned '%s'".formatted(prefixLog, e.getStatusCode(), e.getResponseBodyAsString());
+        log.info(errorMessage, e);
+        return Mono.error(new PaymentApiCallException(errorMessage, e, mapBodyToObErrorResponse(e.getResponseBodyAsString())));
     }
 }

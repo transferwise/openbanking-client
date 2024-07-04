@@ -1,5 +1,14 @@
 package com.transferwise.openbanking.client.api.vrp;
 
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_CREATE_VRP_CONSENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_DELETE_VRP_CONSENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_COF_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_CONSENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_DETAILS_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_SUBMIT_VRP_LOG;
+import static com.transferwise.openbanking.client.api.common.ExceptionUtils.handleWebClientException;
+
 import com.transferwise.openbanking.client.api.common.BasePaymentClient;
 import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
@@ -18,11 +27,13 @@ import com.transferwise.openbanking.client.jwt.JwtClaimsSigner;
 import com.transferwise.openbanking.client.oauth.OAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.client.RestOperations;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
+import wiremock.org.apache.commons.lang3.Validate;
 
 @Slf4j
 @SuppressWarnings({"checkstyle:abbreviationaswordinname", "checkstyle:parametername"})
@@ -42,13 +53,13 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
     private final JwtClaimsSigner jwtClaimsSigner;
 
     public RestVrpClient(
-        RestOperations restOperations,
+        WebClient webClient,
         JsonConverter jsonConverter,
         OAuthClient oAuthClient,
         IdempotencyKeyGenerator<OBDomesticVRPConsentRequest, OBDomesticVRPRequest> idempotencyKeyGenerator,
         JwtClaimsSigner jwtClaimsSigner
     ) {
-        super(restOperations, jsonConverter, oAuthClient);
+        super(webClient, jsonConverter, oAuthClient);
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
         this.jwtClaimsSigner = jwtClaimsSigner;
     }
@@ -73,28 +84,17 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         log.debug("method=createDomesticVrpConsentRequest body={} headers={}", body, headers);
         log.info("Calling create VRP consent API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateVrpApiUrl(BASE_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
-                HttpMethod.POST,
-                request,
-                String.class
-            );
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new VrpApiCallException("Call to create VRP consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e,
-                errorResponse);
-        } catch (RestClientException e) {
-            throw new VrpApiCallException("Call to create VRP consent endpoint failed, and no response body returned", e);
-        }
-        log.debug("method=createDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
-            response.getHeaders());
-        OBDomesticVRPConsentResponse domesticVRPConsentResponse = jsonConverter.readValue(response.getBody(),
-            OBDomesticVRPConsentResponse.class);
-        validateResponse(domesticVRPConsentResponse);
-
-        return domesticVRPConsentResponse;
+        return webClient.post()
+            .uri(generateVrpApiUrl(BASE_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails))
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .exchangeToMono(
+                clientResponse -> exchangeToMonoWithLog(clientResponse, "createDomesticVrpConsentResponse", OBDomesticVRPConsentResponse.class)
+            )
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_CREATE_VRP_CONSENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_CREATE_VRP_CONSENT_LOG, VrpApiCallException.class))
+            .block();
     }
 
     @Override
@@ -118,30 +118,18 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         log.debug("method=getFundsConfirmationRequest body={} headers={}", body, headers);
         log.info("Calling get VRP confirmation of funds API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateVrpApiUrl(FUNDS_CONFIRMATION_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
-                HttpMethod.POST,
-                request,
-                String.class,
-                consentId
-            );
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new VrpApiCallException(
-                "Call to get VRP confirmation of funds endpoint failed, body returned '" + e.getResponseBodyAsString() + "'", e, errorResponse);
-        } catch (RestClientException e) {
-            throw new VrpApiCallException("Call to get VRP confirmation of funds endpoint failed, and no response body returned", e);
-        }
-
-        log.debug("method=getFundsConfirmationResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
-            response.getHeaders());
-        OBVRPFundsConfirmationResponse fundsConfirmationResponse = jsonConverter.readValue(response.getBody(),
-            OBVRPFundsConfirmationResponse.class);
-        validateResponse(fundsConfirmationResponse);
-
-        return fundsConfirmationResponse;
+        return webClient.post()
+            .uri(generateVrpApiUrl(FUNDS_CONFIRMATION_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails), consentId)
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .exchangeToMono(
+                clientResponse -> exchangeToMonoWithLog(clientResponse, "getFundsConfirmationResponse", OBVRPFundsConfirmationResponse.class)
+            )
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class,
+                e -> handleWebClientResponseException(e, ON_ERROR_GET_VRP_COF_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_COF_LOG, VrpApiCallException.class))
+            .block();
     }
 
     @Override
@@ -156,30 +144,16 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         log.debug("method=getDomesticVrpConsentRequest headers={}", headers);
         log.info("Calling get VRP consent API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateVrpApiUrl(CONSENT_BY_ID_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
-                HttpMethod.GET,
-                request,
-                String.class,
-                consentId);
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new VrpApiCallException("Call to get VRP consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e,
-                errorResponse);
-        } catch (RestClientException e) {
-            throw new VrpApiCallException("Call to get VRP consent endpoint failed, and no response body returned", e);
-        }
-
-        log.debug("method=getDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
-            response.getHeaders());
-        OBDomesticVRPConsentResponse domesticVRPConsentResponse = jsonConverter.readValue(response.getBody(),
-            OBDomesticVRPConsentResponse.class);
-        validateResponse(domesticVRPConsentResponse);
-
-        return domesticVRPConsentResponse;
+        return webClient.get()
+            .uri(generateVrpApiUrl(CONSENT_BY_ID_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails), consentId)
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .exchangeToMono(
+                clientResponse -> exchangeToMonoWithLog(clientResponse, "getDomesticVrpConsentResponse", OBDomesticVRPConsentResponse.class)
+            )
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_VRP_CONSENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_CONSENT_LOG, VrpApiCallException.class))
+            .block();
     }
 
     @Override
@@ -194,26 +168,16 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         log.debug("method=deleteDomesticVrpConsentRequest headers={}", headers);
         log.info("Calling delete VRP consent API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateVrpApiUrl(CONSENT_BY_ID_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails),
-                HttpMethod.DELETE,
-                request,
-                String.class,
-                consentId);
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new VrpApiCallException("Call to delete VRP consent endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e,
-                errorResponse);
-        } catch (RestClientException e) {
-            throw new VrpApiCallException("Call to delete VRP consent endpoint failed, and no response body returned", e);
-        }
-
-        log.debug("method=deleteDomesticVrpConsentResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
-            response.getHeaders());
-        validateResponseCode(response);
+        webClient.delete()
+            .uri(generateVrpApiUrl(CONSENT_BY_ID_ENDPOINT_PATH_FORMAT, VRP_CONSENT_RESOURCE, aspspDetails), consentId)
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .exchangeToMono(clientResponse -> {
+                validateResponseCode(clientResponse.statusCode());
+                return exchangeToMonoWithLog(clientResponse, "deleteDomesticVrpConsentResponse", String.class);
+            })
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_DELETE_VRP_CONSENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_DELETE_VRP_CONSENT_LOG, VrpApiCallException.class))
+            .block();
     }
 
     @Override
@@ -235,29 +199,18 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         log.debug("method=submitDomesticVrpRequest body={} headers={}", body, headers);
         log.info("Calling submit VRP API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateVrpApiUrl(BASE_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails),
-                HttpMethod.POST,
-                request,
-                String.class);
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new VrpApiCallException("Call to submit VRP endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e,
-                errorResponse);
-        } catch (RestClientException e) {
-            throw new VrpApiCallException("Call to submit VRP endpoint failed, and no response body returned", e);
-        }
-
-        log.debug("method=submitDomesticVrpResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
-            response.getHeaders());
-        OBDomesticVRPResponse domesticVrpResponse = jsonConverter.readValue(response.getBody(),
-            OBDomesticVRPResponse.class);
-        validateResponse(domesticVrpResponse);
-
-        return domesticVrpResponse;
+        return webClient.post()
+            .uri(generateVrpApiUrl(BASE_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails))
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .bodyValue(Validate.notNull(request.getBody()))
+            .exchangeToMono(clientResponse -> {
+                validateResponseCode(clientResponse.statusCode());
+                return exchangeToMonoWithLog(clientResponse, "submitDomesticVrpResponse", OBDomesticVRPResponse.class);
+            })
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_SUBMIT_VRP_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_SUBMIT_VRP_LOG, VrpApiCallException.class))
+            .block();
     }
 
     @Override
@@ -270,30 +223,17 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         log.debug("method=getDomesticVrpRequest headers={}", headers);
         log.info("Calling get VRP API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateVrpApiUrl(VRP_BY_ID_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails),
-                HttpMethod.GET,
-                request,
-                String.class,
-                domesticVrpId);
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new VrpApiCallException("Call to get VRP endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e,
-                errorResponse);
-        } catch (RestClientException e) {
-            throw new VrpApiCallException("Call to get VRP endpoint failed, and no response body returned", e);
-        }
-
-        log.debug("method=getDomesticVrpResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
-            response.getHeaders());
-        OBDomesticVRPResponse domesticVrpResponse = jsonConverter.readValue(response.getBody(),
-            OBDomesticVRPResponse.class);
-        validateResponse(domesticVrpResponse);
-
-        return domesticVrpResponse;
+        return webClient.get()
+            .uri(generateVrpApiUrl(VRP_BY_ID_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails), domesticVrpId)
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .exchangeToMono(clientResponse -> {
+                validateResponseCode(clientResponse.statusCode());
+                return exchangeToMonoWithLog(clientResponse, "getDomesticVrpResponse", OBDomesticVRPResponse.class);
+            })
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_VRP_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_LOG, VrpApiCallException.class))
+            .block();
     }
 
     @Override
@@ -306,30 +246,17 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         log.debug("method=getDomesticVrpDetailsRequest headers={}", headers);
         log.info("Calling get VRP API, with interaction ID {}", headers.getInteractionId());
 
-        ResponseEntity<String> response;
-        try {
-            response = restOperations.exchange(
-                generateVrpApiUrl(VRP_DETAILS_BY_ID_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails),
-                HttpMethod.GET,
-                request,
-                String.class,
-                domesticVrpId);
-        } catch (RestClientResponseException e) {
-            OBErrorResponse1 errorResponse = mapBodyToObErrorResponse(e.getResponseBodyAsString());
-            throw new VrpApiCallException("Call to get VRP endpoint failed, body returned '" + e.getResponseBodyAsString() + "'",
-                e,
-                errorResponse);
-        } catch (RestClientException e) {
-            throw new VrpApiCallException("Call to get VRP endpoint failed, and no response body returned", e);
-        }
-
-        log.debug("method=getDomesticVrpDetailsResponse code={} body={} headers={}", response.getStatusCode().value(), response.getBody(),
-            response.getHeaders());
-        OBDomesticVRPDetails domesticVrpDetailsResponse = jsonConverter.readValue(response.getBody(),
-            OBDomesticVRPDetails.class);
-        validateResponse(domesticVrpDetailsResponse);
-
-        return domesticVrpDetailsResponse;
+        return webClient.get()
+            .uri(generateVrpApiUrl(VRP_DETAILS_BY_ID_ENDPOINT_PATH_FORMAT, VRP_RESOURCE, aspspDetails), domesticVrpId)
+            .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
+            .exchangeToMono(clientResponse -> {
+                validateResponseCode(clientResponse.statusCode());
+                return exchangeToMonoWithLog(clientResponse, "getDomesticVrpDetailsResponse", OBDomesticVRPDetails.class);
+            })
+            .doOnSuccess(this::validateResponse)
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_VRP_DETAILS_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_DETAILS_LOG, VrpApiCallException.class))
+            .block();
     }
 
     private void validateResponse(OBDomesticVRPConsentResponse response) {
@@ -370,16 +297,16 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         }
     }
 
-    private void validateResponseCode(ResponseEntity<String> response) {
-        if (response.getStatusCode().is2xxSuccessful()) {
+    private void validateResponseCode(HttpStatusCode statusCode) {
+        if (statusCode.is2xxSuccessful()) {
             return;
         }
-        if (response.getStatusCode().is4xxClientError()
-            || response.getStatusCode().is5xxServerError()) {
-            throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + response.getStatusCode().value());
+        if (statusCode.is4xxClientError()
+            || statusCode.is5xxServerError()) {
+            throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + statusCode.value());
         }
-        log.info("Call to delete VRP consent endpoint failed with unexpected status code {}", response.getStatusCode().value());
-        throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + response.getStatusCode().value());
+        log.info("Call to delete VRP consent endpoint failed with unexpected status code {}", statusCode.value());
+        throw new VrpApiCallException("Call to delete VRP consent endpoint failed. Status code " + statusCode.value());
     }
 
     private OBErrorResponse1 mapBodyToObErrorResponse(String responseBodyAsString) {
@@ -388,5 +315,24 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         } catch (Exception ex) {
             return null;
         }
+    }
+
+    private <T> Mono<T> exchangeToMonoWithLog(ClientResponse clientResponse, String method, Class<T> clazz) {
+        if (clientResponse.statusCode().isError()) {
+            return clientResponse.createException().flatMap(Mono::error);
+        }
+        return clientResponse
+            .bodyToMono(clazz)
+            .doFinally(body -> log.debug("method={} code={} body={} headers={}",
+                method,
+                clientResponse.statusCode().value(),
+                body,
+                clientResponse.headers().asHttpHeaders()));
+    }
+
+    private <T> Mono<T> handleWebClientResponseException(WebClientResponseException e, String prefixLog) {
+        var errorMessage = "%s, response status code %s, body returned '%s'".formatted(prefixLog, e.getStatusCode(), e.getResponseBodyAsString());
+        log.error(errorMessage, e);
+        return Mono.error(new VrpApiCallException(errorMessage, e, mapBodyToObErrorResponse(e.getResponseBodyAsString())));
     }
 }
