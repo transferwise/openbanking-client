@@ -1,5 +1,12 @@
 package com.transferwise.openbanking.client.api.vrp;
 
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_DELETE_VRP_CONSENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_COF_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_CONSENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_DETAILS_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_SUBMIT_VRP_LOG;
+
 import com.transferwise.openbanking.client.api.common.BasePaymentClient;
 import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
 import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
@@ -39,12 +46,6 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
     private static final String VRP_RESOURCE = "domestic-vrps";
     private static final String VRP_BY_ID_ENDPOINT_PATH_FORMAT = BASE_ENDPOINT_PATH_FORMAT + "/{domesticVrpId}";
     private static final String VRP_DETAILS_BY_ID_ENDPOINT_PATH_FORMAT = BASE_ENDPOINT_PATH_FORMAT + "/{domesticVrpId}/payment-details";
-
-    private static final String ON_ERROR_GET_VRP_COF_LOG = "Call to get VRP confirmation of funds endpoint failed";
-    private static final String ON_ERROR_GET_VRP_CONSENT_LOG = "Call to get VRP consent endpoint failed";
-    private static final String ON_ERROR_DELETE_VRP_CONSENT_LOG = "Call to delete VRP consent endpoint";
-    private static final String ON_ERROR_SUBMIT_VRP_LOG = "Call to submit VRP endpoint failed";
-    private static final String ON_ERROR_GET_VRP_LOG = "Call to get VRP endpoint failed";
 
     private final IdempotencyKeyGenerator<OBDomesticVRPConsentRequest, OBDomesticVRPRequest> idempotencyKeyGenerator;
     private final JwtClaimsSigner jwtClaimsSigner;
@@ -251,8 +252,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
                 return exchangeToMonoWithLog(clientResponse, "getDomesticVrpDetailsResponse", OBDomesticVRPDetails.class);
             })
             .doOnSuccess(this::validateResponse)
-            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_VRP_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_LOG))
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_VRP_DETAILS_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_DETAILS_LOG))
             .block();
     }
 

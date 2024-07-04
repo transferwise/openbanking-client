@@ -1,5 +1,12 @@
 package com.transferwise.openbanking.client.api.registration;
 
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_DELETE_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_REGISTER_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_UPDATE_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_RECEIVE_DELETE_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_RECEIVE_REGISTER_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_RECEIVE_UPDATE_LOG;
+
 import com.transferwise.openbanking.client.api.common.ExceptionUtils;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationRequest;
 import com.transferwise.openbanking.client.api.registration.domain.ClientRegistrationResponse;
@@ -29,14 +36,6 @@ import wiremock.org.apache.commons.lang3.Validate;
 @Slf4j
 @SuppressWarnings("checkstyle:membername")
 public class AsyncRegistrationClient implements RegistrationClient {
-
-    private static final String ON_RECEIVE_REGISTER_LOG = "Received registration response";
-    private static final String ON_RECEIVE_UPDATE_LOG = "Received update registration response";
-    private static final String ON_RECEIVE_DELETE_LOG = "Received delete registration response";
-
-    private static final String ON_ERROR_REGISTER_LOG = "Call to register client endpoint failed";
-    private static final String ON_ERROR_UPDATE_LOG = "Call to update registration endpoint failed";
-    private static final String ON_ERROR_DELETE_LOG = "Call to delete registration endpoint failed";
 
     private final JwtClaimsSigner jwtClaimsSigner;
     private final OAuthClient oAuthClient;

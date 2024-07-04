@@ -1,5 +1,7 @@
 package com.transferwise.openbanking.client.oauth;
 
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_TOKEN_LOG;
+
 import com.transferwise.openbanking.client.api.common.ExceptionUtils;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
@@ -26,14 +28,11 @@ import wiremock.org.apache.commons.lang3.Validate;
 @Slf4j
 public class AsyncOAuthClient implements OAuthClient {
 
-    private static final String ON_ERROR_TOKEN_LOG = "Call to token endpoint failed";
-
     private final ClientAuthentication clientAuthentication;
     private final WebClient webClient;
 
     @Override
     public AccessTokenResponse getAccessToken(GetAccessTokenRequest getAccessTokenRequest, AspspDetails aspspDetails) {
-
         clientAuthentication.addClientAuthentication(getAccessTokenRequest, aspspDetails);
 
         FapiHeaders requestHeaders = getAccessTokenRequest.getRequestHeaders();

@@ -1,5 +1,11 @@
 package com.transferwise.openbanking.client.api.payment.v3;
 
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_CREATE_PAYMENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_COF_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_PAYMENT_CONSENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_PAYMENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_SUBMIT_PAYMENT_LOG;
+
 import com.transferwise.openbanking.client.api.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.common.BasePaymentClient;
 import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
@@ -28,14 +34,8 @@ import wiremock.org.apache.commons.lang3.Validate;
 public class RestPaymentClient extends BasePaymentClient implements PaymentClient {
 
     private static final String ENDPOINT_PATH_FORMAT = "%s/open-banking/v3.%s/pisp/%s";
-
     private static final String PAYMENT_CONSENT_RESOURCE = "domestic-payment-consents";
     private static final String PAYMENT_RESOURCE = "domestic-payments";
-    private static final String ON_ERROR_CREATE_PAYMENT_LOG = "Call to create payment consent endpoint failed";
-    public static final String ON_ERROR_SUBMIT_PAYMENT_LOG = "Call to submit payment endpoint failed";
-    public static final String ON_ERROR_GET_PAYMENT_CONSENT_LOG = "Call to get payment consent endpoint failed";
-    public static final String ON_ERROR_GET_PAYMENT_LOG = "Call to get payment endpoint failed";
-    public static final String ON_ERROR_GET_COF_LOG = "Call to get confirmation of funds endpoint failed";
 
     private final IdempotencyKeyGenerator<OBWriteDomesticConsent4, OBWriteDomestic2> idempotencyKeyGenerator;
     private final JwtClaimsSigner jwtClaimsSigner;
