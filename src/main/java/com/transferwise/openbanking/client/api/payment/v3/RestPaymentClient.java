@@ -5,6 +5,7 @@ import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_PAYMENT_CONSENT_LOG;
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_PAYMENT_LOG;
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_SUBMIT_PAYMENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ExceptionUtils.handleWebClientException;
 
 import com.transferwise.openbanking.client.api.common.AuthorizationContext;
 import com.transferwise.openbanking.client.api.common.BasePaymentClient;
@@ -81,7 +82,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             .doOnSuccess(this::validateResponse)
             .onErrorResume(WebClientResponseException.class,
                 e -> handleWebClientResponseException(e, ON_ERROR_CREATE_PAYMENT_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_CREATE_PAYMENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_CREATE_PAYMENT_LOG, PaymentApiCallException.class))
             .block();
     }
 
@@ -112,7 +113,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             .bodyToMono(OBWriteDomesticResponse5.class)
             .doOnSuccess(this::validateResponse)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_SUBMIT_PAYMENT_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_SUBMIT_PAYMENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_SUBMIT_PAYMENT_LOG, PaymentApiCallException.class))
             .block();
     }
 
@@ -133,7 +134,8 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             .bodyToMono(OBWriteDomesticConsentResponse5.class)
             .doOnSuccess(this::validateResponse)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_PAYMENT_CONSENT_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_PAYMENT_CONSENT_LOG))
+            .onErrorResume(WebClientException.class,
+                e -> handleWebClientException(e, ON_ERROR_GET_PAYMENT_CONSENT_LOG, PaymentApiCallException.class))
             .block();
     }
 
@@ -154,7 +156,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             .bodyToMono(OBWriteDomesticResponse5.class)
             .doOnSuccess(this::validateResponse)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_PAYMENT_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_PAYMENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_PAYMENT_LOG, PaymentApiCallException.class))
             .block();
     }
 
@@ -180,7 +182,7 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
             .bodyToMono(OBWriteFundsConfirmationResponse1.class)
             .doOnSuccess(this::validateResponse)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_COF_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_COF_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_COF_LOG, PaymentApiCallException.class))
             .block();
     }
 
@@ -222,11 +224,5 @@ public class RestPaymentClient extends BasePaymentClient implements PaymentClien
         var errorMessage = "%s, response status code %s, body returned '%s'".formatted(prefixLog, e.getStatusCode(), e.getResponseBodyAsString());
         log.info(errorMessage, e);
         return Mono.error(new PaymentApiCallException(errorMessage, e, mapBodyToObErrorResponse(e.getResponseBodyAsString())));
-    }
-
-    private <T> Mono<T> handleWebClientException(WebClientException e, String prefixLog) {
-        var errorMessage = "%s, and no response body returned".formatted(prefixLog);
-        log.info(errorMessage, e);
-        return Mono.error(new PaymentApiCallException(errorMessage, e));
     }
 }

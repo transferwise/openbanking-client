@@ -4,6 +4,7 @@ import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_DELETE_EVENT_LOG;
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_EVENT_RESOURCE_LOG;
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_SUB_EVENT_LOG;
+import static com.transferwise.openbanking.client.api.common.ExceptionUtils.handleWebClientException;
 
 import com.transferwise.openbanking.client.api.common.BasePaymentClient;
 import com.transferwise.openbanking.client.api.common.OpenBankingHeaders;
@@ -67,7 +68,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
             .retrieve()
             .bodyToMono(String.class)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_SUB_EVENT_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_SUB_EVENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_SUB_EVENT_LOG, EventApiCallException.class))
             .block();
         return jsonConverter.readValue(response, OBEventSubscriptionResponse1.class);
     }
@@ -86,7 +87,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
             .retrieve()
             .bodyToMono(OBEventSubscriptionsResponse1.class)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_EVENT_RESOURCE_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_EVENT_RESOURCE_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_EVENT_RESOURCE_LOG, EventApiCallException.class))
             .block();
     }
 
@@ -115,7 +116,8 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
             .retrieve()
             .bodyToMono(OBEventSubscriptionResponse1.class)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_CHANGE_EVENT_RESOURCE_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_CHANGE_EVENT_RESOURCE_LOG))
+            .onErrorResume(WebClientException.class,
+                e -> handleWebClientException(e, ON_ERROR_CHANGE_EVENT_RESOURCE_LOG, EventApiCallException.class))
             .block();
     }
 
@@ -136,7 +138,7 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
             .retrieve()
             .bodyToMono(String.class)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_DELETE_EVENT_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_DELETE_EVENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_DELETE_EVENT_LOG, EventApiCallException.class))
             .block();
     }
 
@@ -153,11 +155,5 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
         var errorMessage = "%s, response status code %s, body returned '%s'".formatted(prefixLog, e.getStatusCode(), e.getResponseBodyAsString());
         log.error(errorMessage, e);
         return Mono.error(new EventApiCallException(errorMessage, e, mapBodyToObErrorResponse(e.getResponseBodyAsString())));
-    }
-
-    private <T> Mono<T> handleWebClientException(WebClientException e, String prefixLog) {
-        var errorMessage = "%s, and no response body returned".formatted(prefixLog);
-        log.error(errorMessage, e);
-        return Mono.error(new EventApiCallException(errorMessage, e));
     }
 }

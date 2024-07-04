@@ -7,6 +7,7 @@ import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_DETAILS_LOG;
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_LOG;
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_SUBMIT_VRP_LOG;
+import static com.transferwise.openbanking.client.api.common.ExceptionUtils.handleWebClientException;
 
 import com.transferwise.openbanking.client.api.common.BasePaymentClient;
 import com.transferwise.openbanking.client.api.common.IdempotencyKeyGenerator;
@@ -92,7 +93,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             )
             .doOnSuccess(this::validateResponse)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_CREATE_VRP_CONSENT_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_CREATE_VRP_CONSENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_CREATE_VRP_CONSENT_LOG, VrpApiCallException.class))
             .block();
     }
 
@@ -127,7 +128,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             .doOnSuccess(this::validateResponse)
             .onErrorResume(WebClientResponseException.class,
                 e -> handleWebClientResponseException(e, ON_ERROR_GET_VRP_COF_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_COF_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_COF_LOG, VrpApiCallException.class))
             .block();
     }
 
@@ -151,7 +152,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             )
             .doOnSuccess(this::validateResponse)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_VRP_CONSENT_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_CONSENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_CONSENT_LOG, VrpApiCallException.class))
             .block();
     }
 
@@ -175,7 +176,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
                 return exchangeToMonoWithLog(clientResponse, "deleteDomesticVrpConsentResponse", String.class);
             })
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_DELETE_VRP_CONSENT_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_DELETE_VRP_CONSENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_DELETE_VRP_CONSENT_LOG, VrpApiCallException.class))
             .block();
     }
 
@@ -208,7 +209,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             })
             .doOnSuccess(this::validateResponse)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_SUBMIT_VRP_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_SUBMIT_VRP_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_SUBMIT_VRP_LOG, VrpApiCallException.class))
             .block();
     }
 
@@ -231,7 +232,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             })
             .doOnSuccess(this::validateResponse)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_VRP_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_LOG, VrpApiCallException.class))
             .block();
     }
 
@@ -254,7 +255,7 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
             })
             .doOnSuccess(this::validateResponse)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_GET_VRP_DETAILS_LOG))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_DETAILS_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_GET_VRP_DETAILS_LOG, VrpApiCallException.class))
             .block();
     }
 
@@ -333,11 +334,5 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
         var errorMessage = "%s, response status code %s, body returned '%s'".formatted(prefixLog, e.getStatusCode(), e.getResponseBodyAsString());
         log.error(errorMessage, e);
         return Mono.error(new VrpApiCallException(errorMessage, e, mapBodyToObErrorResponse(e.getResponseBodyAsString())));
-    }
-
-    private <T> Mono<T> handleWebClientException(WebClientException e, String prefixLog) {
-        var errorMessage = "%s, and no response body returned".formatted(prefixLog);
-        log.error(errorMessage, e);
-        return Mono.error(new VrpApiCallException(errorMessage, e));
     }
 }

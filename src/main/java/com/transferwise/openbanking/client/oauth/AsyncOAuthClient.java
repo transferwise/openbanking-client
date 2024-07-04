@@ -1,8 +1,9 @@
 package com.transferwise.openbanking.client.oauth;
 
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_TOKEN_LOG;
+import static com.transferwise.openbanking.client.api.common.ExceptionUtils.handleWebClientException;
+import static com.transferwise.openbanking.client.api.common.ExceptionUtils.handleWebClientResponseException;
 
-import com.transferwise.openbanking.client.api.common.ExceptionUtils;
 import com.transferwise.openbanking.client.configuration.AspspDetails;
 import com.transferwise.openbanking.client.error.ApiCallException;
 import com.transferwise.openbanking.client.oauth.domain.AccessTokenResponse;
@@ -58,11 +59,8 @@ public class AsyncOAuthClient implements OAuthClient {
             .retrieve()
             .bodyToMono(AccessTokenResponse.class)
             .doOnSuccess(this::validateResponse)
-            .onErrorResume(
-                WebClientResponseException.class,
-                e -> ExceptionUtils.handleWebClientResponseException(e, ON_ERROR_TOKEN_LOG)
-            )
-            .onErrorResume(WebClientException.class, e -> ExceptionUtils.handleWebClientException(e, ON_ERROR_TOKEN_LOG))
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_TOKEN_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_TOKEN_LOG, ApiCallException.class))
             .block();
     }
 
