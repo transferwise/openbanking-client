@@ -1,5 +1,6 @@
 package com.transferwise.openbanking.client.api.vrp;
 
+import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_CREATE_VRP_CONSENT_LOG;
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_DELETE_VRP_CONSENT_LOG;
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_COF_LOG;
 import static com.transferwise.openbanking.client.api.common.ErrorLogConstant.ON_ERROR_GET_VRP_CONSENT_LOG;
@@ -90,8 +91,8 @@ public class RestVrpClient extends BasePaymentClient implements VrpClient {
                 clientResponse -> exchangeToMonoWithLog(clientResponse, "createDomesticVrpConsentResponse", OBDomesticVRPConsentResponse.class)
             )
             .doOnSuccess(this::validateResponse)
-            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, "Call to create VRP consent endpoint failed"))
-            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, "Call to create VRP consent endpoint failed"))
+            .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_CREATE_VRP_CONSENT_LOG))
+            .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_CREATE_VRP_CONSENT_LOG))
             .block();
     }
 

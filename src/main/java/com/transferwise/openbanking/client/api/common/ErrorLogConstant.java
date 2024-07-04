@@ -9,6 +9,7 @@ public class ErrorLogConstant {
     public static final String ON_ERROR_DELETE_EVENT_LOG = "Call to delete event endpoint failed";
 
     // RestVrpClient
+    public static final String ON_ERROR_CREATE_VRP_CONSENT_LOG = "Call to create VRP consent endpoint failed";
     public static final String ON_ERROR_GET_VRP_COF_LOG = "Call to get VRP confirmation of funds endpoint failed";
     public static final String ON_ERROR_GET_VRP_CONSENT_LOG = "Call to get VRP consent endpoint failed";
     public static final String ON_ERROR_DELETE_VRP_CONSENT_LOG = "Call to delete VRP consent endpoint";
