@@ -61,16 +61,15 @@ public class RestEventClient extends BasePaymentClient implements EventClient {
 
         String body = jsonConverter.writeValueAsString(eventSubscriptionRequest);
         HttpEntity<String> request = new HttpEntity<>(body, headers);
-        var response = webClient.post()
+        return webClient.post()
             .uri(generateEventApiUrl(BASE_ENDPOINT_PATH_FORMAT, EVENT_SUBSCRIPTION_RESOURCE, aspspDetails))
             .headers(httpHeaders -> httpHeaders.addAll(request.getHeaders()))
             .bodyValue(Validate.notNull(request.getBody()))
             .retrieve()
-            .bodyToMono(String.class)
+            .bodyToMono(OBEventSubscriptionResponse1.class)
             .onErrorResume(WebClientResponseException.class, e -> handleWebClientResponseException(e, ON_ERROR_SUB_EVENT_LOG))
             .onErrorResume(WebClientException.class, e -> handleWebClientException(e, ON_ERROR_SUB_EVENT_LOG, EventApiCallException.class))
             .block();
-        return jsonConverter.readValue(response, OBEventSubscriptionResponse1.class);
     }
 
     @Override
