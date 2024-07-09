@@ -73,7 +73,7 @@ dependencies {
     testImplementation("org.mockito:mockito-core:${libs.mockito}")
     testImplementation("org.mockito:mockito-junit-jupiter:${libs.mockito}")
     testImplementation("org.hamcrest:hamcrest:2.2")
-    testImplementation("org.skyscreamer:jsonassert:1.5.1")
+    testImplementation("org.skyscreamer:jsonassert:1.5.3")
     testImplementation("org.springframework:spring-test:${libs.spring}")
     testImplementation("org.bouncycastle:bcpkix-jdk15on:1.70")
     testImplementation("ch.qos.logback:logback-classic:1.5.6")
