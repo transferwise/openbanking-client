@@ -3,6 +3,10 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [21.0.0] - 2023-12-18
+## Changes
+- Replace `RestTemplate` with `WebClient`
+
 ## [20.0.0] - 2023-12-18
 ## Changes
 - VRP spec is upgraded to 3.1.11
