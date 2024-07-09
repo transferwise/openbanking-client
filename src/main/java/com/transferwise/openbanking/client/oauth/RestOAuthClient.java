@@ -27,7 +27,7 @@ import wiremock.org.apache.commons.lang3.Validate;
 
 @RequiredArgsConstructor
 @Slf4j
-public class AsyncOAuthClient implements OAuthClient {
+public class RestOAuthClient implements OAuthClient {
 
     private final ClientAuthentication clientAuthentication;
     private final WebClient webClient;

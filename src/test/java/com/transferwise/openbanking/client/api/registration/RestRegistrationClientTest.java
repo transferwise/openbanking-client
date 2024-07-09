@@ -59,7 +59,7 @@ import org.springframework.web.reactive.function.client.WebClient;
     "checkstyle:membername",
     "checkstyle:variabledeclarationusagedistance",
     "checkstyle:methodname"})
-class AsyncRegistrationClientTest {
+class RestRegistrationClientTest {
 
     private static ObjectMapper objectMapper;
 
@@ -69,7 +69,7 @@ class AsyncRegistrationClientTest {
     @Mock
     private OAuthClient oAuthClient;
 
-    private AsyncRegistrationClient asyncRegistrationClient;
+    private RestRegistrationClient restRegistrationClient;
 
     private WireMockServer wireMockServer;
 
@@ -86,7 +86,7 @@ class AsyncRegistrationClientTest {
 
         WebClient webClient = WebClient.create("http://localhost:" + wireMockServer.port());
 
-        asyncRegistrationClient = new AsyncRegistrationClient(jwtClaimsSigner, oAuthClient, webClient);
+        restRegistrationClient = new RestRegistrationClient(jwtClaimsSigner, oAuthClient, webClient);
     }
 
     @AfterEach
@@ -116,7 +116,7 @@ class AsyncRegistrationClientTest {
             .withRequestBody(equalTo(signedClaims))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        ClientRegistrationResponse registrationResponse = asyncRegistrationClient.registerClient(
+        ClientRegistrationResponse registrationResponse = restRegistrationClient.registerClient(
             clientRegistrationRequest,
             aspspDetails);
 
@@ -140,7 +140,7 @@ class AsyncRegistrationClientTest {
         WireMock.stubFor(post(urlEqualTo(aspspDetails.getRegistrationUrl()))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        ClientRegistrationResponse registrationResponse = asyncRegistrationClient.registerClient(
+        ClientRegistrationResponse registrationResponse = restRegistrationClient.registerClient(
             clientRegistrationRequest,
             aspspDetails);
 
@@ -163,7 +163,7 @@ class AsyncRegistrationClientTest {
         WireMock.stubFor(post(urlEqualTo(aspspDetails.getRegistrationUrl())).willReturn(serverError()));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> asyncRegistrationClient.registerClient(clientRegistrationRequest, aspspDetails));
+            () -> restRegistrationClient.registerClient(clientRegistrationRequest, aspspDetails));
 
         WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl())));
     }
@@ -201,7 +201,7 @@ class AsyncRegistrationClientTest {
             .withRequestBody(equalTo(signedClaims))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        ClientRegistrationResponse registrationResponse = asyncRegistrationClient.updateRegistration(
+        ClientRegistrationResponse registrationResponse = restRegistrationClient.updateRegistration(
             clientRegistrationRequest,
             aspspDetails,
             softwareStatementDetails);
@@ -239,7 +239,7 @@ class AsyncRegistrationClientTest {
             .withHeader(HttpHeaders.CONTENT_TYPE, equalTo(expectedContentType))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        ClientRegistrationResponse registrationResponse = asyncRegistrationClient.updateRegistration(
+        ClientRegistrationResponse registrationResponse = restRegistrationClient.updateRegistration(
             clientRegistrationRequest,
             aspspDetails,
             softwareStatementDetails);
@@ -281,7 +281,7 @@ class AsyncRegistrationClientTest {
         WireMock.stubFor(put(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id"))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        ClientRegistrationResponse registrationResponse = asyncRegistrationClient.updateRegistration(
+        ClientRegistrationResponse registrationResponse = restRegistrationClient.updateRegistration(
             clientRegistrationRequest,
             aspspDetails,
             softwareStatementDetails);
@@ -310,7 +310,7 @@ class AsyncRegistrationClientTest {
         WireMock.stubFor(put(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id")).willReturn(serverError()));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> asyncRegistrationClient.updateRegistration(
+            () -> restRegistrationClient.updateRegistration(
                 clientRegistrationRequest,
                 aspspDetails,
                 softwareStatementDetails));
@@ -341,7 +341,7 @@ class AsyncRegistrationClientTest {
             .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer access-token"))
             .willReturn(status(200)));
 
-        asyncRegistrationClient.deleteRegistration(aspspDetails, softwareStatementDetails);
+        restRegistrationClient.deleteRegistration(aspspDetails, softwareStatementDetails);
 
         WireMock.verify(exactly(1), deleteRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id")));
     }
@@ -361,7 +361,7 @@ class AsyncRegistrationClientTest {
             .willReturn(serverError()));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> asyncRegistrationClient.deleteRegistration(aspspDetails, softwareStatementDetails));
+            () -> restRegistrationClient.deleteRegistration(aspspDetails, softwareStatementDetails));
 
         WireMock.verify(exactly(1), deleteRequestedFor(urlEqualTo(aspspDetails.getRegistrationUrl() + "/client-id")));
     }

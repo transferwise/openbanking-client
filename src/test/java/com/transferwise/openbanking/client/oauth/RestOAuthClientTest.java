@@ -40,14 +40,14 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @ExtendWith(MockitoExtension.class)
-class AsyncOAuthClientTest {
+class RestOAuthClientTest {
 
     private static ObjectMapper objectMapper;
 
     @Mock
     private ClientAuthentication clientAuthentication;
 
-    private AsyncOAuthClient asyncOAuthClient;
+    private RestOAuthClient restOAuthClient;
 
     private WireMockServer wireMockServer;
 
@@ -63,7 +63,7 @@ class AsyncOAuthClientTest {
         WireMock.configureFor("localhost", wireMockServer.port());
         WebClient webClient = WebClient.create("http://localhost:" + wireMockServer.port());
 
-        asyncOAuthClient = new AsyncOAuthClient(clientAuthentication, webClient);
+        restOAuthClient = new RestOAuthClient(clientAuthentication, webClient);
     }
 
     @AfterEach
@@ -90,7 +90,7 @@ class AsyncOAuthClientTest {
             .withRequestBody(equalTo(expectedBody))
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
-        AccessTokenResponse accessTokenResponse = asyncOAuthClient.getAccessToken(getAccessTokenRequest,
+        AccessTokenResponse accessTokenResponse = restOAuthClient.getAccessToken(getAccessTokenRequest,
             aspspDetails);
 
         Assertions.assertEquals(mockAccessTokenResponse, accessTokenResponse);
@@ -108,7 +108,7 @@ class AsyncOAuthClientTest {
         WireMock.stubFor(post(urlEqualTo(aspspDetails.getTokenUrl())).willReturn(serverError()));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> asyncOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
+            () -> restOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
 
         WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getTokenUrl())));
     }
@@ -127,7 +127,7 @@ class AsyncOAuthClientTest {
             .willReturn(okForContentType(APPLICATION_JSON_VALUE, jsonResponse)));
 
         Assertions.assertThrows(ApiCallException.class,
-            () -> asyncOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
+            () -> restOAuthClient.getAccessToken(getAccessTokenRequest, aspspDetails));
 
         WireMock.verify(exactly(1), postRequestedFor(urlEqualTo(aspspDetails.getTokenUrl())));
     }
